@@ -3,6 +3,8 @@ import Hero from "../components/Hero";
 import HowItWorks from "../components/HowItWorks";
 import ServicesSection from "../components/ServicesSection";
 import howItWorks from "../components/HowItWorks";
+import Reviews from "../components/Reviews";
+
 export default function LandingPage() {
   return (
     <>
@@ -10,6 +12,7 @@ export default function LandingPage() {
       <Hero />
       <ServicesSection />
       <HowItWorks />
+      <Reviews />
 
     </>
   );
