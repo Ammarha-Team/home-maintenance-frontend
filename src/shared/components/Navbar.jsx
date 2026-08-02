@@ -4,7 +4,6 @@ import { Menu, X } from "lucide-react";
 import logo from "../../assets/logo.png";
 
 export default function Navbar() {
-
   const [open, setOpen] = useState(false);
 
   return (
@@ -12,50 +11,59 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
 
         {/* Logo */}
-        <div>
+        <Link to="/">
           <img
             src={logo}
             alt="عمرها Logo"
             className="w-28"
           />
-        </div>
-
+        </Link>
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-gray-600 text-sm">
 
-          <Link className="text-blue-600 font-semibold">
+          <Link
+            to="/"
+            className="text-blue-600 font-semibold hover:text-blue-700 transition"
+          >
             الرئيسية
           </Link>
 
-          <Link>
+          <Link
+            to="/services"
+            className="hover:text-blue-600 transition"
+          >
             الخدمات
           </Link>
 
-          <Link>
+          <Link
+            to="/about"
+            className="hover:text-blue-600 transition"
+          >
             عن المنصة
           </Link>
 
-          <Link>
+          <Link
+            to="/contact"
+            className="hover:text-blue-600 transition"
+          >
             تواصل معنا
           </Link>
 
         </div>
 
-
         {/* Desktop Buttons */}
         <div className="hidden md:flex gap-3">
 
-          <button className="border border-blue-500 text-blue-600 px-5 py-2 rounded-lg text-sm">
+          <button className="border border-blue-500 text-blue-600 px-5 py-2 rounded-lg text-sm hover:bg-blue-50 transition">
             تسجيل الدخول
           </button>
 
-          <button className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm">
+          <button className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
             إنشاء حساب
           </button>
 
         </div>
-
 
         {/* Mobile Menu Button */}
         <button
@@ -67,27 +75,25 @@ export default function Navbar() {
 
       </div>
 
-
       {/* Mobile Menu */}
       {open && (
         <div className="md:hidden px-6 pb-5 flex flex-col gap-4 text-gray-600">
 
-          <Link>
+          <Link to="/" onClick={() => setOpen(false)}>
             الرئيسية
           </Link>
 
-          <Link>
+          <Link to="/services" onClick={() => setOpen(false)}>
             الخدمات
           </Link>
 
-          <Link>
+          <Link to="/about" onClick={() => setOpen(false)}>
             عن المنصة
           </Link>
 
-          <Link>
+          <Link to="/contact" onClick={() => setOpen(false)}>
             تواصل معنا
           </Link>
-
 
           <button className="border border-blue-500 text-blue-600 py-2 rounded-lg">
             تسجيل الدخول
@@ -99,7 +105,6 @@ export default function Navbar() {
 
         </div>
       )}
-
     </nav>
   );
 }
