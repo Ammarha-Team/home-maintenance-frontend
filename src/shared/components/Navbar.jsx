@@ -19,6 +19,7 @@ export default function Navbar() {
           />
         </Link>
 
+
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-gray-600 text-sm">
 
@@ -52,18 +53,43 @@ export default function Navbar() {
 
         </div>
 
+
         {/* Desktop Buttons */}
         <div className="hidden md:flex gap-3">
 
-          <button className="border border-blue-500 text-blue-600 px-5 py-2 rounded-lg text-sm hover:bg-blue-50 transition">
+          <Link
+            to="/login"
+            className="
+            border border-blue-500 
+            text-blue-600 
+            px-5 py-2 
+            rounded-lg 
+            text-sm
+            hover:bg-blue-50
+            transition
+            "
+          >
             تسجيل الدخول
-          </button>
+          </Link>
 
-          <button className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
+
+          <Link
+            to="/register"
+            className="
+            bg-blue-600 
+            text-white 
+            px-5 py-2 
+            rounded-lg 
+            text-sm
+            hover:bg-blue-700
+            transition
+            "
+          >
             إنشاء حساب
-          </button>
+          </Link>
 
         </div>
+
 
         {/* Mobile Menu Button */}
         <button
@@ -75,36 +101,76 @@ export default function Navbar() {
 
       </div>
 
+
       {/* Mobile Menu */}
       {open && (
         <div className="md:hidden px-6 pb-5 flex flex-col gap-4 text-gray-600">
 
-          <Link to="/" onClick={() => setOpen(false)}>
+          <Link
+            to="/"
+            onClick={() => setOpen(false)}
+          >
             الرئيسية
           </Link>
 
-          <Link to="/services" onClick={() => setOpen(false)}>
+
+          <Link
+            to="/services"
+            onClick={() => setOpen(false)}
+          >
             الخدمات
           </Link>
 
-          <Link to="/about" onClick={() => setOpen(false)}>
+
+          <Link
+            to="/about"
+            onClick={() => setOpen(false)}
+          >
             عن المنصة
           </Link>
 
-          <Link to="/contact" onClick={() => setOpen(false)}>
+
+          <Link
+            to="/contact"
+            onClick={() => setOpen(false)}
+          >
             تواصل معنا
           </Link>
 
-          <button className="border border-blue-500 text-blue-600 py-2 rounded-lg">
-            تسجيل الدخول
-          </button>
 
-          <button className="bg-blue-600 text-white py-2 rounded-lg">
+
+          <Link
+            to="/login"
+            onClick={() => setOpen(false)}
+            className="
+            border border-blue-500 
+            text-blue-600 
+            py-2 
+            rounded-lg 
+            text-center
+            "
+          >
+            تسجيل الدخول
+          </Link>
+
+
+          <Link
+            to="/register"
+            onClick={() => setOpen(false)}
+            className="
+            bg-blue-600 
+            text-white 
+            py-2 
+            rounded-lg 
+            text-center
+            "
+          >
             إنشاء حساب
-          </button>
+          </Link>
 
         </div>
       )}
+
     </nav>
   );
 }
