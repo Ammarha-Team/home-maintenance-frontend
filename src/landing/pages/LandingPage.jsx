@@ -4,6 +4,7 @@ import HowItWorks from "../components/HowItWorks";
 import ServicesSection from "../components/ServicesSection";
 import howItWorks from "../components/HowItWorks";
 import Reviews from "../components/Reviews";
+import OurTechnicians from "../components/OurTechnicians";
 
 export default function LandingPage() {
   return (
@@ -13,7 +14,7 @@ export default function LandingPage() {
       <ServicesSection />
       <HowItWorks />
       <Reviews />
-
+      <OurTechnicians />
     </>
   );
 
