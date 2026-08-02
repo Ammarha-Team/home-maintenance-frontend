@@ -1,10 +1,11 @@
 import Navbar from "../../shared/components/Navbar";
 import Hero from "../components/Hero";
-import HowItWorks from "../components/HowItWorks";
 import ServicesSection from "../components/ServicesSection";
-import howItWorks from "../components/HowItWorks";
+import HowItWorks from "../components/HowItWorks";
 import Reviews from "../components/Reviews";
 import OurTechnicians from "../components/OurTechnicians";
+import DownloadSection from "../components/DownloadSection";
+import Footer from "../../shared/components/Footer";
 
 export default function LandingPage() {
   return (
@@ -15,8 +16,8 @@ export default function LandingPage() {
       <HowItWorks />
       <Reviews />
       <OurTechnicians />
+      <DownloadSection />
+      <Footer />
     </>
   );
-
-
 }

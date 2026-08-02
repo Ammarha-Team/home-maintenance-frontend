@@ -1,14 +1,14 @@
 export default function OurTechnicians() {
   return (
-    <section dir="rtl" className="bg-gray-50 py-16 font-sans">
-      <div className="max-w-5xl mx-auto px-6">
+    <section dir="rtl" className="bg-gray-50 py-20 font-sans">
+      <div className="max-w-6xl mx-auto px-6">
         
         {/* الكارت الأساسي */}
         <div className="bg-white border border-gray-100 shadow-xl rounded-3xl p-8 md:p-12 flex flex-col items-start text-right">
           
           {/* العنوان الرئيسي */}
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-            فنيونا هم سر نجاحنا
+           خبرة تثق بها وخدمة تعتمد عليها
           </h2>
 
           {/* الوصف التعريفي */}
