@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import iconUpdated from '../../../assets/icons/terms-updated.svg'
 import PublicLayout from '../../../shared/layouts/PublicLayout.jsx'
 import SignUpStepper from '../components/SignUpStepper.jsx'
@@ -17,6 +17,7 @@ import { registerTechnician } from '../services/authService.js'
 // agreement fills a single full-width card.
 function TechnicianSignUpTerms() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [accepted, setAccepted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -30,6 +31,10 @@ function TechnicianSignUpTerms() {
 
     try {
       await registerTechnician(details)
+      // Last step of the flow — the account exists, so the new technician goes
+      // straight to their home area. `replace` keeps the agreement step out of
+      // the history, which would otherwise re-submit on a back navigation.
+      navigate('/home', { replace: true })
     } catch {
       setSubmitError('تعذر إنشاء الحساب، حاول مرة أخرى لاحقًا.')
     } finally {

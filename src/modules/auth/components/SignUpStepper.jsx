@@ -31,7 +31,11 @@ function SignUpStepper({
             {index > 0 ? (
               <span
                 aria-hidden="true"
-                className={`h-[2px] w-[137px] shrink-0 ${
+                // 137px is the frame's connector length. Capped rather than
+                // fixed so a narrow card shortens the rule instead of pushing
+                // the row wider than its container; at the frame's width the
+                // cap is reached and the spacing is unchanged.
+                className={`h-[2px] w-full max-w-[137px] min-w-[8px] flex-1 ${
                   connectorReached ? 'bg-primary-500' : 'bg-accent-100'
                 }`}
               />

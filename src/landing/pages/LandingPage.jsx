@@ -3,6 +3,7 @@ import ServicesSection from "../../shared/components/ServicesSection";
 import Hero from "../components/Hero";
 import HowItWorks from "../../shared/components/HowItWorks";
 import Reviews from "../components/Reviews";
+import OurTechnicians from "../components/OurTechnicians";
 import DownloadSection from "../components/DownloadSection";
 import Footer from "../../shared/components/Footer";
 
