@@ -4,18 +4,16 @@ import { Menu, X, Bell, User, Settings, LogOut } from "lucide-react";
 import logo from "../../assets/logo.png";
 
 export default function UserNavbar() {
-  const [open, setOpen] = useState(false); // قائمة الموبايل
-  const [dropdownOpen, setDropdownOpen] = useState(false); // القائمة المنسدلة للبروفايل
+  const [open, setOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
 
-  // متغير بيعبر عن صورة المستخدم (لو فاضي/null هيظهر الأيقونة الافتراضية)
   const userAvatar = null; 
 
   const isActive = (path) => location.pathname === path;
 
-  // إغلاق القائمة المنسدلة لو المستخدم ضغط في أي مكان برة القائمة
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -26,11 +24,8 @@ export default function UserNavbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // دالة تسجيل الخروج
   const handleLogout = () => {
-    // هنا ممكن تحطي أي أكواد خاصة بمسح التوكن أو الـ localStorage لو موجودة
-    // localStorage.removeItem("token");
-    navigate("/"); // التوجيه لصفحة الليندينج بيج
+    navigate("/");
   };
 
   return (
@@ -39,11 +34,7 @@ export default function UserNavbar() {
 
         {/* 1. اللوجو على اليمين */}
         <Link to="/home">
-          <img
-            src={logo}
-            alt="عمرها Logo"
-            className="w-28 object-contain"
-          />
+          <img src={logo} alt="عمرها Logo" className="w-28 object-contain" />
         </Link>
 
         {/* 2. روابط التنقل الوسطية (سطح المكتب) */}
@@ -90,27 +81,20 @@ export default function UserNavbar() {
 
         {/* 3. الإشعارات، الفاصل، وبروفايل المستخدم على اليسار */}
         <div className="hidden md:flex items-center gap-4">
-          {/* أيقونة الإشعارات مع نقطة التنبيه */}
           <div className="relative cursor-pointer w-10 h-10 rounded-full bg-blue-50/50 flex items-center justify-center text-blue-600 hover:bg-blue-100/55 transition">
             <Bell size={20} />
             <span className="absolute top-2 left-2.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
           </div>
 
-          {/* الفاصل العمودي */}
           <div className="h-6 w-[1px] bg-blue-200"></div>
 
-          {/* بروفايل المستخدم مع القائمة المنسدلة (Dropdown) */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center focus:outline-none"
             >
               {userAvatar ? (
-                <img
-                  src={userAvatar}
-                  alt="صورة المستخدم"
-                  className="w-10 h-10 rounded-full object-cover border border-gray-200 hover:ring-2 hover:ring-blue-400 transition"
-                />
+                <img src={userAvatar} alt="صورة المستخدم" className="w-10 h-10 rounded-full object-cover border border-gray-200 hover:ring-2 hover:ring-blue-400 transition" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 hover:ring-2 hover:ring-blue-400 transition">
                   <User size={20} className="text-gray-500" />
@@ -118,7 +102,6 @@ export default function UserNavbar() {
               )}
             </button>
 
-            {/* بوكس القائمة المنسدلة */}
             {dropdownOpen && (
               <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 text-sm">
                 <Link
@@ -153,7 +136,6 @@ export default function UserNavbar() {
           </div>
         </div>
 
-        {/* زر القائمة للموبايل */}
         <button
           className="md:hidden text-blue-600"
           onClick={() => setOpen(!open)}
@@ -163,18 +145,13 @@ export default function UserNavbar() {
 
       </div>
 
-      {/* قائمة الموبايل المندمجة */}
       {open && (
         <div className="md:hidden px-6 pb-5 pt-3 flex flex-col gap-4 text-gray-700 bg-white border-b border-gray-100">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-2">
             <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3">
-              {userAvatar ? (
-                <img src={userAvatar} alt="Profile" className="w-9 h-9 rounded-full object-cover" />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
-                  <User size={18} className="text-gray-500" />
-                </div>
-              )}
+              <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+                <User size={18} className="text-gray-500" />
+              </div>
               <span className="font-bold text-sm text-gray-900">حسابي الشخصي</span>
             </Link>
             <div className="relative cursor-pointer w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
@@ -183,21 +160,11 @@ export default function UserNavbar() {
             </div>
           </div>
 
-          <Link to="/home" onClick={() => setOpen(false)} className="hover:text-blue-600">
-            الرئيسية
-          </Link>
-          <Link to="/request-service" onClick={() => setOpen(false)} className="hover:text-blue-600">
-            طلب خدمة
-          </Link>
-          <Link to="/my-orders" onClick={() => setOpen(false)} className="hover:text-blue-600">
-            طلباتي
-          </Link>
-          <Link to="/messages" onClick={() => setOpen(false)} className="hover:text-blue-600">
-            الرسائل
-          </Link>
-          <Link to="/settings" onClick={() => setOpen(false)} className="hover:text-blue-600">
-            الإعدادات
-          </Link>
+          <Link to="/home" onClick={() => setOpen(false)} className="hover:text-blue-600">الرئيسية</Link>
+          <Link to="/request-service" onClick={() => setOpen(false)} className="hover:text-blue-600">طلب خدمة</Link>
+          <Link to="/my-orders" onClick={() => setOpen(false)} className="hover:text-blue-600">طلباتي</Link>
+          <Link to="/messages" onClick={() => setOpen(false)} className="hover:text-blue-600">الرسائل</Link>
+          <Link to="/settings" onClick={() => setOpen(false)} className="hover:text-blue-600">الإعدادات</Link>
 
           <div className="h-[1px] bg-gray-100 my-1"></div>
 
