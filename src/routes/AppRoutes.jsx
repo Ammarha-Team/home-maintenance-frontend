@@ -19,6 +19,16 @@ function AppRoutes() {
       <Route path="/home" element={<Home />} />
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
+
+      {/* The site header links here for "إنشاء حساب". Sign up is split by role
+          and starts on the customer step, so /register is an entry point into
+          that flow rather than a screen of its own. Without this the catch-all
+          below sends the button back to the landing page. */}
+      <Route
+        path="/register"
+        element={<Navigate to={AUTH_ROUTES.customerSignUp} replace />}
+      />
+
       <Route path={SIGN_UP_INFO_PATTERN} element={<SignUpInfo />} />
       <Route
         path={AUTH_ROUTES.customerSignUpTerms}

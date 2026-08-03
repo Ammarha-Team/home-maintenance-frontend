@@ -21,9 +21,14 @@ function SignUpLayout({
     <PublicLayout>
       <div
         dir="rtl"
-        className="flex items-stretch justify-center gap-[16px] px-[80px] pt-[24px] pb-[32px]"
+        className="flex items-stretch justify-center gap-[16px] px-[16px] pt-[24px] pb-[32px] sm:px-[24px] lg:px-[80px]"
       >
-        <div className="w-[739px] shrink-0 rounded-[24px] border border-[#e6e8ea] bg-white p-[49px] drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]">
+        {/* 739 is the card's width in the frame, which sizes the page around
+            it: 739 + the 16 gap + the 519 aside + 2x80 padding is the frame's
+            1440. Held as a cap rather than a fixed width so the card can give
+            up the difference on windows between the aside's breakpoint and
+            that 1440, and take the full width it is given below it. */}
+        <div className="w-full min-w-0 max-w-[739px] rounded-[24px] border border-[#e6e8ea] bg-white p-[24px] drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)] sm:p-[32px] lg:p-[49px]">
           <div className="flex flex-col gap-[32px]">{children}</div>
         </div>
 
@@ -31,7 +36,12 @@ function SignUpLayout({
             when the form grows past the image's natural height (validation
             errors on the technician step); at the frame's own proportions the
             width/offset below still drive the crop exactly. */}
-        <aside className="relative hidden min-h-[700px] w-[519px] shrink-0 overflow-hidden rounded-[24px] bg-dark shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] lg:block">
+        {/* The frame drops the illustration on narrow windows. It reappears at
+            xl rather than lg because 519 + the card + the padding needs 1274
+            of content width: at lg the card would have to give up more than a
+            third of itself and end up narrower than the illustration beside
+            it, which puts the decoration ahead of the form. */}
+        <aside className="relative hidden min-h-[700px] w-[519px] shrink-0 overflow-hidden rounded-[24px] bg-dark shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] xl:block">
           <img
             key={visualImage}
             src={visualImage}
