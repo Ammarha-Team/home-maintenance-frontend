@@ -4,6 +4,7 @@ import {
   SIGN_UP_INFO_PATTERN,
 } from "../modules/auth/constants/authRoutes.js";
 
+import ForgotPassword from "../modules/auth/pages/ForgotPassword.jsx";
 import Login from "../modules/auth/pages/Login.jsx";
 import SignUpInfo from "../modules/auth/pages/SignUpInfo.jsx";
 import CustomerSignUpTerms from "../modules/auth/pages/CustomerSignUpTerms.jsx";
@@ -19,6 +20,7 @@ function AppRoutes() {
       <Route path="/home" element={<Home />} />
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
+      <Route path={AUTH_ROUTES.forgotPassword} element={<ForgotPassword />} />
 
       {/* The site header links here for "إنشاء حساب". Sign up is split by role
           and starts on the customer step, so /register is an entry point into

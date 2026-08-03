@@ -30,3 +30,27 @@ export const registerCustomer = async (details) =>
 // customer fields + { specialisation, experience, documents } -> { token, user }
 export const registerTechnician = async (details) =>
   localSession('technician', details)
+
+// Password reset. Same position as sign up: no endpoint yet, so these resolve
+// locally rather than throw, because a stub here would leave the screens
+// unusable. Swap the bodies for the real calls once the API is wired — what
+// they resolve with is the shape the endpoints are expected to return.
+//
+// The code check is the one step that still has to be able to fail: one that
+// always passed would hide the error state the frame asks for. Until the
+// endpoint exists it accepts any code of the right length.
+export const requestPasswordReset = async ({ method, identifier }) => ({
+  method,
+  identifier,
+  expiresInSeconds: 180,
+})
+
+export const verifyResetCode = async ({ code }) => {
+  if (!/^\d{5}$/.test(code ?? '')) {
+    throw new Error('invalid-code')
+  }
+
+  return { ticket: 'local-dev-reset-ticket' }
+}
+
+export const resetPassword = async () => ({ ok: true })

@@ -1,0 +1,87 @@
+import { RESET_STEP_LABELS } from '../constants/passwordReset.js'
+
+// Progress rail for the password reset flow (Figma node 14:795).
+//
+// The frame draws it as a vertical rail beside the cards, which only fits while
+// the cards keep their width. Below that it lays out as a row above them —
+// same marks, same colours, same order — so the step you are on is still
+// visible on a phone instead of disappearing with the rail.
+function ResetStepper({ currentStep }) {
+  return (
+    <ol
+      aria-label="مراحل إعادة تعيين كلمة المرور"
+      className="flex w-full items-start justify-center gap-[8px] xl:h-full xl:w-[118px] xl:flex-col xl:items-stretch xl:gap-0"
+    >
+      {RESET_STEP_LABELS.map((label, index) => {
+        const step = index + 1
+        const done = step < currentStep
+        const active = step === currentStep
+        const isLast = step === RESET_STEP_LABELS.length
+
+        return (
+          <li
+            key={label}
+            aria-current={active ? 'step' : undefined}
+            className="flex min-w-0 flex-1 flex-col items-center xl:flex-none"
+          >
+            <div className="flex w-full flex-col items-center gap-[12px]">
+              <span
+                className={`flex size-[48px] shrink-0 items-center justify-center rounded-full border text-[17px] font-bold transition-colors duration-300 ${
+                  done
+                    ? 'border-success-200 bg-success-500 text-white'
+                    : active
+                      ? 'border-primary-50 bg-primary-300 text-white'
+                      : 'border-text-100 bg-surface text-text-100'
+                }`}
+              >
+                {done ? (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                    className="size-[24px]"
+                  >
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  step
+                )}
+              </span>
+
+              <span
+                className={`text-center text-[14px] font-bold leading-[1.5] transition-colors duration-300 ${
+                  done
+                    ? 'text-success-500'
+                    : active
+                      ? 'text-primary-300'
+                      : 'text-text-100'
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+
+            {/* The rule belongs to the step above it, so it turns green only
+                once that step is behind you. It is part of the rail, which the
+                row layout does not draw. */}
+            {isLast ? null : (
+              <span
+                aria-hidden="true"
+                className={`hidden xl:my-[8px] xl:block xl:h-full xl:min-h-[120px] xl:w-[2px] xl:self-center xl:rounded-full ${
+                  done ? 'xl:bg-success-500' : 'xl:bg-text-100'
+                }`}
+              />
+            )}
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+export default ResetStepper

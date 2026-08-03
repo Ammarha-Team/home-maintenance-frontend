@@ -17,6 +17,15 @@
   --color-error-50: #f5e8e8;
   --color-error-500: #9e1515;
 
+  /* The reset flow is the first screen to use the success ramp: the completed
+     stepper marks, the green heading on the confirmation, and the badge. */
+  --color-success-100: #c8e6c9;
+  --color-success-200: #addaaf;
+  --color-success-500: #4caf50;
+  --color-success-600: #459f49;
+  --color-success-800: #2a602c;
+
+  --color-text-100: #b7b7b7;
   --color-text-200: #949494;
   --color-text-300: #636363;
   --color-text-400: #454545;
@@ -97,9 +106,41 @@ body {
   animation: signup-hero-fade 360ms ease both;
 }
 
+/* Password reset. The three steps live on one page, so a step opening is the
+   only thing that moves: the card that just unlocked rises into place, the same
+   distance and curve as the sign up fields so the two flows feel related. */
+.reset-card-enter {
+  animation: signup-content-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The confirmation is a dialog rather than a step, so it scales in from the
+   page instead of rising: a short, small scale keeps it from reading as a
+   different screen. */
+@keyframes reset-modal-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reset-modal-enter {
+  animation: reset-modal-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.reset-backdrop-enter {
+  animation: signup-hero-fade 260ms ease both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .signup-content-enter,
-  .signup-hero-fade {
+  .signup-hero-fade,
+  .reset-card-enter,
+  .reset-modal-enter,
+  .reset-backdrop-enter {
     animation: none;
   }
 }
