@@ -25,8 +25,12 @@ function ResetStepper({ currentStep }) {
             className="flex min-w-0 flex-1 flex-col items-center xl:flex-none"
           >
             <div className="flex w-full flex-col items-center gap-[12px]">
+              {/* Re-keying on the state is what replays the pop: the mark is a
+                  new element each time the step changes hands, so the
+                  animation runs instead of being stuck at its end frame. */}
               <span
-                className={`flex size-[48px] shrink-0 items-center justify-center rounded-full border text-[17px] font-bold transition-colors duration-300 ${
+                key={done ? 'done' : active ? 'active' : 'idle'}
+                className={`reset-mark-pop flex size-[48px] shrink-0 items-center justify-center rounded-full border text-[17px] font-bold transition-colors duration-300 ${
                   done
                     ? 'border-success-200 bg-success-500 text-white'
                     : active
@@ -66,16 +70,22 @@ function ResetStepper({ currentStep }) {
               </span>
             </div>
 
-            {/* The rule belongs to the step above it, so it turns green only
-                once that step is behind you. It is part of the rail, which the
-                row layout does not draw. */}
+            {/* The rule belongs to the step above it, so it fills only once
+                that step is behind you. Drawing it as a track with a green
+                line growing down it makes the rail advance rather than jump
+                from one colour to the other. It is part of the rail, which
+                the row layout does not draw. */}
             {isLast ? null : (
               <span
                 aria-hidden="true"
-                className={`hidden xl:my-[8px] xl:block xl:h-full xl:min-h-[120px] xl:w-[2px] xl:self-center xl:rounded-full ${
-                  done ? 'xl:bg-success-500' : 'xl:bg-text-100'
-                }`}
-              />
+                className="relative hidden overflow-hidden bg-text-100 xl:my-[8px] xl:block xl:h-full xl:min-h-[120px] xl:w-[2px] xl:self-center xl:rounded-full"
+              >
+                <span
+                  className={`absolute inset-x-0 top-0 rounded-full bg-success-500 transition-[height] duration-500 ease-out ${
+                    done ? 'h-full' : 'h-0'
+                  }`}
+                />
+              </span>
             )}
           </li>
         )

@@ -20,13 +20,11 @@ function ResetPasswordCard({
   submitError,
   submitting,
   onSubmit,
-  locked,
 }) {
   return (
     <ResetCard
       title="إعادة تعيين كلمة المرور"
       subtitle="قم بإدخال كلمة مرور جديدة للوصول إلى حسابك"
-      locked={locked}
       gap={32}
     >
       <form

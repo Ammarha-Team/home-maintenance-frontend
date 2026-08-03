@@ -23,25 +23,27 @@ function ResetCodeCard({
   onSubmit,
   onResend,
   resendKey,
-  locked,
 }) {
   const inputsRef = useRef([])
   const [secondsLeft, setSecondsLeft] = useState(OTP_TTL_SECONDS)
 
-  // Nothing has been sent while the step is locked, so the clock does not
-  // start until it opens. Restarting on `resendKey` re-arms it for each new
-  // code, including the first one.
+  // The card only mounts once a code has been sent, so the clock starts with
+  // it. Restarting on `resendKey` re-arms it for each new code.
   useEffect(() => {
     setSecondsLeft(OTP_TTL_SECONDS)
-
-    if (locked) return undefined
 
     const timer = setInterval(() => {
       setSecondsLeft((current) => (current > 0 ? current - 1 : 0))
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [resendKey, locked])
+  }, [resendKey])
+
+  // Arriving on this step, the only thing to do is type the code, so the
+  // caret is already in the first box.
+  useEffect(() => {
+    inputsRef.current[0]?.focus()
+  }, [])
 
   const expired = secondsLeft === 0
 
@@ -106,7 +108,6 @@ function ResetCodeCard({
     <ResetCard
       title="تأكد من رسائلك"
       subtitle={`ادخل الكود المرسل المكون من ${OTP_LENGTH} ارقام`}
-      locked={locked}
       gap={32}
     >
       <form

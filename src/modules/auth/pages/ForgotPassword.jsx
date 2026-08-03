@@ -41,21 +41,16 @@ function ForgotPassword() {
   const [resendKey, setResendKey] = useState(0)
   const [done, setDone] = useState(false)
 
-  const codeCardRef = useRef(null)
-  const passwordCardRef = useRef(null)
+  const stepRef = useRef(null)
 
-  // A step opening lower down the page is easy to miss on a laptop, so the
-  // page brings it into view — smoothly, and only when it actually unlocks.
+  // Steps differ in height, so after a swap the card can start above the fold
+  // on a short window. Bringing its top back into view keeps the heading of
+  // the new step where the last one was.
   const revealStep = (nextStep) => {
     setStep(nextStep)
 
-    const target =
-      nextStep === RESET_STEPS.code
-        ? codeCardRef.current
-        : passwordCardRef.current
-
     window.requestAnimationFrame(() => {
-      target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      stepRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
   }
 
@@ -165,55 +160,62 @@ function ForgotPassword() {
         {/* The rail comes after the cards in the source so a keyboard and a
             screen reader reach the form first; `order` puts it back on the
             side the frame draws it. */}
-        <div className="flex min-w-0 flex-1 flex-col gap-[24px] xl:order-2">
-          <ResetMethodCard
-            method={method}
-            onMethodChange={handleMethodChange}
-            identifier={identifier}
-            onIdentifierChange={(value) => {
-              setIdentifier(value)
-              setErrors((current) => ({ ...current, identifier: '' }))
-            }}
-            error={errors.identifier}
-            submitting={submitting && step === RESET_STEPS.method}
-            onSubmit={handleSendCode}
-            locked={step !== RESET_STEPS.method}
-          />
+        {/* One step at a time. Re-keying on the step is what makes the swap an
+            animation rather than a re-render: the outgoing card leaves, the
+            incoming one plays its entrance. */}
+        <div
+          ref={stepRef}
+          className="min-w-0 flex-1 scroll-mt-[24px] xl:order-2"
+        >
+          <div key={step} className="reset-step-enter">
+            {step === RESET_STEPS.method ? (
+              <ResetMethodCard
+                method={method}
+                onMethodChange={handleMethodChange}
+                identifier={identifier}
+                onIdentifierChange={(value) => {
+                  setIdentifier(value)
+                  setErrors((current) => ({ ...current, identifier: '' }))
+                }}
+                error={errors.identifier}
+                submitting={submitting}
+                onSubmit={handleSendCode}
+              />
+            ) : null}
 
-          <div ref={codeCardRef} className="scroll-mt-[24px]">
-            <ResetCodeCard
-              digits={digits}
-              onDigitsChange={(next) => {
-                setDigits(next)
-                setErrors((current) => ({ ...current, code: '' }))
-              }}
-              error={errors.code}
-              submitting={submitting && step === RESET_STEPS.code}
-              onSubmit={handleVerify}
-              onResend={handleResend}
-              resendKey={resendKey}
-              locked={step !== RESET_STEPS.code}
-            />
-          </div>
+            {step === RESET_STEPS.code ? (
+              <ResetCodeCard
+                digits={digits}
+                onDigitsChange={(next) => {
+                  setDigits(next)
+                  setErrors((current) => ({ ...current, code: '' }))
+                }}
+                error={errors.code}
+                submitting={submitting}
+                onSubmit={handleVerify}
+                onResend={handleResend}
+                resendKey={resendKey}
+              />
+            ) : null}
 
-          <div ref={passwordCardRef} className="scroll-mt-[24px]">
-            <ResetPasswordCard
-              password={password}
-              confirmPassword={confirmPassword}
-              onPasswordChange={(value) => {
-                setPassword(value)
-                setErrors((current) => ({ ...current, password: '' }))
-              }}
-              onConfirmPasswordChange={(value) => {
-                setConfirmPassword(value)
-                setErrors((current) => ({ ...current, confirmPassword: '' }))
-              }}
-              errors={errors}
-              submitError={errors.submit}
-              submitting={submitting && step === RESET_STEPS.password}
-              onSubmit={handleReset}
-              locked={step !== RESET_STEPS.password}
-            />
+            {step === RESET_STEPS.password ? (
+              <ResetPasswordCard
+                password={password}
+                confirmPassword={confirmPassword}
+                onPasswordChange={(value) => {
+                  setPassword(value)
+                  setErrors((current) => ({ ...current, password: '' }))
+                }}
+                onConfirmPasswordChange={(value) => {
+                  setConfirmPassword(value)
+                  setErrors((current) => ({ ...current, confirmPassword: '' }))
+                }}
+                errors={errors}
+                submitError={errors.submit}
+                submitting={submitting}
+                onSubmit={handleReset}
+              />
+            ) : null}
           </div>
         </div>
 

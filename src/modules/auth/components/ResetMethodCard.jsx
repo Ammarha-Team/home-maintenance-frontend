@@ -41,7 +41,6 @@ function ResetMethodCard({
   error,
   submitting,
   onSubmit,
-  locked,
 }) {
   const isEmail = method === RESET_METHODS.email
 
@@ -49,7 +48,6 @@ function ResetMethodCard({
     <ResetCard
       title="هل نسيت كلمة المرور؟"
       subtitle="من فضلك قم باختيار الوسيلة لاستقبال كود التحقق لإعادة تعيين كلمة مرورك"
-      locked={locked}
     >
       <div className="flex w-full flex-col gap-[12px] sm:flex-row">
         {OPTIONS.map(({ id, label, hint, Icon }) => {

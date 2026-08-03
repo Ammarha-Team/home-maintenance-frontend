@@ -106,11 +106,47 @@ body {
   animation: signup-hero-fade 360ms ease both;
 }
 
-/* Password reset. The three steps live on one page, so a step opening is the
-   only thing that moves: the card that just unlocked rises into place, the same
-   distance and curve as the sign up fields so the two flows feel related. */
+/* Password reset. One step is on screen at a time, so the step change is the
+   whole transition: the outgoing card is replaced and the incoming one rises
+   and settles into it. The slight scale is what keeps a swap from reading as a
+   page load — it lands rather than appears. */
+@keyframes reset-step-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reset-step-enter {
+  animation: reset-step-enter 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Smaller moves inside a step (the identifier field swapping with the method)
+   keep the sign up curve, so the two flows still feel related. */
 .reset-card-enter {
   animation: signup-content-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The stepper mark overshoots slightly as it takes over, which is what makes
+   the rail read as advancing rather than merely recolouring. */
+@keyframes reset-mark-pop {
+  0% {
+    transform: scale(0.72);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.reset-mark-pop {
+  animation: reset-mark-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 /* The confirmation is a dialog rather than a step, so it scales in from the
@@ -139,6 +175,8 @@ body {
   .signup-content-enter,
   .signup-hero-fade,
   .reset-card-enter,
+  .reset-step-enter,
+  .reset-mark-pop,
   .reset-modal-enter,
   .reset-backdrop-enter {
     animation: none;
