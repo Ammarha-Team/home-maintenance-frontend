@@ -19,7 +19,6 @@ export default function Navbar() {
           />
         </Link>
 
-
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-gray-600 text-sm">
 
@@ -30,29 +29,19 @@ export default function Navbar() {
             الرئيسية
           </Link>
 
-          <Link
-            to="/servicesSection"
-            className="hover:text-blue-600 transition"
-          >
+          <span className="cursor-pointer hover:text-blue-600 transition">
             الخدمات
-          </Link>
+          </span>
 
-          <Link
-            to="/HowItWorks"
-            className="hover:text-blue-600 transition"
-          >
+          <span className="cursor-pointer hover:text-blue-600 transition">
             عن المنصة
-          </Link>
+          </span>
 
-          <Link
-            to="/Footer"
-            className="hover:text-blue-600 transition"
-          >
+          <span className="cursor-pointer hover:text-blue-600 transition">
             تواصل معنا
-          </Link>
+          </span>
 
         </div>
-
 
         {/* Desktop Buttons */}
         <div className="hidden md:flex gap-3">
@@ -60,36 +49,34 @@ export default function Navbar() {
           <Link
             to="/login"
             className="
-            border border-blue-500 
-            text-blue-600 
-            px-5 py-2 
-            rounded-lg 
-            text-sm
-            hover:bg-blue-50
-            transition
+              border border-blue-500
+              text-blue-600
+              px-5 py-2
+              rounded-lg
+              text-sm
+              hover:bg-blue-50
+              transition
             "
           >
             تسجيل الدخول
           </Link>
 
-
           <Link
             to="/register"
             className="
-            bg-blue-600 
-            text-white 
-            px-5 py-2 
-            rounded-lg 
-            text-sm
-            hover:bg-blue-700
-            transition
+              bg-blue-600
+              text-white
+              px-5 py-2
+              rounded-lg
+              text-sm
+              hover:bg-blue-700
+              transition
             "
           >
             إنشاء حساب
           </Link>
 
         </div>
-
 
         {/* Mobile Menu Button */}
         <button
@@ -100,7 +87,6 @@ export default function Navbar() {
         </button>
 
       </div>
-
 
       {/* Mobile Menu */}
       {open && (
@@ -113,56 +99,50 @@ export default function Navbar() {
             الرئيسية
           </Link>
 
-
-          <Link
-            to="servicesSection"
+          <span
+            className="cursor-pointer"
             onClick={() => setOpen(false)}
           >
             الخدمات
-          </Link>
+          </span>
 
-
-          <Link
-            to="/HowItWorks"
+          <span
+            className="cursor-pointer"
             onClick={() => setOpen(false)}
           >
             عن المنصة
-          </Link>
+          </span>
 
-
-          <Link
-            to="/Footer"
+          <span
+            className="cursor-pointer"
             onClick={() => setOpen(false)}
           >
             تواصل معنا
-          </Link>
-
-
+          </span>
 
           <Link
             to="/login"
             onClick={() => setOpen(false)}
             className="
-            border border-blue-500 
-            text-blue-600 
-            py-2 
-            rounded-lg 
-            text-center
+              border border-blue-500
+              text-blue-600
+              py-2
+              rounded-lg
+              text-center
             "
           >
             تسجيل الدخول
           </Link>
 
-
           <Link
             to="/register"
             onClick={() => setOpen(false)}
             className="
-            bg-blue-600 
-            text-white 
-            py-2 
-            rounded-lg 
-            text-center
+              bg-blue-600
+              text-white
+              py-2
+              rounded-lg
+              text-center
             "
           >
             إنشاء حساب
