@@ -1,2 +1,105 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
 @import "tailwindcss";
+
+/* Design tokens for the auth screens. Names follow the design system
+   collections so design and code stay in sync. */
+@theme {
+  --font-cairo: 'Cairo', system-ui, sans-serif;
+
+  --color-primary-50: #eaf1fd;
+  --color-primary-100: #bdd3f8;
+  --color-primary-300: #709ff1;
+  --color-primary-400: #558dee;
+  --color-primary-500: #2a70ea;
+  --color-primary-700: #1e50a6;
+  --color-primary-900: #122f62;
+
+  --color-error-50: #f5e8e8;
+  --color-error-500: #9e1515;
+
+  --color-text-200: #949494;
+  --color-text-300: #636363;
+  --color-text-400: #454545;
+  --color-text-500: #161616;
+  --color-text-secondary: #5d5d5d;
+  --color-text-tertiary: #929292;
+
+  --color-accent-100: #dddddd;
+  --color-accent-600: #858585;
+
+  --color-warning-500: #ff9800;
+  --color-dark: #141b34;
+
+  --color-surface: #fafafa;
+  --color-card: #f6f7f9;
+  --color-line: #e8ebf1;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  font-family: var(--font-cairo);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Vertical rhythm for the auth shell.
+
+   The login design is 1024 tall. 521px of that is content that cannot shrink
+   without breaking the design — the 56px fields and their labels, the
+   segmented control, the submit button, the social row, the headings. The
+   remaining 503px is pure spacing: the column's top and bottom padding plus
+   eight gaps, every one of them a multiple of 8px, 62.875 steps in total.
+
+   Deriving that step from the viewport lets the whitespace absorb a short
+   window instead of pushing the form under a scrollbar, and the 8px cap means
+   1024 and taller render the design's own numbers exactly. The 2px floor is the
+   point below which the page legitimately scrolls (around 650px tall). */
+.auth-rhythm {
+  --auth-unit: clamp(2px, calc((100vh - 521px) / 62.875), 8px);
+}
+
+/* Sign up role switch (customer <-> technician). The panel stays mounted, so
+   only the parts that actually differ move: the fields fade up, the
+   illustration cross-fades, and the segmented control slides its indicator
+   (that one is a transform transition, not a keyframe). */
+@keyframes signup-content-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.signup-content-enter {
+  animation: signup-content-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes signup-hero-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.signup-hero-fade {
+  animation: signup-hero-fade 360ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signup-content-enter,
+  .signup-hero-fade {
+    animation: none;
+  }
+}
