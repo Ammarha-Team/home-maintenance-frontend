@@ -31,21 +31,21 @@ export default function Navbar() {
           </Link>
 
           <Link
-            to="/services"
+            to="/servicesSection"
             className="hover:text-blue-600 transition"
           >
             الخدمات
           </Link>
 
           <Link
-            to="/about"
+            to="/HowItWorks"
             className="hover:text-blue-600 transition"
           >
             عن المنصة
           </Link>
 
           <Link
-            to="/contact"
+            to="/Footer"
             className="hover:text-blue-600 transition"
           >
             تواصل معنا
@@ -115,7 +115,7 @@ export default function Navbar() {
 
 
           <Link
-            to="/services"
+            to="servicesSection"
             onClick={() => setOpen(false)}
           >
             الخدمات
@@ -123,7 +123,7 @@ export default function Navbar() {
 
 
           <Link
-            to="/about"
+            to="/HowItWorks"
             onClick={() => setOpen(false)}
           >
             عن المنصة
@@ -131,7 +131,7 @@ export default function Navbar() {
 
 
           <Link
-            to="/contact"
+            to="/Footer"
             onClick={() => setOpen(false)}
           >
             تواصل معنا
