@@ -1,9 +1,10 @@
 import React from 'react';
 import UserNavbar from "../../../shared/components/HomeNavbar";
+import ServicesSection from "../../../shared/components/ServicesSection";
+import HowItWorks from "../../../shared/components/HowItWorks";
 import LocationHeader from '../components/LocationHeader';
 import QuickActions from '../components/QuickActions';
-// import SearchBar from '../components/SearchBar';
-// import ServiceCategories from '../components/ServiceCategories';
+import Footer from "../../../shared/components/Footer";
 
 export default function Home() {
   return (
@@ -13,9 +14,10 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-6 py-6 flex-1 w-full space-y-6">
         <LocationHeader />
         <QuickActions />
-        {/* <SearchBar /> */}
-        {/* <ServiceCategories /> */}
+        <ServicesSection />
+        <HowItWorks />
       </main>
+      <Footer />
     </div>
   );
 }
