@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import termsHero from '../../../assets/auth/terms-hero.png'
 import SignUpLayout from '../components/SignUpLayout.jsx'
 import SignUpStepper from '../components/SignUpStepper.jsx'
@@ -14,6 +14,7 @@ const TERMS_HERO_CROP = { width: 913 / 517, offsetX: -198 / 517 }
 // Figma: "Create an account (for the customer)" step 3 of 3 (node 6:1446)
 function CustomerSignUpTerms() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [accepted, setAccepted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -27,6 +28,10 @@ function CustomerSignUpTerms() {
 
     try {
       await registerCustomer(details)
+      // Last step of the flow — the account exists, so the new customer goes
+      // straight to their home area. `replace` keeps the terms step out of the
+      // history, which would otherwise re-submit on a back navigation.
+      navigate('/home', { replace: true })
     } catch {
       setSubmitError('تعذر إنشاء الحساب، حاول مرة أخرى لاحقًا.')
     } finally {
