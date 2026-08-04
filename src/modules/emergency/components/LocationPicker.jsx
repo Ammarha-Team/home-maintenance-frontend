@@ -1,27 +1,113 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Crosshair, MapPin } from 'lucide-react'
 import ServiceMap from '../../../shared/components/ServiceMap.jsx'
+import {
+  MIN_QUERY_LENGTH,
+  SEARCH_DEBOUNCE_MS,
+  reverseGeocode,
+  searchAddress,
+} from '../../../shared/services/geocoding.js'
 
 /**
- * Service location: either the device's current position or a typed address.
+ * Service location: the device's position, a point on the map, or a typed
+ * address — the three kept in step through Nominatim.
  *
  * Layout follows the Figma section (node 17:1697): a tinted panel holding the
- * map preview and the controls side by side, preview first in reading order so
- * it lands on the left of the RTL row. The design's fixed 360/625 split becomes
- * a fixed-basis preview beside a fluid column, and the row stacks under `sm` so
- * neither half is squeezed on a phone.
+ * map and the controls side by side, with the controls first in reading order
+ * so the map lands on the left of the RTL row. The design's fixed 360/625 split
+ * becomes a fixed-basis map beside a fluid column, and the row stacks under
+ * `lg` so neither half is squeezed.
  *
- * The frame drew a map tile, but no map provider is configured in this project
- * and adding one is a dependency decision rather than a styling one. The
- * preview keeps the design's box — proportion, radius, border — and the
- * resolved position is stated in words below the controls, so swapping in a
- * real map touches only the markup inside that box.
+ * `mode` records where the current value came from, and is what stops the two
+ * directions of geocoding from chasing each other: only a typed address (mode
+ * `manual`) triggers a forward search, and the reverse lookups that fill the
+ * field from the map write mode `map` or `current` instead.
  */
 function LocationPicker({ value, onChange, error }) {
   const [locating, setLocating] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const [resolving, setResolving] = useState(false)
   const [geoError, setGeoError] = useState('')
   const fieldId = useId()
   const errorId = `${fieldId}-error`
+
+  // Held in a ref so the debounced search below depends on the typed text
+  // alone. The parent passes a new inline handler every render, and depending
+  // on it would restart the timer on each keystroke of unrelated form state.
+  const onChangeRef = useRef(onChange)
+  useEffect(() => {
+    onChangeRef.current = onChange
+  })
+
+  const reverseRequest = useRef(null)
+
+  // Fills the address field from a position. Applies the coordinates first so
+  // the marker moves immediately, then again with the address once it arrives —
+  // a lookup over the network should not hold up the map.
+  const applyPosition = async (coords, mode) => {
+    reverseRequest.current?.abort()
+    const controller = new AbortController()
+    reverseRequest.current = controller
+
+    onChange({ mode, address: '', coords })
+    setGeoError('')
+    setResolving(true)
+
+    try {
+      const address = await reverseGeocode(coords, { signal: controller.signal })
+      if (controller.signal.aborted) return
+      onChangeRef.current({ mode, address: address ?? '', coords })
+    } catch (requestError) {
+      if (requestError.name === 'AbortError') return
+      setGeoError('تعذّر جلب العنوان لهذا الموقع. الإحداثيات محفوظة.')
+    } finally {
+      if (!controller.signal.aborted) setResolving(false)
+    }
+  }
+
+  useEffect(() => () => reverseRequest.current?.abort(), [])
+
+  // Forward search. Only a typed address runs it, so an address written into
+  // the field by a reverse lookup cannot bounce back as a new search.
+  const typed = value.mode === 'manual' ? value.address : ''
+
+  useEffect(() => {
+    if (typed.trim().length < MIN_QUERY_LENGTH) return undefined
+
+    const controller = new AbortController()
+    const timer = setTimeout(() => {
+      setSearching(true)
+
+      searchAddress(typed, { signal: controller.signal })
+        .then((match) => {
+          if (controller.signal.aborted) return
+
+          if (!match) {
+            setGeoError('لم نعثر على هذا العنوان. جرّب صياغة أخرى أو حدّده على الخريطة.')
+            return
+          }
+
+          setGeoError('')
+          onChangeRef.current({
+            mode: 'manual',
+            address: typed,
+            coords: match.coords,
+          })
+        })
+        .catch((requestError) => {
+          if (requestError.name === 'AbortError') return
+          setGeoError('تعذّر البحث عن العنوان الآن. حدّد موقعك على الخريطة.')
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setSearching(false)
+        })
+    }, SEARCH_DEBOUNCE_MS)
+
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
+  }, [typed])
 
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -35,14 +121,10 @@ function LocationPicker({ value, onChange, error }) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocating(false)
-        onChange({
-          mode: 'current',
-          address: 'الموقع الحالي للجهاز',
-          coords: {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          },
-        })
+        applyPosition(
+          { lat: position.coords.latitude, lng: position.coords.longitude },
+          'current',
+        )
       },
       () => {
         setLocating(false)
@@ -52,21 +134,27 @@ function LocationPicker({ value, onChange, error }) {
     )
   }
 
-  // Coordinates win when there are any, whether they came from the device or
-  // from a tap on the map; a typed address is what is left to show otherwise.
-  const resolved = value.coords
-    ? `${value.coords.lat.toFixed(4)}، ${value.coords.lng.toFixed(4)}`
-    : value.address
+  // One status line, as before — it just has more to report now. Progress wins
+  // over the resolved value so the user can tell a stale reading from a fresh
+  // one while a lookup is still running.
+  let status = 'حدّد موقعك ليصل الفني بأسرع وقت.'
+  if (searching) status = 'جارٍ البحث عن العنوان…'
+  else if (resolving) status = 'جارٍ تحديد العنوان…'
+  else if (value.coords)
+    status = `${value.coords.lat.toFixed(4)}، ${value.coords.lng.toFixed(4)}`
+  else if (value.address) status = value.address
+
+  const showLabel = !searching && !resolving && Boolean(value.coords || value.address)
 
   // The row splits at `lg`, not earlier: inside the dialog the panel is
   // narrower than the page, and at tablet width a side-by-side split left the
-  // controls narrower than the preview — the reverse of the design's
-  // proportion. Below that the two stack at full width.
+  // controls narrower than the map — the reverse of the design's proportion.
+  // Below that the two stack at full width.
   return (
     <div className="flex flex-col gap-[16px] rounded-[20px] border border-line bg-primary-50 p-[16px] md:rounded-[24px] md:p-[20px] lg:flex-row lg:items-start lg:gap-[24px] lg:p-[25px]">
       {/* Controls come first in the DOM: they are the interactive half, and in
           an RTL row the first child is the rightmost — which is where the frame
-          puts them, leaving the preview on the left. */}
+          puts them, leaving the map on the left. */}
       <div className="flex min-w-0 flex-1 flex-col gap-[12px] md:gap-[16px]">
         <button
           type="button"
@@ -98,15 +186,20 @@ function LocationPicker({ value, onChange, error }) {
               aria-hidden="true"
               className="shrink-0 text-text-300"
             />
+            {/* Shows the address whatever set it, so a point picked on the map
+                reads back here as text rather than leaving the field empty. */}
             <input
               id={fieldId}
               type="text"
-              value={value.mode === 'manual' ? value.address : ''}
+              value={value.address}
               onChange={(event) =>
                 onChange({
                   mode: 'manual',
                   address: event.target.value,
-                  coords: null,
+                  // The last known position is kept while typing. Clearing it
+                  // would send the map back to its default view between
+                  // keystrokes, and the search replaces it when it resolves.
+                  coords: value.coords,
                 })
               }
               placeholder="شارع التخصصي، منطقة بوصلة"
@@ -117,15 +210,14 @@ function LocationPicker({ value, onChange, error }) {
           </div>
         </div>
 
-        <p className="text-right text-[13px] leading-[1.6] text-text-400">
-          {resolved ? (
-            <>
-              <span className="font-bold text-text-500">الموقع المحدد: </span>
-              {resolved}
-            </>
-          ) : (
-            'حدّد موقعك ليصل الفني بأسرع وقت.'
-          )}
+        <p
+          aria-live="polite"
+          className="text-right text-[13px] leading-[1.6] text-text-400"
+        >
+          {showLabel ? (
+            <span className="font-bold text-text-500">الموقع المحدد: </span>
+          ) : null}
+          {status}
         </p>
 
         {error ? (
@@ -148,20 +240,12 @@ function LocationPicker({ value, onChange, error }) {
         ) : null}
       </div>
 
-      {/* Preview. Fixed basis from `sm` up so it holds the design's proportion
-          beside the fluid column; full width when the row stacks. The box keeps
-          the size and breakpoints it had as a placeholder — only its contents
-          changed, from a drawn grid to the shared map. */}
+      {/* The map. Fixed basis from `lg` up so it holds the design's proportion
+          beside the fluid column; full width when the row stacks. */}
       <div className="relative w-full shrink-0 overflow-hidden rounded-[16px] border border-accent-100 bg-white lg:w-[300px] xl:w-[360px]">
         <ServiceMap
           value={value.coords}
-          onChange={(coords) =>
-            onChange({
-              mode: 'map',
-              address: 'موقع محدد على الخريطة',
-              coords,
-            })
-          }
+          onChange={(coords) => applyPosition(coords, 'map')}
           className="h-[150px] w-full sm:h-[172px] lg:h-[187px]"
         />
       </div>
