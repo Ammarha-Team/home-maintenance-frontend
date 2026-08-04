@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { Crosshair, MapPin } from 'lucide-react'
+import ServiceMap from '../../../shared/components/ServiceMap.jsx'
 
 /**
  * Service location: either the device's current position or a typed address.
@@ -51,10 +52,11 @@ function LocationPicker({ value, onChange, error }) {
     )
   }
 
-  const resolved =
-    value.mode === 'current' && value.coords
-      ? `${value.coords.lat.toFixed(4)}، ${value.coords.lng.toFixed(4)}`
-      : value.address
+  // Coordinates win when there are any, whether they came from the device or
+  // from a tap on the map; a typed address is what is left to show otherwise.
+  const resolved = value.coords
+    ? `${value.coords.lat.toFixed(4)}، ${value.coords.lng.toFixed(4)}`
+    : value.address
 
   // The row splits at `lg`, not earlier: inside the dialog the panel is
   // narrower than the page, and at tablet width a side-by-side split left the
@@ -147,15 +149,21 @@ function LocationPicker({ value, onChange, error }) {
       </div>
 
       {/* Preview. Fixed basis from `sm` up so it holds the design's proportion
-          beside the fluid column; full width when the row stacks. */}
+          beside the fluid column; full width when the row stacks. The box keeps
+          the size and breakpoints it had as a placeholder — only its contents
+          changed, from a drawn grid to the shared map. */}
       <div className="relative w-full shrink-0 overflow-hidden rounded-[16px] border border-accent-100 bg-white lg:w-[300px] xl:w-[360px]">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(0deg,var(--color-line)_1px,transparent_1px),linear-gradient(90deg,var(--color-line)_1px,transparent_1px)] bg-[size:26px_26px] opacity-70"
+        <ServiceMap
+          value={value.coords}
+          onChange={(coords) =>
+            onChange({
+              mode: 'map',
+              address: 'موقع محدد على الخريطة',
+              coords,
+            })
+          }
+          className="h-[150px] w-full sm:h-[172px] lg:h-[187px]"
         />
-        <div className="relative grid h-[150px] place-items-center sm:h-[172px] lg:h-[187px]">
-          <MapPin size={30} aria-hidden="true" className="text-error-500" />
-        </div>
       </div>
     </div>
   )
