@@ -12,6 +12,18 @@ import TechnicianSignUpTerms from "../modules/auth/pages/TechnicianSignUpTerms.j
 import LandingPage from "../landing/pages/LandingPage";
 import Home from "../modules/home/pages/Home";
 
+import Profile from "../modules/profile/pages/Profile";
+import Settings from "../modules/profile/pages/Settings";
+
+import ChangePassword from "../modules/profile/pages/ChangePassword";
+import Notifications from "../modules/profile/pages/Notifications";
+import Language from "../modules/profile/pages/Language";
+import HelpSupport from "../modules/profile/pages/HelpSupport.jsx";
+import PrivacyPolicy from "../modules/profile/pages/PrivacyPolicy";
+import Terms from "../modules/profile/pages/Terms";
+import About from "../modules/profile/pages/About";
+import SavedAddresses from "../modules/profile/pages/SavedAddresses.jsx";
+
 function AppRoutes() {
   return (
     <Routes>
@@ -40,6 +52,20 @@ function AppRoutes() {
       />
 
       <Route path="*" element={<Navigate to="/" replace />} />
+
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/settings" element={<Settings />} />
+
+      <Route path="/change-password" element={<ChangePassword />} />
+      <Route path="/notifications" element={<Notifications />} />
+      <Route path="/language" element={<Language />} />
+      <Route path="/help-support" element={<HelpSupport />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/savedaddresses" element={<SavedAddresses />} />
+
+      
     </Routes>
   );
 }
