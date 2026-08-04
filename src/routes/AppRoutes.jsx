@@ -13,6 +13,11 @@ import TechnicianSignUpTerms from "../modules/auth/pages/TechnicianSignUpTerms.j
 import LandingPage from "../landing/pages/LandingPage";
 import Home from "../modules/home/pages/Home";
 
+import { EMERGENCY_ROUTES } from "../modules/emergency/constants/emergency.js";
+import EmergencyRequest from "../modules/emergency/pages/EmergencyRequest.jsx";
+import EmergencyTracking from "../modules/emergency/pages/EmergencyTracking.jsx";
+import EmergencyRating from "../modules/emergency/pages/EmergencyRating.jsx";
+
 import Profile from "../modules/profile/pages/Profile";
 import Settings from "../modules/profile/pages/Settings";
 
@@ -53,6 +58,20 @@ function AppRoutes() {
         path={AUTH_ROUTES.technicianSignUpTerms}
         element={<TechnicianSignUpTerms />}
       />
+
+      {/* Emergency service. The home screen's quick actions already point at
+          /emergency-diagnosis, so that path is kept as an alias rather than
+          changing a link this feature does not own. */}
+      <Route path={EMERGENCY_ROUTES.request} element={<EmergencyRequest />} />
+      <Route
+        path={EMERGENCY_ROUTES.requestAlias}
+        element={<EmergencyRequest />}
+      />
+      <Route
+        path={EMERGENCY_ROUTES.tracking}
+        element={<EmergencyTracking />}
+      />
+      <Route path={EMERGENCY_ROUTES.rating} element={<EmergencyRating />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
 

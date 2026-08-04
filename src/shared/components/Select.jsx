@@ -32,7 +32,7 @@ function Select({
 
       <div
         style={{ height }}
-        className={`flex w-full items-center gap-[8px] rounded-[12px] border bg-card px-[12px] py-[15px] ${
+        className={`flex w-full items-center gap-[8px] rounded-[12px] border bg-card px-[12px] ${
           error ? 'border-red-500' : 'border-line'
         } ${className}`}
       >
@@ -45,7 +45,9 @@ function Select({
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
           style={{ fontSize }}
-          className="w-full cursor-pointer bg-transparent text-right leading-[1.5] text-text-500 outline-none"
+          // h-full so the whole field opens the picker — the native control is
+          // ~31px inside a 52px wrapper, leaving the padding dead to touch.
+          className="h-full w-full cursor-pointer bg-transparent text-right leading-[1.5] text-text-500 outline-none"
           {...props}
         >
           <option value="" disabled>

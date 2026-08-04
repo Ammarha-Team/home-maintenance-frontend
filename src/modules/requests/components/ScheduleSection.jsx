@@ -1,31 +1,12 @@
-import { useState } from "react";
-import { Clock, MapPin } from "lucide-react";
+import { Clock } from "lucide-react";
 
 import CustomCalendar from "./CustomCalendar";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-
-import L from "leaflet";
-
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
-
+// The map, its tile layer and the Leaflet default-marker fix all live in
+// ServiceMap now, which MapPicker renders — nothing map-related is needed here.
 import MapPicker from "./MapPicker";
-delete L.Icon.Default.prototype._getIconUrl;
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
 
 export default function ScheduleSection() {
-  const [date, setDate] = useState(new Date());
-
-  const position = [30.0444, 31.2357];
-
   return (
     <div className="space-y-6">
       {/* العنوان */}
