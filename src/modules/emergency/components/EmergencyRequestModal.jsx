@@ -145,8 +145,8 @@ function EmergencyRequestModal({ open, onClose, onConfirmed }) {
           </div>
         </div>
 
-        <section className="flex flex-col gap-[12px]">
-          <h3 className="text-right text-[15px] leading-[1.5] font-bold text-text-400 md:text-[18px]">
+        <section className="flex flex-col gap-[16px] md:gap-[24px]">
+          <h3 className="text-right text-[16px] leading-[1.5] font-bold text-text-400 md:text-[20px]">
             موقع الخدمة
           </h3>
           <LocationPicker
