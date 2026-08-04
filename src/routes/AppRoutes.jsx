@@ -8,15 +8,18 @@ import Login from "../modules/auth/pages/Login.jsx";
 import SignUpInfo from "../modules/auth/pages/SignUpInfo.jsx";
 import CustomerSignUpTerms from "../modules/auth/pages/CustomerSignUpTerms.jsx";
 import TechnicianSignUpTerms from "../modules/auth/pages/TechnicianSignUpTerms.jsx";
-
 import LandingPage from "../landing/pages/LandingPage";
 import Home from "../modules/home/pages/Home";
+import MyOrders from "../modules/orders/pages/MyOrders.jsx";
+import { ORDERS_ROUTES } from "../modules/orders/constants/ordersRoutes.js";
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
+      <Route path={ORDERS_ROUTES.myOrders} element={<MyOrders />} />
+      <Route path="/orders" element={<Navigate to={ORDERS_ROUTES.myOrders} replace />} />
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
 
