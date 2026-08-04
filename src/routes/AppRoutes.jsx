@@ -35,6 +35,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
+      
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
       <Route path={AUTH_ROUTES.forgotPassword} element={<ForgotPassword />} />

@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function QuickActions() {
+export default function QuickActions({ onRequestClick }) {
   const navigate = useNavigate();
 
   return (
@@ -80,7 +80,7 @@ export default function QuickActions() {
 
 
           <button
-            onClick={() => navigate("/request-service")}
+            onClick={onRequestClick}
             className="
               bg-blue-600
               hover:bg-blue-700
