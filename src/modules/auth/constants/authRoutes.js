@@ -2,7 +2,8 @@
 // strings in links, redirects and route definitions.
 export const AUTH_ROUTES = {
   login: '/login',
-  // Screen not in this Figma scope yet — the route falls through to login.
+  // The whole reset flow — pick a method, enter the code, set the password —
+  // lives on this one route, the way the frame draws it.
   forgotPassword: '/forgot-password',
   customerSignUp: '/signup/customer',
   customerSignUpTerms: '/signup/customer/terms',
