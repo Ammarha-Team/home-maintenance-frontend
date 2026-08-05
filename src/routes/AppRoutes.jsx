@@ -4,7 +4,9 @@ import {
   SIGN_UP_INFO_PATTERN,
 } from "../modules/auth/constants/authRoutes.js";
 
+import ConfirmEmail from "../modules/auth/pages/ConfirmEmail.jsx";
 import ForgotPassword from "../modules/auth/pages/ForgotPassword.jsx";
+import ResetPassword from "../modules/auth/pages/ResetPassword.jsx";
 import Login from "../modules/auth/pages/Login.jsx";
 import SignUpInfo from "../modules/auth/pages/SignUpInfo.jsx";
 import CustomerSignUpTerms from "../modules/auth/pages/CustomerSignUpTerms.jsx";
@@ -20,6 +22,7 @@ import EmergencyRating from "../modules/emergency/pages/EmergencyRating.jsx";
 
 import { TECHNICIAN_ROUTES } from "../modules/technician/constants/technicianRoutes.js";
 import TechnicianDashboard from "../modules/technician/pages/TechnicianDashboard.jsx";
+import TechnicianRoute from "./TechnicianRoute.jsx";
 
 import Profile from "../modules/profile/pages/Profile";
 import Settings from "../modules/profile/pages/Settings";
@@ -42,6 +45,15 @@ function AppRoutes() {
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
       <Route path={AUTH_ROUTES.forgotPassword} element={<ForgotPassword />} />
+
+      {/* Landing page for the confirmation mail. The backend has to point the
+          link here instead of at its own dev address for it to be reachable
+          from an inbox. */}
+      <Route path={AUTH_ROUTES.confirmEmail} element={<ConfirmEmail />} />
+
+      {/* Landing page for the reset mail. The link must point here rather than
+          at the API's POST endpoint, which a browser cannot open. */}
+      <Route path={AUTH_ROUTES.resetPassword} element={<ResetPassword />} />
 
       {/* The site header links here for "إنشاء حساب". Sign up is split by role
           and starts on the customer step, so /register is an entry point into
@@ -81,7 +93,11 @@ function AppRoutes() {
           technician screens land on their own branches. */}
       <Route
         path={TECHNICIAN_ROUTES.dashboard}
-        element={<TechnicianDashboard />}
+        element={
+          <TechnicianRoute>
+            <TechnicianDashboard />
+          </TechnicianRoute>
+        }
       />
 
       <Route path="*" element={<Navigate to="/" replace />} />

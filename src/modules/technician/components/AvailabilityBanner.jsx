@@ -5,7 +5,7 @@
  * keyboard and screen-reader behaviour of a control; `role="switch"` reports
  * on/off instead of checked/unchecked, which is what the label describes.
  */
-function AvailabilityBanner({ name, available, onAvailabilityChange }) {
+function AvailabilityBanner({ name, email, available, onAvailabilityChange }) {
   return (
     <section className="flex flex-col gap-[20px] rounded-[12px] bg-white p-[24px] shadow-card md:flex-row md:items-center md:justify-between md:p-[40px]">
       {/* The greeting is first in the DOM and the row is not reversed: in an
@@ -13,14 +13,24 @@ function AvailabilityBanner({ name, available, onAvailabilityChange }) {
           puts the greeting, leaving the switch at the left. Below `md` the two
           stack and the greeting still leads. */}
       <div className="flex flex-col gap-[4px] text-right">
+        {/* The name is dropped rather than faked when the backend has not
+            returned one, so the greeting reads as a greeting either way. */}
         <h1 className="text-[26px] leading-[1.5] font-bold text-primary-500 md:text-[35px]">
-          مرحباً بك، {name}
+          {name ? `مرحباً بك، ${name}` : 'مرحباً بك'}
         </h1>
         <p className="text-[16px] leading-[1.5] text-text-400 md:text-[20px]">
           {available
             ? 'أنت متصل الآن وجاهز لاستقبال الطلبات'
             : 'أنت غير متصل ولن تصلك طلبات جديدة'}
         </p>
+
+        {/* The account behind the session. Shown because the greeting alone
+            cannot tell a technician which of several logins they are in. */}
+        {email ? (
+          <p className="text-[13px] leading-[1.5] break-all text-text-200">
+            {email}
+          </p>
+        ) : null}
       </div>
 
       <label className="flex w-fit cursor-pointer items-center gap-[12px] rounded-[12px] bg-primary-50 p-[12px]">

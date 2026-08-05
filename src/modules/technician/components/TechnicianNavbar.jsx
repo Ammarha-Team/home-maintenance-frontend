@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Bell, User } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Bell, LogOut, Settings, User } from 'lucide-react'
 import logo from '../../../assets/brand/logo.png'
+import { AUTH_ROUTES } from '../../auth/constants/authRoutes.js'
+import {
+  clearSession,
+  readSession,
+} from '../../auth/services/authSession.js'
 import { TECHNICIAN_NAV_ITEMS } from '../constants/technicianRoutes.js'
 
 /**
@@ -15,6 +20,19 @@ import { TECHNICIAN_NAV_ITEMS } from '../constants/technicianRoutes.js'
 function TechnicianNavbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+
+  const email = readSession()?.user?.email ?? ''
+
+  // Clears the client's half of the session. The refresh token is a cookie the
+  // server owns; `logout` cannot be called from the browser until the API
+  // stops answering preflight with a wildcard origin, so that cookie is left to
+  // expire rather than pretended to be revoked.
+  const handleSignOut = () => {
+    clearSession()
+    setMenuOpen(false)
+    navigate(AUTH_ROUTES.login, { replace: true })
+  }
 
   // The frame draws the account menu closed, so only the trigger is
   // implemented here; the menu's destinations belong to screens outside this
@@ -89,7 +107,7 @@ function TechnicianNavbar() {
         {/* Avatar first, bell last: in an RTL row the last child is the
             leftmost, and the frame puts the bell at the far left. */}
         <div className="flex items-center gap-[12px]">
-          <div ref={menuRef}>
+          <div ref={menuRef} className="relative">
             <button
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
@@ -99,6 +117,51 @@ function TechnicianNavbar() {
             >
               <User size={20} aria-hidden="true" />
             </button>
+
+            {/* Same menu the customer header has — profile, settings, sign
+                out — so the two portals behave the same way, with the signed-in
+                address above it. */}
+            {menuOpen ? (
+              <div className="absolute left-0 z-50 mt-[8px] w-[240px] rounded-[12px] border border-line bg-white py-[8px] text-[14px] shadow-raised">
+                {email ? (
+                  <p className="border-b border-line px-[16px] pb-[8px] text-right text-[13px] break-all text-text-300">
+                    {email}
+                  </p>
+                ) : null}
+
+                <Link
+                  to="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-[10px] px-[16px] py-[10px] text-text-400 transition-colors hover:bg-primary-50 hover:text-primary-500"
+                >
+                  <User size={16} aria-hidden="true" />
+                  الملف الشخصي
+                </Link>
+
+                <Link
+                  to="/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-[10px] px-[16px] py-[10px] text-text-400 transition-colors hover:bg-primary-50 hover:text-primary-500"
+                >
+                  <Settings size={16} aria-hidden="true" />
+                  الإعدادات
+                </Link>
+
+                <span
+                  aria-hidden="true"
+                  className="my-[4px] block h-px bg-line"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex w-full items-center gap-[10px] px-[16px] py-[10px] text-right font-bold text-error-500 transition-colors hover:bg-error-50"
+                >
+                  <LogOut size={16} aria-hidden="true" />
+                  تسجيل الخروج
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <span aria-hidden="true" className="h-[24px] w-px bg-primary-100" />

@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapPin } from 'lucide-react'
 import TechnicianLayout from '../../../shared/layouts/TechnicianLayout.jsx'
+import {
+  readDisplayName,
+  readSession,
+} from '../../auth/services/authSession.js'
 import AvailabilityBanner from '../components/AvailabilityBanner.jsx'
 import CurrentWorkPanel from '../components/CurrentWorkPanel.jsx'
 import NewRequestCard from '../components/NewRequestCard.jsx'
@@ -31,6 +35,18 @@ import {
 function TechnicianDashboard() {
   const [available, setAvailable] = useState(TECHNICIAN.available)
   const navigate = useNavigate()
+
+  // The signed-in technician. The guard on this route has already established
+  // there is a session by the time the page renders.
+  //
+  // Only the identity is real so far: the login payload carries the account,
+  // and the figures, requests and jobs below stay on stand-in data until the
+  // portal has endpoints of its own.
+  const session = readSession()
+  // Empty until the API returns a name — the greeting drops the name rather
+  // than substituting something derived from the address.
+  const displayName = readDisplayName(session)
+  const email = session?.user?.email ?? ''
 
   // Every forward action on this screen leads to Technician Orders or
   // Technician Order Details, and the portal is being built one screen per
@@ -64,7 +80,8 @@ function TechnicianDashboard() {
           </p>
 
           <AvailabilityBanner
-            name={TECHNICIAN.name}
+            name={displayName}
+            email={email}
             available={available}
             onAvailabilityChange={setAvailable}
           />

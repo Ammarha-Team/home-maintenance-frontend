@@ -1,10 +1,15 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import iconApple from '../../../assets/auth/icon-apple.svg'
 import iconFacebook from '../../../assets/auth/icon-facebook.svg'
 import iconGoogle from '../../../assets/auth/icon-google.svg'
-import { AUTH_METHODS, AUTH_ROUTES } from '../constants/authRoutes.js'
+import {
+  AUTH_METHODS,
+  AUTH_METHOD_AVAILABILITY,
+  AUTH_ROUTES,
+} from '../constants/authRoutes.js'
 import { login } from '../services/authService.js'
+import { landingRouteFor, saveSession } from '../services/authSession.js'
 import {
   validateEmail,
   validatePassword,
@@ -30,7 +35,9 @@ const FIELD_FONT_SIZE = 16
 // Login form from Figma nodes 6:1196 (phone) and 6:1280 (email) — one form, the
 // identifier swaps with the segmented control above it.
 function LoginForm() {
-  const [method, setMethod] = useState(AUTH_METHODS.phone)
+  const navigate = useNavigate()
+  // Email, because it is the only identifier the API authenticates.
+  const [method, setMethod] = useState(AUTH_METHODS.email)
   const [values, setValues] = useState({ phone: '', email: '', password: '' })
   const [errors, setErrors] = useState({})
   const [rememberMe, setRememberMe] = useState(false)
@@ -74,15 +81,27 @@ function LoginForm() {
     setSubmitting(true)
 
     try {
-      await login({
+      const session = await login({
         method,
         identifier: isEmail ? values.email : values.phone,
         password: values.password,
         rememberMe,
       })
-    } catch {
-      // authService is still a stub — surface it instead of faking success.
-      setSubmitError('تعذر تسجيل الدخول، حاول مرة أخرى لاحقًا.')
+
+      saveSession(session)
+
+      // Where a session lands depends on the role its token carries: a
+      // technician goes to the technician portal, everyone else to the
+      // customer home. `replace` keeps the login screen out of the history so
+      // going back does not return to a form the user has already passed.
+      navigate(landingRouteFor(session), { replace: true })
+    } catch (error) {
+      // The service has already turned the API's English codes into Arabic;
+      // anything else keeps its own message rather than being hidden behind a
+      // generic one.
+      setSubmitError(
+        error.message || 'تعذر تسجيل الدخول، حاول مرة أخرى لاحقًا.',
+      )
     } finally {
       setSubmitting(false)
     }
@@ -95,7 +114,13 @@ function LoginForm() {
       className="flex flex-col gap-[calc(var(--auth-unit)*9)]"
     >
       <div className="flex flex-col gap-[calc(var(--auth-unit)*4)]">
-        <AuthMethodSwitcher value={method} onChange={handleMethodChange} />
+        {/* The switcher only earns its place when there is something to switch
+            between. Phone sign in is off because the API has no endpoint for
+            it, so the control is hidden rather than deleted — it returns with
+            AUTH_METHOD_AVAILABILITY. */}
+        {Object.values(AUTH_METHOD_AVAILABILITY).filter(Boolean).length > 1 ? (
+          <AuthMethodSwitcher value={method} onChange={handleMethodChange} />
+        ) : null}
 
         <div className="flex flex-col gap-[calc(var(--auth-unit)*2.5)]">
           {/* Re-keying replays the enter animation when the identifier swaps,
