@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import PublicLayout from '../../../shared/layouts/PublicLayout.jsx'
 import PasswordChangedDialog from '../components/PasswordChangedDialog.jsx'
 import ResetPasswordCard from '../components/ResetPasswordCard.jsx'
@@ -7,6 +7,28 @@ import { AUTH_ROUTES } from '../constants/authRoutes.js'
 import { passwordMeetsRules } from '../constants/passwordReset.js'
 import { resetPassword } from '../services/authService.js'
 import { validateConfirmPassword } from '../../../shared/utils/validation.js'
+
+/**
+ * Reads a query parameter without decoding it.
+ *
+ * `URLSearchParams.get` percent-decodes, which is normally what you want and is
+ * wrong here. The reset endpoint decodes the token itself, so it has to receive
+ * the escaped form the mail link carries: decoding first and letting the server
+ * decode again turns every `+` in the token into a space — the token holds four
+ * of them — and the resulting string is no longer valid base64, which the API
+ * reports as `Auth.PasswordResetFailed` / "Invalid token."
+ *
+ * So the value is cut out of the raw query string byte for byte and passed on
+ * exactly as it arrived.
+ */
+const readRawParam = (search, name) => {
+  const pair = search
+    .replace(/^\?/, '')
+    .split('&')
+    .find((entry) => entry.startsWith(`${name}=`))
+
+  return pair ? pair.slice(name.length + 1) : null
+}
 
 /**
  * The second half of the link-based password reset (Figma node 14:840).
@@ -17,15 +39,15 @@ import { validateConfirmPassword } from '../../../shared/utils/validation.js'
  * a user reaches from their inbox is the one the design specifies.
  */
 function ResetPassword() {
-  const [params] = useSearchParams()
+  const { search } = useLocation()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
-  const userId = params.get('userId')
-  const token = params.get('token')
+  const userId = readRawParam(search, 'userId')
+  const token = readRawParam(search, 'token')
   const linkComplete = Boolean(userId && token)
 
   const handleSubmit = async (event) => {
