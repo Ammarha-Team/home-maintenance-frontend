@@ -86,6 +86,48 @@ const normaliseError = (error) => {
   return unknown
 }
 
+// Diagnostic for the link-based auth flows.
+//
+// The backend team asked for proof of the exact `userId` and `token` the
+// browser sends back from an email link, so the two calls that carry one log
+// their outgoing payload. Passwords are redacted; the token is printed in full
+// because it is the value under investigation, and it is already visible in the
+// address bar of the page doing the printing.
+//
+// `tokenLength` and `tokenHasSpace` are the tell: a token mangled in transit
+// loses characters or gains a space where a `+` used to be. A clean token
+// prints `tokenHasSpace: false`.
+//
+// Remove this once the reset flow is verified end to end.
+const LOGGED_PATHS = [
+  '/api/Authentication/reset-password',
+  '/api/Authentication/confirm-email',
+]
+
+const redactPasswords = (body) =>
+  Object.fromEntries(
+    Object.entries(body).map(([key, value]) =>
+      /password/i.test(key) ? [key, '<redacted>'] : [key, value],
+    ),
+  )
+
+api.interceptors.request.use((config) => {
+  if (!LOGGED_PATHS.some((path) => config.url?.startsWith(path))) return config
+
+  const payload = config.data ?? config.params ?? {}
+  const token = typeof payload.token === 'string' ? payload.token : ''
+
+  console.info('[auth] outgoing request', {
+    method: config.method?.toUpperCase(),
+    url: `${config.baseURL ?? ''}${config.url}`,
+    payload: redactPasswords(payload),
+    tokenLength: token.length,
+    tokenHasSpace: token.includes(' '),
+  })
+
+  return config
+})
+
 // Callers get the payload, not the envelope. A body that says `success: false`
 // with a 200 is still a failure, so it is rejected rather than returned.
 api.interceptors.response.use(
