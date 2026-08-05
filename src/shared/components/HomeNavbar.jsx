@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, Bell, User, Settings, LogOut } from "lucide-react";
 import logo from "../../assets/logo.png";
+import NotificationModal from "../../shared/components/NotificationModal";
 
 export default function UserNavbar({ onRequestClick }) {
   const [open, setOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+const [dropdownOpen, setDropdownOpen] = useState(false);
+const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -79,10 +81,13 @@ export default function UserNavbar({ onRequestClick }) {
 
         {/* 3. الإشعارات، الفاصل، وبروفايل المستخدم على اليسار */}
         <div className="hidden md:flex items-center gap-4">
-          <div className="relative cursor-pointer w-10 h-10 rounded-full bg-blue-50/50 flex items-center justify-center text-blue-600 hover:bg-blue-100/55 transition">
-            <Bell size={20} />
-            <span className="absolute top-2 left-2.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
-          </div>
+           <button
+  onClick={() => setShowNotifications(true)}
+  className="relative w-10 h-10 rounded-full bg-blue-50/50 flex items-center justify-center text-blue-600 hover:bg-blue-100/55 transition"
+>
+  <Bell size={20} />
+  <span className="absolute top-2 left-2.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
+</button>
 
           <div className="h-6 w-[1px] bg-blue-200"></div>
 
@@ -186,6 +191,11 @@ export default function UserNavbar({ onRequestClick }) {
           </button>
         </div>
       )}
+
+      <NotificationModal
+  open={showNotifications}
+  onClose={() => setShowNotifications(false)}
+/>
     </nav>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from "react";
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import ServicesSection from "../../../shared/components/ServicesSection";
 import ChatBot from "../../../shared/components/ChatBot";
@@ -9,7 +9,9 @@ import Footer from "../../../shared/components/Footer";
 import RequestServiceModal from "../../requests/components/RequestServiceModal";
 
 export default function Home() {
+
   const [openRequestModal, setOpenRequestModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col" dir="rtl">
      <UserNavbar 
