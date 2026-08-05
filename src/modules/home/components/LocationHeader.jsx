@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function LocationHeader() {
+export default function LocationHeader({ onRequestClick }) {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('المستخدم'); // قيمة افتراضية
 
@@ -57,7 +57,7 @@ export default function LocationHeader() {
         </div>
 
         <button
-          onClick={() => navigate('/request-service')}
+          onClick={onRequestClick}
           className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all text-sm whitespace-nowrap order-1 sm:order-none"
         >
           <span>احجز خدمة الآن</span>

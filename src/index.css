@@ -11,10 +11,14 @@
   --color-primary-300: #709ff1;
   --color-primary-400: #558dee;
   --color-primary-500: #2a70ea;
+  /* The emergency frames call for primary-600; it was the one step of the ramp
+     the auth screens never used. */
+  --color-primary-600: #2666d5;
   --color-primary-700: #1e50a6;
   --color-primary-900: #122f62;
 
   --color-error-50: #f5e8e8;
+  --color-error-100: #e1b6b6;
   --color-error-500: #9e1515;
 
   /* The reset flow is the first screen to use the success ramp: the completed
@@ -24,6 +28,9 @@
   --color-success-500: #4caf50;
   --color-success-600: #459f49;
   --color-success-800: #2a602c;
+  /* success-800 is the lightest green that clears 4.5:1 against white, so it
+     carries the accept action and the success headings. 900 is its hover. */
+  --color-success-900: #1e451f;
 
   --color-text-100: #b7b7b7;
   --color-text-200: #949494;
@@ -42,6 +49,11 @@
   --color-surface: #fafafa;
   --color-card: #f6f7f9;
   --color-line: #e8ebf1;
+
+  /* The card elevation used across the emergency frames. It was an unnamed
+     effect style in the library, so it becomes a token here. */
+  --shadow-card: 0 4px 12px rgba(37, 99, 235, 0.06);
+  --shadow-raised: 0 8px 24px rgba(37, 99, 235, 0.1);
 }
 
 html,
@@ -171,6 +183,79 @@ body {
   animation: signup-hero-fade 260ms ease both;
 }
 
+/* Emergency flow.
+
+   The request dialog is a bottom sheet under `md` and a centred dialog above
+   it, so it needs two entrances: a sheet rises off the bottom edge, a dialog
+   settles in place. Both are driven by the same class — the media query picks
+   the keyframes — which keeps the component free of viewport branching. */
+@keyframes emergency-sheet-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes emergency-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.emergency-panel-enter {
+  animation: emergency-sheet-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (min-width: 48rem) {
+  .emergency-panel-enter {
+    animation: emergency-dialog-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+/* Cards arrive in sequence rather than together — the offers land one after
+   another, which reads as results coming in instead of a block appearing. */
+@keyframes emergency-item-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.emergency-item-enter {
+  animation: emergency-item-enter 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The active timeline step keeps a slow halo so a glanced-at screen still
+   shows which stage the request is in. */
+@keyframes emergency-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(42, 112, 234, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(42, 112, 234, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(42, 112, 234, 0);
+  }
+}
+
+.emergency-pulse {
+  animation: emergency-pulse 2s ease-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .signup-content-enter,
   .signup-hero-fade,
@@ -178,7 +263,10 @@ body {
   .reset-step-enter,
   .reset-mark-pop,
   .reset-modal-enter,
-  .reset-backdrop-enter {
+  .reset-backdrop-enter,
+  .emergency-panel-enter,
+  .emergency-item-enter,
+  .emergency-pulse {
     animation: none;
   }
 }
