@@ -43,7 +43,7 @@ function Input({
 
       <div
         style={{ height }}
-        className={`flex w-full items-center gap-[8px] rounded-[12px] border bg-card px-[12px] py-[15px] ${
+        className={`flex w-full items-center gap-[8px] rounded-[12px] border bg-card px-[12px] ${
           error ? 'border-red-500' : 'border-line'
         } ${className}`}
       >
@@ -57,7 +57,10 @@ function Input({
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
           style={{ fontSize }}
-          className="w-full bg-transparent text-right leading-[1.5] text-text-500 outline-none placeholder:text-text-200"
+          // h-full so the tappable area matches the field the user sees: the
+          // native control is ~23px inside a 48-56px wrapper, which leaves the
+          // padding dead to touch.
+          className="h-full w-full bg-transparent text-right leading-[1.5] text-text-500 outline-none placeholder:text-text-200"
           {...props}
         />
 

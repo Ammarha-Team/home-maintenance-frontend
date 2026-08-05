@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, Bell, User, Settings, LogOut } from "lucide-react";
 import logo from "../../assets/logo.png";
 
-export default function UserNavbar() {
+export default function UserNavbar({ onRequestClick }) {
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -53,14 +53,11 @@ export default function UserNavbar() {
 
           <Link
             to="/request-service"
-            className={`relative py-1 transition-colors ${
+            className={`transition-colors ${
               isActive("/request-service") ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"
             }`}
           >
             طلب خدمة
-            {isActive("/request-service") && (
-              <span className="absolute bottom-[-13px] right-0 w-full h-[2px] bg-blue-600 rounded-full"></span>
-            )}
           </Link>
 
           <Link
@@ -170,7 +167,15 @@ export default function UserNavbar() {
           </div>
 
           <Link to="/home" onClick={() => setOpen(false)} className="hover:text-blue-600">الرئيسية</Link>
-          <Link to="/request-service" onClick={() => setOpen(false)} className="hover:text-blue-600">طلب خدمة</Link>
+          <button
+  onClick={() => {
+    setOpen(false);
+    onRequestClick();
+  }}
+  className="text-right hover:text-blue-600"
+>
+  طلب خدمة
+</button>
           <Link to="/my-orders" onClick={() => setOpen(false)} className="hover:text-blue-600">طلباتي</Link>
           <Link to="/messages" onClick={() => setOpen(false)} className="hover:text-blue-600">الرسائل</Link>
           <Link to="/settings" onClick={() => setOpen(false)} className="hover:text-blue-600">الإعدادات</Link>

@@ -4,24 +4,22 @@ import {
   SIGN_UP_INFO_PATTERN,
 } from "../modules/auth/constants/authRoutes.js";
 
+import ForgotPassword from "../modules/auth/pages/ForgotPassword.jsx";
 import Login from "../modules/auth/pages/Login.jsx";
 import SignUpInfo from "../modules/auth/pages/SignUpInfo.jsx";
 import CustomerSignUpTerms from "../modules/auth/pages/CustomerSignUpTerms.jsx";
 import TechnicianSignUpTerms from "../modules/auth/pages/TechnicianSignUpTerms.jsx";
 import LandingPage from "../landing/pages/LandingPage";
 import Home from "../modules/home/pages/Home";
-import MyOrders from "../modules/orders/pages/MyOrders.jsx";
-import { ORDERS_ROUTES } from "../modules/orders/constants/ordersRoutes.js";
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
-      <Route path={ORDERS_ROUTES.myOrders} element={<MyOrders />} />
-      <Route path="/orders" element={<Navigate to={ORDERS_ROUTES.myOrders} replace />} />
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
+      <Route path={AUTH_ROUTES.forgotPassword} element={<ForgotPassword />} />
 
       {/* The site header links here for "إنشاء حساب". Sign up is split by role
           and starts on the customer step, so /register is an entry point into
@@ -42,7 +40,35 @@ function AppRoutes() {
         element={<TechnicianSignUpTerms />}
       />
 
+      {/* Emergency service. The home screen's quick actions already point at
+          /emergency-diagnosis, so that path is kept as an alias rather than
+          changing a link this feature does not own. */}
+      <Route path={EMERGENCY_ROUTES.request} element={<EmergencyRequest />} />
+      <Route
+        path={EMERGENCY_ROUTES.requestAlias}
+        element={<EmergencyRequest />}
+      />
+      <Route
+        path={EMERGENCY_ROUTES.tracking}
+        element={<EmergencyTracking />}
+      />
+      <Route path={EMERGENCY_ROUTES.rating} element={<EmergencyRating />} />
+
       <Route path="*" element={<Navigate to="/" replace />} />
+
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/settings" element={<Settings />} />
+
+      <Route path="/change-password" element={<ChangePassword />} />
+      <Route path="/notifications" element={<Notifications />} />
+      <Route path="/language" element={<Language />} />
+      <Route path="/help-support" element={<HelpSupport />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/savedaddresses" element={<SavedAddresses />} />
+
+      
     </Routes>
   );
 }

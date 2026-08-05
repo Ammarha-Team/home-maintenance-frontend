@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App";
+import "leaflet/dist/leaflet.css";
+import "react-calendar/dist/Calendar.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
