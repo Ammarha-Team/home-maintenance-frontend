@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import ServicesSection from "../../../shared/components/ServicesSection";
+import ChatBot from "../../../shared/components/ChatBot";
 import HowItWorks from "../../../shared/components/HowItWorks";
 import LocationHeader from '../components/LocationHeader';
 import QuickActions from '../components/QuickActions';
@@ -27,6 +28,7 @@ export default function Home() {
          open={openRequestModal}
          onClose={() => setOpenRequestModal(false)}/>
 
+ <ChatBot />
     </div>
   );
 }
