@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, Bell, User, Settings, LogOut } from "lucide-react";
 import logo from "../../assets/logo.png";
 import NotificationModal from "../../shared/components/NotificationModal";
+import { AUTH_ROUTES } from "../../modules/auth/constants/authRoutes.js";
+import { signOut } from "../../modules/auth/services/authService.js";
 
 export default function UserNavbar({ onRequestClick }) {
   const [open, setOpen] = useState(false);
@@ -26,8 +28,12 @@ const [showNotifications, setShowNotifications] = useState(false);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    navigate("/");
+  // Signing out revokes the refresh token server side and clears the stored
+  // session. This previously only navigated away, which left the account signed
+  // in — the next visit to a protected screen walked straight back in.
+  const handleLogout = async () => {
+    await signOut();
+    navigate(AUTH_ROUTES.login, { replace: true });
   };
 
   return (

@@ -26,6 +26,70 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// Session plumbing, injected rather than imported.
+//
+// This file lives in shared/ and the auth module already depends on it, so it
+// must not depend on the auth module back. The two things it needs from a
+// session — the access token to attach, and the way to renew it — are handed in
+// at start up by `configureAuthHandlers` instead.
+let getAccessToken = () => null
+let requestRefresh = null
+let handleSessionExpired = null
+
+export const configureAuthHandlers = ({ getToken, onRefresh, onExpired } = {}) => {
+  getAccessToken = getToken ?? (() => null)
+  requestRefresh = onRefresh ?? null
+  handleSessionExpired = onExpired ?? null
+}
+
+// Endpoints that establish or end a session rather than consume one.
+//
+// They must not carry a bearer token — sending a stale one alongside the
+// credentials meant to replace it is at best noise — and a 401 from any of them
+// is a real answer about those credentials, not a hint that the access token
+// needs renewing. Renewing on those would loop.
+const PUBLIC_AUTH_PATHS = [
+  '/api/Authentication/login',
+  '/api/Authentication/register-client',
+  '/api/Authentication/register-technician',
+  '/api/Authentication/confirm-email',
+  '/api/Authentication/resend-confirmation-email',
+  '/api/Authentication/forgot-password',
+  '/api/Authentication/reset-password',
+  '/api/Authentication/refresh-token',
+]
+
+const isPublicAuthPath = (url = '') =>
+  PUBLIC_AUTH_PATHS.some((path) => url.startsWith(path))
+
+api.interceptors.request.use((config) => {
+  if (isPublicAuthPath(config.url)) return config
+
+  const token = getAccessToken()
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
+  return config
+})
+
+// One renewal at a time.
+//
+// A page that fires several requests at once will see them all fail together on
+// the same expired token. Without this they would start a refresh each, and all
+// but one would be spending a refresh token that the first had already rotated.
+let pendingRefresh = null
+
+const renewAccessToken = () => {
+  pendingRefresh ??= Promise.resolve()
+    .then(() => requestRefresh())
+    .finally(() => {
+      pendingRefresh = null
+    })
+
+  return pendingRefresh
+}
+
 // The API answers with two different failure shapes, and a caller should not
 // have to know which one it got:
 //
@@ -146,7 +210,40 @@ api.interceptors.response.use(
 
     return body
   },
-  (error) => Promise.reject(normaliseError(error)),
+  async (error) => {
+    const original = error.config
+    const status = error.response?.status
+
+    // An expired access token is worth one silent renewal and one retry, so a
+    // signed-in user is not thrown back to the login form mid-task.
+    //
+    // `renewed` marks the request as having had its one attempt: if the fresh
+    // token is refused too, the problem is not staleness and retrying again
+    // would loop.
+    if (
+      status === 401 &&
+      original &&
+      !original.renewed &&
+      !isPublicAuthPath(original.url) &&
+      requestRefresh
+    ) {
+      original.renewed = true
+
+      try {
+        const token = await renewAccessToken()
+        if (token) original.headers.Authorization = `Bearer ${token}`
+
+        return await api(original)
+      } catch {
+        // The refresh token is missing, expired or refused. The session is over
+        // — say so once, here, rather than letting every pending call decide
+        // for itself.
+        handleSessionExpired?.()
+      }
+    }
+
+    return Promise.reject(normaliseError(error))
+  },
 )
 
 export default api
