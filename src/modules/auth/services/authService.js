@@ -97,6 +97,14 @@ const readSession = (data) => {
     user: {
       id: data.id ?? null,
       email: data.email ?? null,
+      // Carried through so the greeting picks the name up the moment the API
+      // starts sending one. Today it is null: the login payload holds `id`,
+      // `email`, `token`, `roles`, `message`, `isAuthenticated` and
+      // `refreshTokenExpiration`, and the token's claims are `sub`, `jti`,
+      // `email`, `role`, `exp`, `iss` and `aud` — no name in either, even
+      // though registration collects one. Both spellings are read so whichever
+      // the API picks will work without another change here.
+      fullName: data.fullName ?? data.name ?? null,
       roles: Array.isArray(data.roles) ? data.roles : [data.roles].filter(Boolean),
     },
   }
