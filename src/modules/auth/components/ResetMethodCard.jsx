@@ -4,20 +4,27 @@ import PhoneIcon from '../../../shared/components/icons/PhoneIcon.jsx'
 import EmailField from './EmailField.jsx'
 import PhoneField from './PhoneField.jsx'
 import ResetCard from './ResetCard.jsx'
-import { RESET_METHODS } from '../constants/passwordReset.js'
+import {
+  RESET_METHODS,
+  isResetMethodAvailable,
+} from '../constants/passwordReset.js'
 
-// Step 1 (Figma node 14:813): choose where the code is sent.
+// Step 1 (Figma node 14:813): choose where the reset is sent.
 //
 // The frame shows the two options already carrying an address and a number,
 // which is the signed-in case. This flow is reached from the login screen, so
 // the account is not known yet and the chosen option has to ask for the
 // identifier before anything can be sent — the field sits under the pair rather
 // than beside it, so the two option cards keep the layout the frame gives them.
+//
+// Both options stay in this list. Which of them a user can reach is decided by
+// RESET_METHOD_AVAILABILITY, so switching phone back on is a one-line change
+// there rather than a rebuild of this card.
 const OPTIONS = [
   {
     id: RESET_METHODS.email,
     label: 'عبر البريد الالكتروني',
-    hint: 'كود التحقق يصل إلى بريدك',
+    hint: 'رابط إعادة التعيين يصل إلى بريدك',
     Icon: EnvelopeIcon,
   },
   {
@@ -27,6 +34,10 @@ const OPTIONS = [
     Icon: PhoneIcon,
   },
 ]
+
+const AVAILABLE_OPTIONS = OPTIONS.filter((option) =>
+  isResetMethodAvailable(option.id),
+)
 
 // Login draws the shared field at 56px / 16px; the reset cards inherit that so
 // the two screens do not disagree about how tall an input is.
@@ -47,10 +58,12 @@ function ResetMethodCard({
   return (
     <ResetCard
       title="هل نسيت كلمة المرور؟"
-      subtitle="من فضلك قم باختيار الوسيلة لاستقبال كود التحقق لإعادة تعيين كلمة مرورك"
+      subtitle="أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور"
     >
+      {/* One option renders on its own rather than as half a row: a lone card
+          stretched across the full width reads as a heading, not a choice. */}
       <div className="flex w-full flex-col gap-[12px] sm:flex-row">
-        {OPTIONS.map(({ id, label, hint, Icon }) => {
+        {AVAILABLE_OPTIONS.map(({ id, label, hint, Icon }) => {
           const selected = method === id
 
           return (
@@ -126,7 +139,7 @@ function ResetMethodCard({
           disabled={submitting}
           className="h-[56px] text-[18px] sm:text-[20px]"
         >
-          {submitting ? '...جارٍ الإرسال' : 'إرسال كود التحقق'}
+          {submitting ? '...جارٍ الإرسال' : 'إرسال رابط إعادة التعيين'}
         </Button>
       </form>
     </ResetCard>
