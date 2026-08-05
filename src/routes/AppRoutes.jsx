@@ -18,6 +18,9 @@ import EmergencyRequest from "../modules/emergency/pages/EmergencyRequest.jsx";
 import EmergencyTracking from "../modules/emergency/pages/EmergencyTracking.jsx";
 import EmergencyRating from "../modules/emergency/pages/EmergencyRating.jsx";
 
+import { TECHNICIAN_ROUTES } from "../modules/technician/constants/technicianRoutes.js";
+import TechnicianDashboard from "../modules/technician/pages/TechnicianDashboard.jsx";
+
 import Profile from "../modules/profile/pages/Profile";
 import Settings from "../modules/profile/pages/Settings";
 
@@ -72,6 +75,14 @@ function AppRoutes() {
         element={<EmergencyTracking />}
       />
       <Route path={EMERGENCY_ROUTES.rating} element={<EmergencyRating />} />
+
+      {/* Technician portal. Kept under its own /technician prefix so it can
+          never be confused with the customer screens above. The remaining
+          technician screens land on their own branches. */}
+      <Route
+        path={TECHNICIAN_ROUTES.dashboard}
+        element={<TechnicianDashboard />}
+      />
 
       <Route path="*" element={<Navigate to="/" replace />} />
 
