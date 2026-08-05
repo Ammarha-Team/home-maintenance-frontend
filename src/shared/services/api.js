@@ -158,9 +158,11 @@ const normaliseError = (error) => {
 // because it is the value under investigation, and it is already visible in the
 // address bar of the page doing the printing.
 //
-// `tokenLength` and `tokenHasSpace` are the tell: a token mangled in transit
-// loses characters or gains a space where a `+` used to be. A clean token
-// prints `tokenHasSpace: false`.
+// The counters are the tell. The reset endpoint decodes the token itself, so
+// the escaped form the mail link carries is what has to go out: a healthy reset
+// request prints `tokenHasEscapes: true` and `tokenHasSpace: false`. A `true`
+// on the space means a `+` became one somewhere — the signature of a token that
+// was decoded once too often.
 //
 // Remove this once the reset flow is verified end to end.
 const LOGGED_PATHS = [
@@ -187,6 +189,7 @@ api.interceptors.request.use((config) => {
     payload: redactPasswords(payload),
     tokenLength: token.length,
     tokenHasSpace: token.includes(' '),
+    tokenHasEscapes: token.includes('%'),
   })
 
   return config
