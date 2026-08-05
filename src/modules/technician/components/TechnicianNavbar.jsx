@@ -3,10 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Bell, LogOut, Settings, User } from 'lucide-react'
 import logo from '../../../assets/brand/logo.png'
 import { AUTH_ROUTES } from '../../auth/constants/authRoutes.js'
-import {
-  clearSession,
-  readSession,
-} from '../../auth/services/authSession.js'
+import { signOut } from '../../auth/services/authService.js'
+import { readSession } from '../../auth/services/authSession.js'
 import { TECHNICIAN_NAV_ITEMS } from '../constants/technicianRoutes.js'
 
 /**
@@ -24,13 +22,22 @@ function TechnicianNavbar() {
 
   const email = readSession()?.user?.email ?? ''
 
-  // Clears the client's half of the session. The refresh token is a cookie the
-  // server owns; `logout` cannot be called from the browser until the API
-  // stops answering preflight with a wildcard origin, so that cookie is left to
-  // expire rather than pretended to be revoked.
-  const handleSignOut = () => {
-    clearSession()
+  // Revokes the refresh token server side, then clears the local session.
+  //
+  // The redirect does not wait on the outcome being a success: `signOut` clears
+  // this device either way and reports whether the server agreed, so a failed
+  // revoke still ends the session here rather than leaving someone who pressed
+  // sign out looking at a signed-in screen.
+  const handleSignOut = async () => {
     setMenuOpen(false)
+
+    const { revoked } = await signOut()
+    if (!revoked) {
+      // Worth knowing about — the cookie outlives the click — but not worth
+      // blocking the redirect or showing an error to someone who is leaving.
+      console.warn('[auth] sign out could not revoke the session server side')
+    }
+
     navigate(AUTH_ROUTES.login, { replace: true })
   }
 
