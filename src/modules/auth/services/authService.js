@@ -1,4 +1,5 @@
 import api from '../../../shared/services/api.js'
+import { clearSession } from './authSession.js'
 
 // Auth API surface, backed by /api/Authentication.
 
@@ -165,6 +166,67 @@ export const registerTechnician = async (details) => {
     })
   } catch (error) {
     throw translateAuthError(error)
+  }
+}
+
+/**
+ * POST /api/Authentication/logout.
+ *
+ * Revokes the refresh token server side. Takes no body and identifies the
+ * session purely by the httpOnly `refreshToken` cookie, so it has to go out
+ * with credentials.
+ */
+export const logout = async () => {
+  try {
+    await api.post('/api/Authentication/logout', null, {
+      withCredentials: true,
+    })
+  } catch (error) {
+    throw translateAuthError(error)
+  }
+}
+
+/**
+ * POST /api/Authentication/refresh-token.
+ *
+ * Trades the refresh cookie for a fresh access token. As with logout it is the
+ * cookie that identifies the caller, so this needs credentials and no body.
+ *
+ * @returns {Promise<{token: string, user: object}>} the renewed session
+ */
+export const refreshSession = async () => {
+  try {
+    const data = await api.post('/api/Authentication/refresh-token', null, {
+      withCredentials: true,
+    })
+
+    // Same reader as login: it insists on a token rather than storing a
+    // session that has none.
+    return readSession(data)
+  } catch (error) {
+    throw translateAuthError(error)
+  }
+}
+
+/**
+ * Ends the session on the server and on this device.
+ *
+ * The local session is cleared whether or not the server call succeeds. Someone
+ * who pressed sign out has to end up signed out here even if the network was
+ * down — staying logged in because the server could not be reached is the worse
+ * of the two failures. The error is returned rather than thrown so the caller
+ * can mention it without that blocking the redirect.
+ *
+ * @returns {Promise<{revoked: boolean, error: Error|null}>}
+ */
+export const signOut = async () => {
+  try {
+    await logout()
+    return { revoked: true, error: null }
+  } catch (error) {
+    return { revoked: false, error }
+  } finally {
+    clearSession()
   }
 }
 
