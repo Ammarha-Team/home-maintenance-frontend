@@ -36,11 +36,14 @@ import Terms from "../modules/profile/pages/Terms";
 import About from "../modules/profile/pages/About";
 import SavedAddresses from "../modules/profile/pages/SavedAddresses.jsx";
 
+import ReviewPage from "../modules/reviews/pages/ReviewPage";
+
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/review" element={<ReviewPage />} />
       
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
