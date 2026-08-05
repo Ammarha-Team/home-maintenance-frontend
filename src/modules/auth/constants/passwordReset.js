@@ -21,6 +21,29 @@ export const RESET_METHODS = {
   phone: 'phone',
 }
 
+// Which channels a user can actually pick today.
+//
+// The backend sends a reset link by email and has no SMS or OTP endpoint yet,
+// so phone is switched off rather than deleted: the option, its icon, its field
+// and the OTP screens all stay in the codebase and come back by flipping this
+// flag once those endpoints exist.
+export const RESET_METHOD_AVAILABILITY = {
+  [RESET_METHODS.email]: true,
+  [RESET_METHODS.phone]: false,
+}
+
+export const isResetMethodAvailable = (method) =>
+  RESET_METHOD_AVAILABILITY[method] === true
+
+// The rail while the flow is link-based. RESET_STEP_LABELS above is the
+// three-step OTP rail the frame draws, kept for when that flow returns.
+export const ACTIVE_RESET_STEP_LABELS = ['وسيله التحقق', 'تحقق من بريدك']
+
+export const ACTIVE_RESET_STEPS = {
+  request: 1,
+  sent: 2,
+}
+
 export const OTP_LENGTH = 5
 
 // The frame shows "3:23 ث" left on the countdown, i.e. a code that starts life
