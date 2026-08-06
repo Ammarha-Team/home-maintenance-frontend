@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   Clock3,
   Image,
@@ -5,6 +6,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import { TECHNICIAN_ROUTES } from "../../technician/constants/technicianRoutes.js";
 
 
 export default function ServiceCard({
@@ -164,7 +166,11 @@ export default function ServiceCard({
         ) : (
 
 
-          <button
+          // The forward action on every offer card, and it had no handler, so
+          // the card ended in a button that did nothing. The inbox is the only
+          // place a conversation with the customer can happen.
+          <Link
+            to={TECHNICIAN_ROUTES.messages}
             className="mt-5 w-full h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center gap-2"
           >
 
@@ -172,7 +178,7 @@ export default function ServiceCard({
 
             بدء المحادثة مع العميل
 
-          </button>
+          </Link>
 
 
         )
