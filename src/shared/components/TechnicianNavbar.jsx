@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Bell, LogOut, Settings, User } from 'lucide-react'
-import logo from '../../../assets/brand/logo.png'
-import { AUTH_ROUTES } from '../../auth/constants/authRoutes.js'
-import { signOut } from '../../auth/services/authService.js'
-import { readSession } from '../../auth/services/authSession.js'
-import { TECHNICIAN_NAV_ITEMS } from '../constants/technicianRoutes.js'
+import logo from '../../assets/brand/logo.png'
+import { AUTH_ROUTES } from '../../modules/auth/constants/authRoutes.js'
+import { signOut } from '../../modules/auth/services/authService.js'
+import { readSession } from '../../modules/auth/services/authSession.js'
+import { TECHNICIAN_NAV_ITEMS } from '../../modules/technician/constants/technicianRoutes.js'
 
 /**
  * Header for the technician portal (Figma node 21:2235).
@@ -64,17 +64,17 @@ function TechnicianNavbar() {
       dir="rtl"
       className="sticky top-0 z-50 w-full border-b border-line bg-white"
     >
-      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-[16px] px-[24px] py-[14px] lg:px-[40px]">
+      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-[16px] px-[24px] pt-[16px] pb-[17px] lg:px-[80px]">
         {/* Brand sits at the start of the row — the right edge in RTL. */}
         <Link to={TECHNICIAN_NAV_ITEMS[0].to} className="shrink-0">
           <img
             src={logo}
             alt="عمّرها"
-            className="h-[40px] w-[104px] object-contain"
+            className="h-[58px] w-[127px] object-contain"
           />
         </Link>
 
-        <ul className="hidden items-center gap-[32px] md:flex">
+        <ul className="hidden items-center gap-[24px] md:flex">
           {TECHNICIAN_NAV_ITEMS.map((item) => {
             const active = pathname === item.to
 
@@ -87,22 +87,16 @@ function TechnicianNavbar() {
                   <Link
                     to={item.to}
                     aria-current={active ? 'page' : undefined}
-                    className={`relative block py-[10px] text-[16px] transition-colors ${
+                    className={`block text-[20px] leading-[1.5] whitespace-nowrap transition-colors ${
                       active
-                        ? 'font-bold text-primary-500'
-                        : 'text-text-300 hover:text-primary-500'
+                        ? 'border-b-2 border-primary-500 pb-[6px] text-primary-500'
+                        : 'rounded-[8px] px-[8px] py-[4px] text-text-400 hover:text-primary-500'
                     }`}
                   >
                     {item.label}
-                    {active ? (
-                      <span
-                        aria-hidden="true"
-                        className="absolute right-0 -bottom-[14px] h-[2px] w-full rounded-full bg-primary-500"
-                      />
-                    ) : null}
                   </Link>
                 ) : (
-                  <span className="block cursor-default py-[10px] text-[16px] text-text-200">
+                  <span className="block cursor-default rounded-[8px] px-[8px] py-[4px] text-[20px] leading-[1.5] whitespace-nowrap text-text-400">
                     {item.label}
                   </span>
                 )}
@@ -113,16 +107,19 @@ function TechnicianNavbar() {
 
         {/* Avatar first, bell last: in an RTL row the last child is the
             leftmost, and the frame puts the bell at the far left. */}
-        <div className="flex items-center gap-[12px]">
+        <div className="flex items-center gap-[26px]">
           <div ref={menuRef} className="relative">
+            {/* The frame fills this circle with the technician's photo. No
+                account carries one, so the same circle holds the account icon
+                rather than a stock face belonging to nobody. */}
             <button
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-label="حساب الفني"
               aria-expanded={menuOpen}
-              className="flex size-[44px] items-center justify-center rounded-full border border-line bg-card text-text-300 transition hover:ring-2 hover:ring-primary-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
+              className="flex size-[42px] items-center justify-center rounded-full bg-primary-50 text-primary-500 transition hover:ring-2 hover:ring-primary-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
             >
-              <User size={20} aria-hidden="true" />
+              <User size={21} aria-hidden="true" />
             </button>
 
             {/* Same menu the customer header has — profile, settings, sign
@@ -171,19 +168,20 @@ function TechnicianNavbar() {
             ) : null}
           </div>
 
-          <span aria-hidden="true" className="h-[24px] w-px bg-primary-100" />
+          <span aria-hidden="true" className="h-[28px] w-px bg-primary-100" />
 
           <button
             type="button"
             aria-label="الإشعارات"
-            className="relative flex size-[44px] items-center justify-center rounded-full bg-primary-50 text-primary-500 transition-colors hover:bg-primary-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
+            className="relative flex size-[41px] items-center justify-center rounded-[20px] bg-primary-50 text-primary-500 transition-colors hover:bg-primary-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
           >
-            <Bell size={20} aria-hidden="true" />
-            {/* Unread marker. Decorative — the count belongs to the
+            <Bell size={21} aria-hidden="true" />
+            {/* Unread marker, flush with the top-right of the circle as the
+                frame draws it. Decorative — the count belongs to the
                 notifications screen, which is outside this scope. */}
             <span
               aria-hidden="true"
-              className="absolute top-[9px] left-[11px] size-[10px] rounded-full border-2 border-white bg-success-500"
+              className="absolute top-0 right-0 size-[12px] rounded-full bg-success-500"
             />
           </button>
         </div>

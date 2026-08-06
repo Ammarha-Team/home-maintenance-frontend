@@ -22,6 +22,14 @@ import EmergencyRating from "../modules/emergency/pages/EmergencyRating.jsx";
 
 import { TECHNICIAN_ROUTES } from "../modules/technician/constants/technicianRoutes.js";
 import TechnicianDashboard from "../modules/technician/pages/TechnicianDashboard.jsx";
+import TechnicianOrders from "../modules/technician/pages/TechnicianOrders.jsx";
+import TechnicianOrderDetails from "../modules/technician/pages/TechnicianOrderDetails.jsx";
+import TechnicianOrderOffer from "../modules/technician/pages/TechnicianOrderOffer.jsx";
+import TechnicianOfferAccepted from "../modules/technician/pages/TechnicianOfferAccepted.jsx";
+import TechnicianMessages from "../modules/technician/pages/TechnicianMessages.jsx";
+import TechnicianJobTracking from "../modules/technician/pages/TechnicianJobTracking.jsx";
+import TechnicianJobArrival from "../modules/technician/pages/TechnicianJobArrival.jsx";
+import TechnicianJobCompletion from "../modules/technician/pages/TechnicianJobCompletion.jsx";
 import TechnicianRoute from "./TechnicianRoute.jsx";
 
 import Profile from "../modules/profile/pages/Profile";
@@ -37,6 +45,7 @@ import About from "../modules/profile/pages/About";
 import SavedAddresses from "../modules/profile/pages/SavedAddresses.jsx";
 
 import ReviewPage from "../modules/reviews/pages/ReviewPage";
+import Services from "../modules/services/pages/Services";
 
 function AppRoutes() {
   return (
@@ -44,6 +53,7 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
       <Route path="/review" element={<ReviewPage />} />
+      <Route path="/services" element={<Services />} />
       
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
@@ -92,13 +102,87 @@ function AppRoutes() {
       <Route path={EMERGENCY_ROUTES.rating} element={<EmergencyRating />} />
 
       {/* Technician portal. Kept under its own /technician prefix so it can
-          never be confused with the customer screens above. The remaining
-          technician screens land on their own branches. */}
+          never be confused with the customer screens above.
+
+          The four screens are one flow: the dashboard leads to the job board,
+          the board opens a request, and the request leads to the offer that
+          bids for it. Every one of them sits behind the same guard — a
+          customer who reaches these paths has nothing to do here. */}
       <Route
         path={TECHNICIAN_ROUTES.dashboard}
         element={
           <TechnicianRoute>
             <TechnicianDashboard />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.orders}
+        element={
+          <TechnicianRoute>
+            <TechnicianOrders />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.orderDetails}
+        element={
+          <TechnicianRoute>
+            <TechnicianOrderDetails />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.orderOffer}
+        element={
+          <TechnicianRoute>
+            <TechnicianOrderOffer />
+          </TechnicianRoute>
+        }
+      />
+
+      {/* The job, once the offer wins it. Sending an offer lands on the
+          acceptance screen, which starts the job; from there the technician
+          confirms arrival and then closes the service out. Messaging is a
+          detour off the acceptance screen rather than a step in that chain,
+          which is why it keeps a path of its own. */}
+      <Route
+        path={TECHNICIAN_ROUTES.offerAccepted}
+        element={
+          <TechnicianRoute>
+            <TechnicianOfferAccepted />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.messages}
+        element={
+          <TechnicianRoute>
+            <TechnicianMessages />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.jobTracking}
+        element={
+          <TechnicianRoute>
+            <TechnicianJobTracking />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.jobArrival}
+        element={
+          <TechnicianRoute>
+            <TechnicianJobArrival />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.jobCompletion}
+        element={
+          <TechnicianRoute>
+            <TechnicianJobCompletion />
           </TechnicianRoute>
         }
       />
