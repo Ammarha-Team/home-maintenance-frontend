@@ -45,6 +45,7 @@ import About from "../modules/profile/pages/About";
 import SavedAddresses from "../modules/profile/pages/SavedAddresses.jsx";
 
 import ReviewPage from "../modules/reviews/pages/ReviewPage";
+import Services from "../modules/services/pages/Services";
 
 function AppRoutes() {
   return (
@@ -52,6 +53,7 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
       <Route path="/review" element={<ReviewPage />} />
+      <Route path="/services" element={<Services />} />
       
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
