@@ -1,5 +1,5 @@
 import Footer from '../components/Footer.jsx'
-import TechnicianNavbar from '../../modules/technician/components/TechnicianNavbar.jsx'
+import TechnicianNavbar from '../components/TechnicianNavbar.jsx'
 
 /**
  * Chrome for the technician portal: technician header, page content, site

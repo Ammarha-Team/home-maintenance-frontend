@@ -26,7 +26,7 @@ export const technicianOrderPath = (route, orderId) =>
  * Each screen flips its own flag as it merges.
  */
 export const TECHNICIAN_NAV_ITEMS = [
-  { key: 'dashboard', label: 'الرئيسيه', to: TECHNICIAN_ROUTES.dashboard, ready: true },
+  { key: 'dashboard', label: 'الرئيسية', to: TECHNICIAN_ROUTES.dashboard, ready: true },
   { key: 'orders', label: 'الطلبات', to: TECHNICIAN_ROUTES.orders, ready: true },
   { key: 'offers', label: 'عروضي', to: '/technician/offers', ready: false },
   { key: 'messages', label: 'الرسائل', to: '/technician/messages', ready: false },
