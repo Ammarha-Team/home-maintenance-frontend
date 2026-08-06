@@ -53,7 +53,18 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
       <Route path="/review" element={<ReviewPage />} />
-      <Route path="/services" element={<Services />} />
+      {/* The footer's "الخدمات" points here, but the screen behind it lists the
+          technician's own sent offers — so it moved under /technician, behind
+          the portal guard, and this path follows it. A customer who lands here
+          is sent to their own home by that guard rather than being shown
+          another account's offers.
+
+          A customer-facing services listing still has to be built; when it is,
+          it takes this path back. */}
+      <Route
+        path="/services"
+        element={<Navigate to={TECHNICIAN_ROUTES.offers} replace />}
+      />
       
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
@@ -159,6 +170,17 @@ function AppRoutes() {
         element={
           <TechnicianRoute>
             <TechnicianMessages />
+          </TechnicianRoute>
+        }
+      />
+
+      {/* عروضي — every offer the technician has sent, filtered by what became
+          of it. Behind the same guard as the rest of the portal. */}
+      <Route
+        path={TECHNICIAN_ROUTES.offers}
+        element={
+          <TechnicianRoute>
+            <Services />
           </TechnicianRoute>
         }
       />
