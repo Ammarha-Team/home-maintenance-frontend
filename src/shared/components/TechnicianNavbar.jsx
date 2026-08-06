@@ -76,8 +76,33 @@ function TechnicianNavbar() {
     />
   </Link>
 
+  {/* The desktop tabs. A placeholder had been left in their place, so the
+      header rendered the literal text "..." and every technician screen lost
+      its navigation above `md`. */}
   <ul className="hidden items-center gap-[24px] md:flex">
-    ...
+    {TECHNICIAN_NAV_ITEMS.map((item) => (
+      <li key={item.key}>
+        {item.ready ? (
+          <Link
+            to={item.to}
+            aria-current={pathname === item.to ? 'page' : undefined}
+            className={`block text-[20px] transition-colors ${
+              pathname === item.to
+                ? 'border-b-2 border-primary-500 pb-[6px] text-primary-500'
+                : 'rounded-[8px] px-[8px] py-[4px] text-text-400 hover:text-primary-500'
+            }`}
+          >
+            {item.label}
+          </Link>
+        ) : (
+          // Not built yet. A <Link> to an unregistered path would fall through
+          // to the catch-all and throw the technician back to the landing page.
+          <span className="block px-[8px] py-[4px] text-[20px] text-text-200">
+            {item.label}
+          </span>
+        )}
+      </li>
+    ))}
   </ul>
 
 

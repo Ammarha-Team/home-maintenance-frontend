@@ -23,6 +23,12 @@ export const TECHNICIAN_ROUTES = {
   // Not tied to one order: the inbox lists every conversation the technician
   // has, which is why it sits beside the order paths rather than under one.
   messages: '/technician/messages',
+
+  // Every offer the technician has sent, whatever became of it. The screen was
+  // first published at /services, which is the footer's public "الخدمات" link —
+  // so a signed-out visitor reached a technician's own offers. It belongs under
+  // /technician like the rest of the portal, behind the same guard.
+  offers: '/technician/offers',
 }
 
 /** Fills `:orderId` in the two order paths. */
@@ -41,7 +47,7 @@ export const technicianOrderPath = (route, orderId) =>
 export const TECHNICIAN_NAV_ITEMS = [
   { key: 'dashboard', label: 'الرئيسية', to: TECHNICIAN_ROUTES.dashboard, ready: true },
   { key: 'orders', label: 'الطلبات', to: TECHNICIAN_ROUTES.orders, ready: true },
-  { key: 'offers', label: 'عروضي', to: '/technician/offers', ready: false },
+  { key: 'offers', label: 'عروضي', to: TECHNICIAN_ROUTES.offers, ready: true },
   { key: 'messages', label: 'الرسائل', to: TECHNICIAN_ROUTES.messages, ready: true },
   { key: 'wallet', label: 'المحفظه', to: '/technician/wallet', ready: false },
 ]
