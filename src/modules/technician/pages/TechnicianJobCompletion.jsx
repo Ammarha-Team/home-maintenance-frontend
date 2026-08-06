@@ -81,17 +81,14 @@ function TechnicianJobCompletion() {
           </dl>
 
           <div className="flex flex-col gap-[12px]">
-            {/* The wallet screen has not been built, so this says as much rather
-                than routing to a path that would fall through to the catch-all
-                and drop the technician out of the portal. */}
-            <button
-              type="button"
-              disabled
-              title="المحفظة غير متاحة حاليًا — لم يتم بناء الشاشة بعد."
-              className="flex h-[56px] w-full cursor-not-allowed items-center justify-center rounded-[12px] bg-primary-500 text-[18px] font-bold text-white opacity-60"
+            {/* The commission this screen just named is what the wallet asks
+                to be settled, so this goes straight there. */}
+            <Link
+              to={TECHNICIAN_ROUTES.wallet}
+              className="flex h-[56px] w-full items-center justify-center rounded-[12px] bg-primary-500 text-[18px] font-bold text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
             >
               الذهاب للمحفظه
-            </button>
+            </Link>
 
             <Link
               to={TECHNICIAN_ROUTES.dashboard}

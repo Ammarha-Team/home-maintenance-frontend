@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import { Star, Wallet } from 'lucide-react'
+import { TECHNICIAN_ROUTES } from '../constants/technicianRoutes.js'
 
 /**
  * The three summary tiles under the greeting (Figma node 21:2076): today's
@@ -111,12 +113,15 @@ function TechnicianStats({ stats }) {
           </span>
         </p>
 
-        <button
-          type="button"
-          className="mt-[16px] w-full rounded-[8px] bg-white py-[12px] text-[16px] leading-[24px] font-bold text-primary-600 transition-colors hover:bg-primary-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        {/* The only way into the wallet from the dashboard, and the settlement
+            flow starts there. It had no handler, so the tile stated a debt with
+            no way to pay it. */}
+        <Link
+          to={TECHNICIAN_ROUTES.wallet}
+          className="mt-[16px] block w-full rounded-[8px] bg-white py-[12px] text-center text-[16px] leading-[24px] font-bold text-primary-600 transition-colors hover:bg-primary-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           سداد الان
-        </button>
+        </Link>
       </article>
     </section>
   )

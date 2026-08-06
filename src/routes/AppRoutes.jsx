@@ -30,7 +30,13 @@ import TechnicianMessages from "../modules/technician/pages/TechnicianMessages.j
 import TechnicianJobTracking from "../modules/technician/pages/TechnicianJobTracking.jsx";
 import TechnicianJobArrival from "../modules/technician/pages/TechnicianJobArrival.jsx";
 import TechnicianJobCompletion from "../modules/technician/pages/TechnicianJobCompletion.jsx";
+import TechnicianWallet from "../modules/technician/pages/TechnicianWallet.jsx";
+import TechnicianPaymentDetails from "../modules/technician/pages/TechnicianPaymentDetails.jsx";
+import TechnicianPaymentMethod from "../modules/technician/pages/TechnicianPaymentMethod.jsx";
+import TechnicianPaymentConfirm from "../modules/technician/pages/TechnicianPaymentConfirm.jsx";
+import TechnicianPaymentComplete from "../modules/technician/pages/TechnicianPaymentComplete.jsx";
 import TechnicianRoute from "./TechnicianRoute.jsx";
+import ScrollToTop from "./ScrollToTop.jsx";
 
 import Profile from "../modules/profile/pages/Profile";
 import Settings from "../modules/profile/pages/Settings";
@@ -49,6 +55,11 @@ import Services from "../modules/services/pages/Services";
 
 function AppRoutes() {
   return (
+    <>
+      {/* Route changes keep the old scroll position, which lands a screen
+          reached from the bottom of a long page partway down its own. */}
+      <ScrollToTop />
+
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
@@ -209,6 +220,52 @@ function AppRoutes() {
         }
       />
 
+      {/* The wallet, and the settlement that runs out of it. The technician
+          owes the platform its commission, so this flow goes the other way from
+          the job screens above: the wallet states what is due, the payment
+          screens collect it, and the receipt closes it out. Each screen leads
+          to the next, and the wallet is the only way in. */}
+      <Route
+        path={TECHNICIAN_ROUTES.wallet}
+        element={
+          <TechnicianRoute>
+            <TechnicianWallet />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentDetails}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentDetails />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentMethod}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentMethod />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentConfirm}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentConfirm />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentComplete}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentComplete />
+          </TechnicianRoute>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/" replace />} />
 
       <Route path="/profile" element={<Profile />} />
@@ -225,6 +282,7 @@ function AppRoutes() {
 
       
     </Routes>
+    </>
   );
 }
 

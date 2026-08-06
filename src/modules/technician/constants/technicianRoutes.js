@@ -29,6 +29,19 @@ export const TECHNICIAN_ROUTES = {
   // so a signed-out visitor reached a technician's own offers. It belongs under
   // /technician like the rest of the portal, behind the same guard.
   offers: '/technician/offers',
+
+  // The wallet, and the settlement that starts from it. This flow runs the
+  // opposite way from the job screens: the technician owes the platform its
+  // commission, so here the technician is the one paying.
+  //
+  // The four payment paths nest under the wallet because that is the only way
+  // in — each screen carries the technician to the next, and none of them means
+  // anything on its own.
+  wallet: '/technician/wallet',
+  paymentDetails: '/technician/wallet/payment',
+  paymentMethod: '/technician/wallet/payment/method',
+  paymentConfirm: '/technician/wallet/payment/confirm',
+  paymentComplete: '/technician/wallet/payment/complete',
 }
 
 /** Fills `:orderId` in the two order paths. */
@@ -49,5 +62,5 @@ export const TECHNICIAN_NAV_ITEMS = [
   { key: 'orders', label: 'الطلبات', to: TECHNICIAN_ROUTES.orders, ready: true },
   { key: 'offers', label: 'عروضي', to: TECHNICIAN_ROUTES.offers, ready: true },
   { key: 'messages', label: 'الرسائل', to: TECHNICIAN_ROUTES.messages, ready: true },
-  { key: 'wallet', label: 'المحفظه', to: '/technician/wallet', ready: false },
+  { key: 'wallet', label: 'المحفظه', to: TECHNICIAN_ROUTES.wallet, ready: true },
 ]
