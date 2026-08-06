@@ -23,7 +23,7 @@ export default function LocationHeader({ onRequestClick }) {
       
       {/* 1. الترحيب الديناميكي بناءً على اسم المسجل */}
       <h1 className="text-2xl md:text-3xl font-bold text-blue-600 flex items-center justify-center gap-2 mb-2">
-        <span>{userName ? `مرحباً، ${userName}` : 'مرحباً بك'}</span>
+        <span>{userName ? `مرحباً بك، ${userName}` : 'مرحباً بك'}</span>
         <span className="text-2xl">👋</span>
       </h1>
       
