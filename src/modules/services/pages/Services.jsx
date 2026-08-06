@@ -15,7 +15,7 @@ const initialServices = [
     title: "تسريب مفاجئ في المطبخ",
     description: "يوجد تسريب مياه قوي تحت الحوض يحتاج إلى إصلاح...",
     price: 450,
-    status: "مقبول",
+    status: "المجدولة",
     location: "المعادي",
     time: "12 د",
     imagesCount: 3,
@@ -28,7 +28,7 @@ const initialServices = [
     title: "تصليح تكييف",
     description: "التكييف لا يعمل ويحتاج إلى صيانة.",
     price: 300,
-    status: "معلقة",
+    status: "قيد الانتظار",
     location: "مدينة نصر",
     time: "20 د",
     imagesCount: 2,
@@ -63,8 +63,9 @@ const initialServices = [
 
 export default function Services() {
 
-  const [services, setServices] = useState(initialServices);
-  const [selectedService, setSelectedService] = useState(null);
+const [services, setServices] = useState(initialServices);
+const [selectedService, setSelectedService] = useState(null);
+const [activeFilter, setActiveFilter] = useState("الكل");
 
 
   const handleDelete = (id) => {
@@ -91,6 +92,11 @@ export default function Services() {
     setSelectedService(null);
   };
 
+  const filteredServices = services.filter((service) => {
+  if (activeFilter === "الكل") return true;
+
+ return service.status === activeFilter;
+});
 
   return (
     <>
@@ -107,18 +113,21 @@ export default function Services() {
           }
           pendingOffers={
             services.filter(
-              (item) => item.status === "معلقة"
+              (item) => item.status === "قيد الانتظار"
             ).length
           }
         />
 
 
-        <ServiceFilter />
+       <ServiceFilter
+  active={activeFilter}
+  setActive={setActiveFilter}
+/>
 
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6" dir="rtl">
 
-          {services.map((service) => (
+          {filteredServices.map((service) => (
             <ServiceCard
               key={service.id}
               {...service}

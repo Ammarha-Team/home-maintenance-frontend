@@ -1,7 +1,4 @@
-import { useState } from "react";
-
-export default function ServiceFilter() {
-  const [active, setActive] = useState("الكل");
+export default function ServiceFilter({ active, setActive }) {
 
   const filters = [
     "مقبول",
