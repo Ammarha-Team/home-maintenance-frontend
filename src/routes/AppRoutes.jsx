@@ -25,6 +25,11 @@ import TechnicianDashboard from "../modules/technician/pages/TechnicianDashboard
 import TechnicianOrders from "../modules/technician/pages/TechnicianOrders.jsx";
 import TechnicianOrderDetails from "../modules/technician/pages/TechnicianOrderDetails.jsx";
 import TechnicianOrderOffer from "../modules/technician/pages/TechnicianOrderOffer.jsx";
+import TechnicianOfferAccepted from "../modules/technician/pages/TechnicianOfferAccepted.jsx";
+import TechnicianMessages from "../modules/technician/pages/TechnicianMessages.jsx";
+import TechnicianJobTracking from "../modules/technician/pages/TechnicianJobTracking.jsx";
+import TechnicianJobArrival from "../modules/technician/pages/TechnicianJobArrival.jsx";
+import TechnicianJobCompletion from "../modules/technician/pages/TechnicianJobCompletion.jsx";
 import TechnicianRoute from "./TechnicianRoute.jsx";
 
 import Profile from "../modules/profile/pages/Profile";
@@ -130,6 +135,52 @@ function AppRoutes() {
         element={
           <TechnicianRoute>
             <TechnicianOrderOffer />
+          </TechnicianRoute>
+        }
+      />
+
+      {/* The job, once the offer wins it. Sending an offer lands on the
+          acceptance screen, which starts the job; from there the technician
+          confirms arrival and then closes the service out. Messaging is a
+          detour off the acceptance screen rather than a step in that chain,
+          which is why it keeps a path of its own. */}
+      <Route
+        path={TECHNICIAN_ROUTES.offerAccepted}
+        element={
+          <TechnicianRoute>
+            <TechnicianOfferAccepted />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.messages}
+        element={
+          <TechnicianRoute>
+            <TechnicianMessages />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.jobTracking}
+        element={
+          <TechnicianRoute>
+            <TechnicianJobTracking />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.jobArrival}
+        element={
+          <TechnicianRoute>
+            <TechnicianJobArrival />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.jobCompletion}
+        element={
+          <TechnicianRoute>
+            <TechnicianJobCompletion />
           </TechnicianRoute>
         }
       />
