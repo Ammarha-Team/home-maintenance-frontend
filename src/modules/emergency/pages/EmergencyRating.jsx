@@ -5,7 +5,7 @@ import AppLayout from '../../../shared/layouts/AppLayout.jsx'
 import Button from '../../../shared/components/Button.jsx'
 import Textarea from '../../../shared/components/Textarea.jsx'
 import RatingStars from '../../reviews/components/RatingStars.jsx'
-import SuccessSeal from '../components/SuccessSeal.jsx'
+import SuccessSeal from '../../../shared/components/SuccessSeal.jsx'
 import TechnicianSummaryCard from '../components/TechnicianSummaryCard.jsx'
 import {
   submitEmergencyRating,

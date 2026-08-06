@@ -41,7 +41,6 @@ function TechnicianOrderOffer() {
   const [time, setTime] = useState('09:00')
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
-  const [sent, setSent] = useState(false)
 
   const trail = [
     { label: 'الرئيسيه', to: TECHNICIAN_ROUTES.dashboard },
@@ -91,30 +90,7 @@ function TechnicianOrderOffer() {
     }
 
     setError('')
-    setSent(true)
-  }
-
-  // Nothing receives this yet, so the screen is honest about what just
-  // happened: the offer is held on this device only, and the technician is told
-  // so rather than shown a success that reached nobody.
-  if (sent) {
-    return (
-      <TechnicianLayout>
-        <div className="mx-auto flex w-full max-w-[720px] flex-col items-center gap-[16px] px-[24px] py-[64px] text-center">
-          <h1 className="text-[24px] leading-[1.5] font-bold text-text-500">
-            تم تجهيز عرضك
-          </h1>
-          <p className="text-[16px] leading-[1.6] text-text-300">
-            {`سعر ${money(total)} لطلب ${order.reference}. لم يصل العرض إلى العميل بعد — لا يوفر الخادم خدمة لاستقبال العروض حتى الآن.`}
-          </p>
-          <div className="w-full max-w-[320px]">
-            <Button fullWidth onClick={() => navigate(TECHNICIAN_ROUTES.orders)}>
-              العودة إلى الطلبات
-            </Button>
-          </div>
-        </div>
-      </TechnicianLayout>
-    )
+    navigate(technicianOrderPath(TECHNICIAN_ROUTES.offerAccepted, order.id))
   }
 
   return (

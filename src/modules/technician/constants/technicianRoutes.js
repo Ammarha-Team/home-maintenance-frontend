@@ -10,6 +10,19 @@ export const TECHNICIAN_ROUTES = {
   // job — a price, a start time and a note to the customer — not anything that
   // completes one, so the name follows the screen.
   orderOffer: '/technician/orders/:orderId/offer',
+
+  // The job itself, once the customer has accepted the offer. These four run in
+  // order — accepted, on the way, arrived, finished — and each screen carries
+  // the technician on to the next, so the paths are named for the stage rather
+  // than for the frame titles, which describe the same steps from outside.
+  offerAccepted: '/technician/orders/:orderId/accepted',
+  jobTracking: '/technician/orders/:orderId/tracking',
+  jobArrival: '/technician/orders/:orderId/arrival',
+  jobCompletion: '/technician/orders/:orderId/completed',
+
+  // Not tied to one order: the inbox lists every conversation the technician
+  // has, which is why it sits beside the order paths rather than under one.
+  messages: '/technician/messages',
 }
 
 /** Fills `:orderId` in the two order paths. */
@@ -29,6 +42,6 @@ export const TECHNICIAN_NAV_ITEMS = [
   { key: 'dashboard', label: 'الرئيسية', to: TECHNICIAN_ROUTES.dashboard, ready: true },
   { key: 'orders', label: 'الطلبات', to: TECHNICIAN_ROUTES.orders, ready: true },
   { key: 'offers', label: 'عروضي', to: '/technician/offers', ready: false },
-  { key: 'messages', label: 'الرسائل', to: '/technician/messages', ready: false },
+  { key: 'messages', label: 'الرسائل', to: TECHNICIAN_ROUTES.messages, ready: true },
   { key: 'wallet', label: 'المحفظه', to: '/technician/wallet', ready: false },
 ]
