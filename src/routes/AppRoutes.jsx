@@ -22,6 +22,9 @@ import EmergencyRating from "../modules/emergency/pages/EmergencyRating.jsx";
 
 import { TECHNICIAN_ROUTES } from "../modules/technician/constants/technicianRoutes.js";
 import TechnicianDashboard from "../modules/technician/pages/TechnicianDashboard.jsx";
+import TechnicianOrders from "../modules/technician/pages/TechnicianOrders.jsx";
+import TechnicianOrderDetails from "../modules/technician/pages/TechnicianOrderDetails.jsx";
+import TechnicianOrderOffer from "../modules/technician/pages/TechnicianOrderOffer.jsx";
 import TechnicianRoute from "./TechnicianRoute.jsx";
 
 import Profile from "../modules/profile/pages/Profile";
@@ -92,13 +95,41 @@ function AppRoutes() {
       <Route path={EMERGENCY_ROUTES.rating} element={<EmergencyRating />} />
 
       {/* Technician portal. Kept under its own /technician prefix so it can
-          never be confused with the customer screens above. The remaining
-          technician screens land on their own branches. */}
+          never be confused with the customer screens above.
+
+          The four screens are one flow: the dashboard leads to the job board,
+          the board opens a request, and the request leads to the offer that
+          bids for it. Every one of them sits behind the same guard — a
+          customer who reaches these paths has nothing to do here. */}
       <Route
         path={TECHNICIAN_ROUTES.dashboard}
         element={
           <TechnicianRoute>
             <TechnicianDashboard />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.orders}
+        element={
+          <TechnicianRoute>
+            <TechnicianOrders />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.orderDetails}
+        element={
+          <TechnicianRoute>
+            <TechnicianOrderDetails />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.orderOffer}
+        element={
+          <TechnicianRoute>
+            <TechnicianOrderOffer />
           </TechnicianRoute>
         }
       />
