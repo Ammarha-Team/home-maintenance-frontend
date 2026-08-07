@@ -43,6 +43,9 @@ import { ORDERS_ROUTES } from "../modules/orders/constants/ordersRoutes";
 // 👇 1. استدعاء مكون المحادثة/الشات من الموديول الخاص به
 import Chat from "../modules/chat/pages/Chat"; // تأكد من مسار الملف لديك
 
+// The admin console keeps its own route table and mounts here as one branch.
+import AdminRoutes from "./AdminRoutes.jsx";
+
 function AppRoutes() {
   return (
     <>
@@ -109,6 +112,10 @@ function AppRoutes() {
       <Route path="/terms" element={<Terms />} />
       <Route path="/about" element={<About />} />
       <Route path="/savedaddresses" element={<SavedAddresses />} />
+
+      {/* Admin console. It has to be registered before the catch-all below,
+          which would otherwise answer every /admin path and redirect out. */}
+      <Route path="/admin/*" element={<AdminRoutes />} />
 
       {/* 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
