@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Check, X, Sparkles } from "lucide-react";
 
 export default function OrderCard({ order }) {
@@ -42,16 +43,22 @@ export default function OrderCard({ order }) {
   const renderActionButton = (actionType) => {
     if (actionType === "view_offers") {
       return (
-        <button className="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold rounded-xl text-sm transition-colors shadow-2xs cursor-pointer">
+        <Link
+          to={`/my-orders/${order.id}`}
+          className="block w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold rounded-xl text-sm transition-colors shadow-2xs cursor-pointer text-center"
+        >
           عرض العروض المتقدمه
-        </button>
+        </Link>
       );
     }
     if (actionType === "track") {
       return (
-        <button className="w-full py-2.5 bg-white border border-[#2563eb] text-[#2563eb] hover:bg-blue-50 font-semibold rounded-xl text-sm transition-colors cursor-pointer">
+        <Link
+          to={`/my-orders/${order.id}/track`}
+          className="block w-full py-2.5 bg-white border border-[#2563eb] text-[#2563eb] hover:bg-blue-50 font-semibold rounded-xl text-sm transition-colors shadow-2xs cursor-pointer text-center"
+        >
           تتبع الطلب
-        </button>
+        </Link>
       );
     }
     if (actionType === "reorder") {
@@ -62,9 +69,12 @@ export default function OrderCard({ order }) {
       );
     }
     return (
-      <button className="w-full py-2.5 bg-white border border-[#2563eb] text-[#2563eb] hover:bg-blue-50 font-semibold rounded-xl text-sm transition-colors cursor-pointer">
+      <Link
+        to={`/my-orders/${order.id}`}
+        className="block w-full py-2.5 bg-white border border-[#2563eb] text-[#2563eb] hover:bg-blue-50 font-semibold rounded-xl text-sm transition-colors cursor-pointer text-center"
+      >
         تتبع الطلب
-      </button>
+      </Link>
     );
   };
 

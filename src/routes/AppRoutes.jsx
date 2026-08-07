@@ -1,16 +1,45 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+
 import {
   AUTH_ROUTES,
   SIGN_UP_INFO_PATTERN,
 } from "../modules/auth/constants/authRoutes.js";
 
-import ForgotPassword from "../modules/auth/pages/ForgotPassword.jsx";
+import { EMERGENCY_ROUTES } from "../modules/emergency/constants/emergency";
+
+import LandingPage from "../landing/pages/LandingPage";
+import Home from "../modules/home/pages/Home";
+
 import Login from "../modules/auth/pages/Login.jsx";
+import ForgotPassword from "../modules/auth/pages/ForgotPassword.jsx";
 import SignUpInfo from "../modules/auth/pages/SignUpInfo.jsx";
 import CustomerSignUpTerms from "../modules/auth/pages/CustomerSignUpTerms.jsx";
 import TechnicianSignUpTerms from "../modules/auth/pages/TechnicianSignUpTerms.jsx";
-import LandingPage from "../landing/pages/LandingPage";
-import Home from "../modules/home/pages/Home";
+
+import EmergencyRequest from "../modules/emergency/pages/EmergencyRequest";
+import EmergencyTracking from "../modules/emergency/pages/EmergencyTracking";
+import EmergencyRating from "../modules/emergency/pages/EmergencyRating";
+
+import Profile from "../modules/profile/pages/Profile";
+import Settings from "../modules/profile/pages/Settings";
+import ChangePassword from "../modules/profile/pages/ChangePassword";
+import Notifications from "../modules/profile/pages/Notifications";
+import Language from "../modules/profile/pages/Language";
+import HelpSupport from "../modules/profile/pages/HelpSupport";
+import PrivacyPolicy from "../modules/profile/pages/PrivacyPolicy";
+import Terms from "../modules/profile/pages/Terms";
+import About from "../modules/profile/pages/About";
+import SavedAddresses from "../modules/profile/pages/SavedAddresses";
+
+// My Orders & Technicians
+import MyOrders from "../modules/orders/pages/MyOrders";
+import OrderOffers from "../modules/orders/pages/OrderOffers";
+import OrderTracking from "../modules/orders/pages/OrderTracking";
+import TechnicianProfile from "../modules/technicians/pages/TechnicianProfile";
+import { ORDERS_ROUTES } from "../modules/orders/constants/ordersRoutes";
+
+// 👇 1. استدعاء مكون المحادثة/الشات من الموديول الخاص به
+import Chat from "../modules/chat/pages/Chat"; // تأكد من مسار الملف لديك
 
 function AppRoutes() {
   return (
@@ -18,47 +47,65 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
 
+      {/* Orders */}
+      <Route path={ORDERS_ROUTES.myOrders} element={<MyOrders />} />
+      <Route path={ORDERS_ROUTES.orderDetails} element={<OrderOffers />} />
+      <Route path={ORDERS_ROUTES.orderOffers} element={<OrderOffers />} />
+      <Route path={ORDERS_ROUTES.orderTracking} element={<OrderTracking />} />
+      <Route path="/track-order/:id" element={<OrderTracking />} />
+
+      {/* 👇 2. إضافة مسار الشات والمراسلة هنا */}
+      <Route path="/messages" element={<Chat />} />
+      <Route path="/messages/:id" element={<Chat />} />
+
+      {/* Technician Profile */}
+      <Route path="/technicians/:id" element={<TechnicianProfile />} />
+      <Route path="/my-orders/:orderId/technicians/:id" element={<TechnicianProfile />} />
+
       <Route path={AUTH_ROUTES.login} element={<Login />} />
       <Route path={AUTH_ROUTES.forgotPassword} element={<ForgotPassword />} />
 
-      {/* The site header links here for "إنشاء حساب". Sign up is split by role
-          and starts on the customer step, so /register is an entry point into
-          that flow rather than a screen of its own. Without this the catch-all
-          below sends the button back to the landing page. */}
       <Route
         path="/register"
         element={<Navigate to={AUTH_ROUTES.customerSignUp} replace />}
       />
 
       <Route path={SIGN_UP_INFO_PATTERN} element={<SignUpInfo />} />
+
       <Route
         path={AUTH_ROUTES.customerSignUpTerms}
         element={<CustomerSignUpTerms />}
       />
+
       <Route
         path={AUTH_ROUTES.technicianSignUpTerms}
         element={<TechnicianSignUpTerms />}
       />
 
-      {/* Emergency service. The home screen's quick actions already point at
-          /emergency-diagnosis, so that path is kept as an alias rather than
-          changing a link this feature does not own. */}
-      <Route path={EMERGENCY_ROUTES.request} element={<EmergencyRequest />} />
+      {/* Emergency */}
+      <Route
+        path={EMERGENCY_ROUTES.request}
+        element={<EmergencyRequest />}
+      />
+
       <Route
         path={EMERGENCY_ROUTES.requestAlias}
         element={<EmergencyRequest />}
       />
+
       <Route
         path={EMERGENCY_ROUTES.tracking}
         element={<EmergencyTracking />}
       />
-      <Route path={EMERGENCY_ROUTES.rating} element={<EmergencyRating />} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path={EMERGENCY_ROUTES.rating}
+        element={<EmergencyRating />}
+      />
 
+      {/* Profile */}
       <Route path="/profile" element={<Profile />} />
       <Route path="/settings" element={<Settings />} />
-
       <Route path="/change-password" element={<ChangePassword />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/language" element={<Language />} />
@@ -68,7 +115,8 @@ function AppRoutes() {
       <Route path="/about" element={<About />} />
       <Route path="/savedaddresses" element={<SavedAddresses />} />
 
-      
+      {/* 404 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
