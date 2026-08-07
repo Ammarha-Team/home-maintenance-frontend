@@ -43,6 +43,25 @@ import { ORDERS_ROUTES } from "../modules/orders/constants/ordersRoutes";
 // 👇 1. استدعاء مكون المحادثة/الشات من الموديول الخاص به
 import Chat from "../modules/chat/pages/Chat"; // تأكد من مسار الملف لديك
 
+// The technician portal.
+import { TECHNICIAN_ROUTES } from "../modules/technician/constants/technicianRoutes.js";
+import TechnicianDashboard from "../modules/technician/pages/TechnicianDashboard.jsx";
+import TechnicianOrders from "../modules/technician/pages/TechnicianOrders.jsx";
+import TechnicianOrderDetails from "../modules/technician/pages/TechnicianOrderDetails.jsx";
+import TechnicianOrderOffer from "../modules/technician/pages/TechnicianOrderOffer.jsx";
+import TechnicianOfferAccepted from "../modules/technician/pages/TechnicianOfferAccepted.jsx";
+import TechnicianMessages from "../modules/technician/pages/TechnicianMessages.jsx";
+import TechnicianJobTracking from "../modules/technician/pages/TechnicianJobTracking.jsx";
+import TechnicianJobArrival from "../modules/technician/pages/TechnicianJobArrival.jsx";
+import TechnicianJobCompletion from "../modules/technician/pages/TechnicianJobCompletion.jsx";
+import TechnicianWallet from "../modules/technician/pages/TechnicianWallet.jsx";
+import TechnicianPaymentDetails from "../modules/technician/pages/TechnicianPaymentDetails.jsx";
+import TechnicianPaymentMethod from "../modules/technician/pages/TechnicianPaymentMethod.jsx";
+import TechnicianPaymentConfirm from "../modules/technician/pages/TechnicianPaymentConfirm.jsx";
+import TechnicianPaymentComplete from "../modules/technician/pages/TechnicianPaymentComplete.jsx";
+import TechnicianRoute from "./TechnicianRoute.jsx";
+import ScrollToTop from "./ScrollToTop.jsx";
+
 // The admin console keeps its own route table and mounts here as one branch.
 import AdminRoutes from "./AdminRoutes.jsx";
 
@@ -51,7 +70,7 @@ function AppRoutes() {
     <>
       {/* Route changes keep the old scroll position, which lands a screen
           reached from the bottom of a long page partway down its own. */}
-      {/* <ScrollToTop /> */}
+      <ScrollToTop />
 
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -112,6 +131,169 @@ function AppRoutes() {
       <Route path="/terms" element={<Terms />} />
       <Route path="/about" element={<About />} />
       <Route path="/savedaddresses" element={<SavedAddresses />} />
+
+      {/* The customer's own orders. Every card in the list links to one of
+          these three, and none of them was registered — the screens were built
+          and imported but no path reached them. */}
+      <Route path={ORDERS_ROUTES.myOrders} element={<MyOrders />} />
+      <Route path={ORDERS_ROUTES.orderDetails} element={<OrderOffers />} />
+      <Route path={ORDERS_ROUTES.orderOffers} element={<OrderOffers />} />
+      <Route path={ORDERS_ROUTES.orderTracking} element={<OrderTracking />} />
+
+      {/* Reached from an offer card, which links to the technician behind the
+          offer rather than to the offer itself. */}
+      <Route
+        path="/my-orders/:id/technicians/:technicianId"
+        element={<TechnicianProfile />}
+      />
+
+      <Route path="/chat" element={<Chat />} />
+
+      {/* The technician portal. Named Technician* on both the route and the
+          component so these can never be confused with the customer screens
+          above.
+
+          The first four are one flow: the dashboard leads to the job board,
+          the board opens a request, and the request leads to the offer that
+          bids for it. Every one of them sits behind the same guard — a
+          customer who reaches these paths has nothing to do here. */}
+      <Route
+        path={TECHNICIAN_ROUTES.dashboard}
+        element={
+          <TechnicianRoute>
+            <TechnicianDashboard />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.orders}
+        element={
+          <TechnicianRoute>
+            <TechnicianOrders />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.orderDetails}
+        element={
+          <TechnicianRoute>
+            <TechnicianOrderDetails />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.orderOffer}
+        element={
+          <TechnicianRoute>
+            <TechnicianOrderOffer />
+          </TechnicianRoute>
+        }
+      />
+
+      {/* The job, once the offer wins it. Sending an offer lands on the
+          acceptance screen, which starts the job; from there the technician
+          confirms arrival and then closes the service out. Messaging is a
+          detour off the acceptance screen rather than a step in that chain,
+          which is why it keeps a path of its own. */}
+      <Route
+        path={TECHNICIAN_ROUTES.offerAccepted}
+        element={
+          <TechnicianRoute>
+            <TechnicianOfferAccepted />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.messages}
+        element={
+          <TechnicianRoute>
+            <TechnicianMessages />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.jobTracking}
+        element={
+          <TechnicianRoute>
+            <TechnicianJobTracking />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.jobArrival}
+        element={
+          <TechnicianRoute>
+            <TechnicianJobArrival />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.jobCompletion}
+        element={
+          <TechnicianRoute>
+            <TechnicianJobCompletion />
+          </TechnicianRoute>
+        }
+      />
+
+      {/* عروضي — every offer the technician has sent, whatever became of it.
+          It shares its screen with the public /services page above; only this
+          path is behind the guard, so a signed-out visitor still reaches the
+          public one and only a technician reaches their own offers. */}
+      <Route
+        path={TECHNICIAN_ROUTES.offers}
+        element={
+          <TechnicianRoute>
+            <Services />
+          </TechnicianRoute>
+        }
+      />
+
+      {/* The wallet, and the settlement that runs out of it. The technician
+          owes the platform its commission, so this flow goes the other way from
+          the job screens above: the wallet states what is due, the payment
+          screens collect it, and the receipt closes it out. Each screen leads
+          to the next, and the wallet is the only way in. */}
+      <Route
+        path={TECHNICIAN_ROUTES.wallet}
+        element={
+          <TechnicianRoute>
+            <TechnicianWallet />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentDetails}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentDetails />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentMethod}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentMethod />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentConfirm}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentConfirm />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentComplete}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentComplete />
+          </TechnicianRoute>
+        }
+      />
 
       {/* Admin console. It has to be registered before the catch-all below,
           which would otherwise answer every /admin path and redirect out. */}
