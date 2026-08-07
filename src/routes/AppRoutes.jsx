@@ -11,6 +11,7 @@ import LandingPage from "../landing/pages/LandingPage";
 import Home from "../modules/home/pages/Home";
 import Services from "../modules/services/pages/Services";
 import AccountRestricted from "../modules/account-restriction/pages/AccountRestricted";
+import TechnicianProfile from "../modules/technician-profile/pages/TechnicianProfile";
 
 import Login from "../modules/auth/pages/Login.jsx";
 import ForgotPassword from "../modules/auth/pages/ForgotPassword.jsx";
@@ -39,7 +40,6 @@ import SavedAddresses from "../modules/profile/pages/SavedAddresses";
 import MyOrders from "../modules/orders/pages/MyOrders";
 import OrderOffers from "../modules/orders/pages/OrderOffers";
 import OrderTracking from "../modules/orders/pages/OrderTracking";
-import TechnicianProfile from "../modules/technicians/pages/TechnicianProfile";
 import { ORDERS_ROUTES } from "../modules/orders/constants/ordersRoutes";
 
 // 👇 1. استدعاء مكون المحادثة/الشات من الموديول الخاص به
@@ -79,7 +79,9 @@ function AppRoutes() {
       <Route path="/home" element={<Home />} />
 
       <Route path="/services" element={<Services />} />
-      <Route path="/AccountRestricted" element={<AccountRestricted />}/>
+      <Route path="/AccountRestricted" element={<AccountRestricted />} />
+      <Route path="/technician/profile" element={<TechnicianProfile />}/>
+
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
       <Route path={AUTH_ROUTES.forgotPassword} element={<ForgotPassword />} />

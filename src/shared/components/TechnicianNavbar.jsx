@@ -130,7 +130,7 @@ function TechnicianNavbar() {
         )}
 
         <Link
-          to="/profile"
+          to="/technician/profile"
           onClick={() => setMenuOpen(false)}
           className="flex items-center gap-[10px] px-[16px] py-[10px] text-text-400 hover:bg-primary-50"
         >
