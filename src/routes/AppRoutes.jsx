@@ -14,6 +14,8 @@ import AccountRestricted from "../modules/account-restriction/pages/AccountRestr
 
 import Login from "../modules/auth/pages/Login.jsx";
 import ForgotPassword from "../modules/auth/pages/ForgotPassword.jsx";
+import ConfirmEmail from "../modules/auth/pages/ConfirmEmail.jsx";
+import ResetPassword from "../modules/auth/pages/ResetPassword.jsx";
 import SignUpInfo from "../modules/auth/pages/SignUpInfo.jsx";
 import CustomerSignUpTerms from "../modules/auth/pages/CustomerSignUpTerms.jsx";
 import TechnicianSignUpTerms from "../modules/auth/pages/TechnicianSignUpTerms.jsx";
@@ -81,6 +83,17 @@ function AppRoutes() {
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
       <Route path={AUTH_ROUTES.forgotPassword} element={<ForgotPassword />} />
+
+      {/* Landing page for the confirmation mail. The mail carries userId and
+          token on the query string and this screen spends them; without the
+          route the link falls through to the catch-all below and the browser
+          bounces to the landing page before the account is ever activated. */}
+      <Route path={AUTH_ROUTES.confirmEmail} element={<ConfirmEmail />} />
+
+      {/* Landing page for the reset mail, reachable only from that link. It
+          has to exist here for the same reason: the API mails a link to its own
+          POST endpoint otherwise, which a browser cannot open. */}
+      <Route path={AUTH_ROUTES.resetPassword} element={<ResetPassword />} />
 
       <Route
         path="/register"

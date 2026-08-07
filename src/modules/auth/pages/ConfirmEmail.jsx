@@ -44,9 +44,19 @@ function ConfirmEmail() {
       .then(() => setState('done'))
       .catch((error) => {
         setState('error')
+
+        // A 4xx here is the token being refused: expired, or already spent by
+        // an earlier click. Without a domain message the shared handler falls
+        // back to "try again later", which a dead link will never satisfy —
+        // so say what actually went wrong and where a new one comes from.
+        const refused = error.status >= 400 && error.status < 500
+        const unexplained = !error.code || error.code === 'Unknown'
+
         setMessage(
-          error.message ||
-            'تعذر تفعيل الحساب. قد يكون الرابط منتهي الصلاحية أو مستخدمًا من قبل.',
+          refused && unexplained
+            ? 'انتهت صلاحية رابط التفعيل أو تم استخدامه من قبل. سجّل الدخول لطلب رسالة تفعيل جديدة.'
+            : error.message ||
+                'تعذر تفعيل الحساب. قد يكون الرابط منتهي الصلاحية أو مستخدمًا من قبل.',
         )
       })
   }, [userId, token])
