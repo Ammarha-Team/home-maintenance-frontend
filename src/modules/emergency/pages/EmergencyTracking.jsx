@@ -5,7 +5,7 @@ import AppLayout from '../../../shared/layouts/AppLayout.jsx'
 import Button from '../../../shared/components/Button.jsx'
 import Modal from '../../../shared/components/Modal.jsx'
 import StatusTimeline from '../components/StatusTimeline.jsx'
-import SuccessSeal from '../components/SuccessSeal.jsx'
+import SuccessSeal from '../../../shared/components/SuccessSeal.jsx'
 import TechnicianSummaryCard from '../components/TechnicianSummaryCard.jsx'
 import { EMERGENCY_ROUTES, REQUEST_STAGES } from '../constants/emergency.js'
 import {

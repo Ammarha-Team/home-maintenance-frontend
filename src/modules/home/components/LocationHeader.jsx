@@ -1,35 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { readDisplayName, readSession } from '../../auth/services/authSession.js';
 
 export default function LocationHeader({ onRequestClick }) {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('المستخدم'); // قيمة افتراضية
 
-  useEffect(() => {
-    // جلب اسم المستخدم من بيانات التسجيل (تعديل المفتاح حسب المعتاد في مشروعكم مثل user أو userData)
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        if (parsedUser?.name) {
-          // جلب الاسم الأول فقط ليكون أنيقاً مع الترحيب
-          const firstName = parsedUser.name.split(' ')[0];
-          setUserName(firstName);
-        }
-      } catch (e) {
-        // لو الـ storedUser عبارة عن نص عادي
-        setUserName(storedUser);
-      }
-    }
-  }, []);
+  // The signed-in user's name, from the one place the session lives.
+  //
+  // This used to read a `user` key that nothing ever writes — signing in stores
+  // the session under `ammarha.session` — so it always fell through to the
+  // placeholder and greeted every customer as "the user".
+  //
+  // `readDisplayName` is the same reader the technician portal uses, so both
+  // portals take the name from one source. It returns an empty string until the
+  // API sends a name, and deliberately does not fall back to the email address:
+  // greeting someone by the front of their address is a guess dressed as a fact.
+  const userName = readDisplayName(readSession());
 
   return (
     <div className="w-full max-w-4xl mx-auto text-center my-6 px-4" dir="rtl">
       
       {/* 1. الترحيب الديناميكي بناءً على اسم المسجل */}
       <h1 className="text-2xl md:text-3xl font-bold text-blue-600 flex items-center justify-center gap-2 mb-2">
-        <span>مرحباً، {userName}</span>
+        <span>{userName ? `مرحباً بك، ${userName}` : 'مرحباً بك'}</span>
         <span className="text-2xl">👋</span>
       </h1>
       

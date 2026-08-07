@@ -43,6 +43,11 @@ import Chat from "../modules/chat/pages/Chat"; // تأكد من مسار الم�
 
 function AppRoutes() {
   return (
+    <>
+      {/* Route changes keep the old scroll position, which lands a screen
+          reached from the bottom of a long page partway down its own. */}
+      <ScrollToTop />
+
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
@@ -118,6 +123,7 @@ function AppRoutes() {
       {/* 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 

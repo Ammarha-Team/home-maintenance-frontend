@@ -1,16 +1,41 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Camera } from "lucide-react";
+import {
+  readDisplayName,
+  readSession,
+} from "../../auth/services/authSession.js";
+import { AUTH_ROUTES } from "../../auth/constants/authRoutes.js";
+
+// What this screen can show today, and why the rest is blank.
+//
+// The page used to open on a hardcoded person — "المستخدم", "user@email.com" —
+// so it showed the same stranger to everyone who signed in. It now reads the
+// signed-in session instead, which is the only source of user data the client
+// has.
+//
+// That session carries an id, an email and the roles, and nothing else: the API
+// exposes no profile endpoint at all, so there is nowhere to fetch a phone or an
+// address from and nowhere to save one to. Those fields are therefore shown
+// empty and left alone rather than filled with invented values, and the save
+// button stays disabled instead of pretending to write somewhere.
+//
+// The name is read through `readDisplayName`, the same reader the home greeting
+// and the technician portal use. It comes back empty until the login payload or
+// the token carries a name — neither does today, though registration collects
+// one.
+const readProfileFromSession = (session) => ({
+  name: readDisplayName(session),
+  email: session?.user?.email ?? "",
+  phone: "",
+  governorate: "",
+  city: "",
+  address: "",
+});
 
 export default function Profile() {
-  const [profile, setProfile] = useState({
-    name: "المستخدم",
-    email: "user@email.com",
-    phone: "",
-    governorate: "",
-    city: "",
-    address: "",
-  });
-
+  const session = readSession();
+  const [profile, setProfile] = useState(() => readProfileFromSession(session));
   const [image, setImage] = useState(null);
 
   const handleChange = (e) => {
@@ -25,6 +50,27 @@ export default function Profile() {
       setImage(URL.createObjectURL(e.target.files[0]));
     }
   };
+
+  // Reached signed out — there is no profile to show, so the page says so
+  // rather than rendering an empty form that could never fill itself.
+  if (!session?.token) {
+    return (
+      <div className="max-w-3xl mx-auto py-10 px-6 text-center" dir="rtl">
+        <h1 className="text-3xl font-bold text-blue-600 mb-4">
+          الملف الشخصي
+        </h1>
+        <p className="text-gray-600 mb-6">
+          سجّل الدخول لعرض بياناتك الشخصية.
+        </p>
+        <Link
+          to={AUTH_ROUTES.login}
+          className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition"
+        >
+          تسجيل الدخول
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-6">
@@ -77,6 +123,7 @@ export default function Profile() {
           name="name"
           value={profile.name}
           onChange={handleChange}
+          placeholder="لم يصل الاسم من الخادم بعد"
         />
 
         <Input
@@ -84,6 +131,7 @@ export default function Profile() {
           name="email"
           value={profile.email}
           onChange={handleChange}
+          readOnly
         />
 
         <Input
@@ -114,9 +162,18 @@ export default function Profile() {
           onChange={handleChange}
         />
 
-        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition">
+        <button
+          type="button"
+          disabled
+          className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold transition disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+        >
           حفظ التعديلات
         </button>
+
+        <p className="text-center text-sm text-gray-500">
+          حفظ التعديلات غير متاح حاليًا — لا يوفر الخادم خدمة لتحديث الملف
+          الشخصي بعد.
+        </p>
 
       </div>
 
@@ -133,7 +190,7 @@ function Input({ label, ...props }) {
 
       <input
         {...props}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 read-only:bg-gray-50 read-only:text-gray-600"
       />
     </div>
   );

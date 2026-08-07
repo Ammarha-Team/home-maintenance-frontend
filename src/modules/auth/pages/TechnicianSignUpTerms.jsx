@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import iconUpdated from '../../../assets/icons/terms-updated.svg'
 import PublicLayout from '../../../shared/layouts/PublicLayout.jsx'
+import AccountCreatedPanel from '../components/AccountCreatedPanel.jsx'
 import SignUpStepper from '../components/SignUpStepper.jsx'
 import TermsCards from '../components/TermsCards.jsx'
 import TermsConsent from '../components/TermsConsent.jsx'
@@ -11,6 +12,7 @@ import {
   TERMS_UPDATED_LABEL,
 } from '../constants/terms.js'
 import { registerTechnician } from '../services/authService.js'
+import { landingRouteFor, saveSession } from '../services/authSession.js'
 
 // Figma: "Create an account (for the technician)" step 3 of 3 (node 6:1663).
 // Unlike the other sign up steps this frame has no illustration panel — the
@@ -21,6 +23,7 @@ function TechnicianSignUpTerms() {
   const [accepted, setAccepted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [created, setCreated] = useState(false)
 
   // Step 2 hands the collected fields over through router state.
   const details = location.state?.details
@@ -30,13 +33,25 @@ function TechnicianSignUpTerms() {
     setSubmitError('')
 
     try {
-      await registerTechnician(details)
-      // Last step of the flow — the account exists, so the new technician goes
-      // straight to their home area. `replace` keeps the agreement step out of
-      // the history, which would otherwise re-submit on a back navigation.
-      navigate('/home', { replace: true })
-    } catch {
-      setSubmitError('تعذر إنشاء الحساب، حاول مرة أخرى لاحقًا.')
+      const result = await registerTechnician(details)
+
+      // If registration ever returns a session, the role inside it decides
+      // where the account lands — through the same helper login uses, so no
+      // screen has a destination written into it.
+      if (result?.session) {
+        saveSession(result.session)
+        navigate(landingRouteFor(result.session), { replace: true })
+        return
+      }
+
+      // As it stands the API answers with "Please confirm your email", and a
+      // login before that is rejected with Auth.EmailNotConfirmed. So the flow
+      // ends on an instruction to go and open the mail.
+      setCreated(true)
+    } catch (error) {
+      setSubmitError(
+        error.message || 'تعذر إنشاء الحساب، حاول مرة أخرى لاحقًا.',
+      )
     } finally {
       setSubmitting(false)
     }
@@ -52,6 +67,10 @@ function TechnicianSignUpTerms() {
             <SignUpStepper currentStep={3} />
           </div>
 
+          {created ? (
+            <AccountCreatedPanel email={details?.email} />
+          ) : (
+            <>
           <header className="flex w-full flex-col items-start gap-[16px]">
             <div className="flex w-full flex-col gap-[4px]">
               <h1 className="text-right text-[24px] font-bold leading-[1.5] text-text-500">
@@ -82,6 +101,8 @@ function TechnicianSignUpTerms() {
           >
             <TermsCards items={TECHNICIAN_TERMS} />
           </TermsConsent>
+            </>
+          )}
         </div>
       </div>
     </PublicLayout>
