@@ -72,10 +72,10 @@ function AppRoutes() {
 
           A customer-facing services listing still has to be built; when it is,
           it takes this path back. */}
-      <Route
-        path="/services"
-        element={<Navigate to={TECHNICIAN_ROUTES.offers} replace />}
-      />
+    <Route
+  path="/services"
+  element={<Services />}
+/>
       
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
