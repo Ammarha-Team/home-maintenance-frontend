@@ -349,3 +349,104 @@ export const THREADS = {
 export const findConversation = (conversationId) =>
   CONVERSATIONS.find((conversation) => conversation.id === conversationId) ??
   CONVERSATIONS[0]
+
+// The wallet and the settlement that follows it (Figma nodes 22:2926, 22:3064,
+// 22:3169, 22:3249 and 22:3345).
+//
+// Everything these five screens say about money comes from one figure — what
+// the completed orders billed. The commission, the net and the amount owed are
+// all worked out from it by `walletTotals`, so the screens cannot disagree.
+//
+// The frames write those figures as 2,882 / -432 / 2,600 with 450 owed, which
+// does not reconcile: 2,882 less 432 is 2,450, not 2,600, and 15% of 2,882 is
+// 432.30, not 450. Rather than copy four numbers that contradict each other
+// onto screens a technician would check against their own records, the billed
+// total is taken as given and the rest derived.
+export const WALLET = {
+  completedCount: 42,
+  weekEarnings: 3200,
+  // إجمالي الطلبات المنفذة — what the finished jobs billed, before commission.
+  billed: 2882,
+  dueDays: 4,
+  // How long is left to settle, as the frame writes it. Display values rather
+  // than a deadline: a live countdown needs a timestamp from the API, and one
+  // invented here would tick down to a moment that means nothing.
+  countdown: [
+    { key: 'days', value: 4, label: 'يوم' },
+    { key: 'hours', value: 42, label: 'ساعه' },
+    { key: 'minutes', value: 15, label: 'دقيقه' },
+  ],
+  period: 'فترة: 12 - 19 أكتوبر',
+}
+
+/**
+ * The wallet's figures, and the one the technician owes.
+ *
+ * `due` is the commission: the platform's cut is exactly what has to be paid
+ * back, and that is what the settlement flow collects.
+ */
+export const walletTotals = () => {
+  const { total, commission, net } = earningsFor(WALLET.billed)
+  return { billed: total, commission, net, due: commission }
+}
+
+// Past settlements, newest first. `settled` drives the green badge.
+export const WALLET_HISTORY = [
+  { id: 'may-2024', amount: 1120, month: 'مايو 2024', orders: 18, settled: true },
+  { id: 'apr-2024', amount: 1480, month: 'أبريل 2024', orders: 24, settled: true },
+]
+
+// How the commission can be paid (Figma node 22:3169).
+//
+// `tone` picks the tint behind the icon, matching the frame's three colours.
+// The brand marks the frame draws are not shipped with this project, so each
+// method carries a lucide icon describing what it is instead.
+//
+// The card option is drawn exactly as designed but cannot be chosen. The
+// confirmation frame that follows is the e-wallet one — it asks for a mobile
+// number and explains a wallet PIN prompt. Nothing was designed for paying by
+// card, so offering it would lead to a screen that does not exist.
+export const PAYMENT_METHODS = [
+  {
+    key: 'vodafone',
+    name: 'فودافون كاش',
+    hint: 'الدفع السريع عبر الهاتف',
+    tone: 'error',
+    available: true,
+  },
+  {
+    key: 'instapay',
+    name: 'انستا باي',
+    hint: 'تحويل بنكي لحظي مباشر',
+    tone: 'success',
+    available: true,
+  },
+  {
+    key: 'card',
+    name: 'بطاقة ائتمان / خصم',
+    hint: 'فيزا، ماستر كارد، ميزة',
+    tone: 'primary',
+    available: false,
+  },
+]
+
+/** The method behind a key, falling back to the first one that can be used. */
+export const findPaymentMethod = (methodKey) =>
+  PAYMENT_METHODS.find((method) => method.key === methodKey) ??
+  PAYMENT_METHODS.find((method) => method.available)
+
+// What follows "تأكيد الدفع", as the confirmation frame explains it.
+export const PAYMENT_STEPS = [
+  'أدخل رقم الموبايل المسجل في خدمة فودافون كاش أو أي محفظة إلكترونية أخرى.',
+  'ستتلقى طلباً على هاتفك لإدخال الرقم السري لمحفظتك لتأكيد العملية.',
+  'بمجرد التأكيد، سيتم خصم المبلغ وإتمام العملية فوراً وبشكل آمن.',
+]
+
+// The receipt (Figma node 22:3345). The reference, date and time are the
+// frame's. The amount and the method are not held here: they are whatever was
+// just paid, so the closing screen is handed those.
+export const PAYMENT_RECEIPT = {
+  reference: '#TRX-992834',
+  date: '15 مايو 2024',
+  time: '10:30 صباحاً',
+}

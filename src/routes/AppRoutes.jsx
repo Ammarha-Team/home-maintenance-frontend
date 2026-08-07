@@ -1,25 +1,49 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+
 import {
   AUTH_ROUTES,
   SIGN_UP_INFO_PATTERN,
 } from "../modules/auth/constants/authRoutes.js";
 
-import ConfirmEmail from "../modules/auth/pages/ConfirmEmail.jsx";
-import ForgotPassword from "../modules/auth/pages/ForgotPassword.jsx";
-import ResetPassword from "../modules/auth/pages/ResetPassword.jsx";
+import { EMERGENCY_ROUTES } from "../modules/emergency/constants/emergency";
+
+import LandingPage from "../landing/pages/LandingPage";
+import Home from "../modules/home/pages/Home";
+import Services from "../modules/services/pages/Services";
+import AccountRestricted from "../modules/account-restriction/pages/AccountRestricted";
+
 import Login from "../modules/auth/pages/Login.jsx";
+import ForgotPassword from "../modules/auth/pages/ForgotPassword.jsx";
 import SignUpInfo from "../modules/auth/pages/SignUpInfo.jsx";
 import CustomerSignUpTerms from "../modules/auth/pages/CustomerSignUpTerms.jsx";
 import TechnicianSignUpTerms from "../modules/auth/pages/TechnicianSignUpTerms.jsx";
 
-import LandingPage from "../landing/pages/LandingPage";
-import Home from "../modules/home/pages/Home";
+import EmergencyRequest from "../modules/emergency/pages/EmergencyRequest";
+import EmergencyTracking from "../modules/emergency/pages/EmergencyTracking";
+import EmergencyRating from "../modules/emergency/pages/EmergencyRating";
 
-import { EMERGENCY_ROUTES } from "../modules/emergency/constants/emergency.js";
-import EmergencyRequest from "../modules/emergency/pages/EmergencyRequest.jsx";
-import EmergencyTracking from "../modules/emergency/pages/EmergencyTracking.jsx";
-import EmergencyRating from "../modules/emergency/pages/EmergencyRating.jsx";
+import Profile from "../modules/profile/pages/Profile";
+import Settings from "../modules/profile/pages/Settings";
+import ChangePassword from "../modules/profile/pages/ChangePassword";
+import Notifications from "../modules/profile/pages/Notifications";
+import Language from "../modules/profile/pages/Language";
+import HelpSupport from "../modules/profile/pages/HelpSupport";
+import PrivacyPolicy from "../modules/profile/pages/PrivacyPolicy";
+import Terms from "../modules/profile/pages/Terms";
+import About from "../modules/profile/pages/About";
+import SavedAddresses from "../modules/profile/pages/SavedAddresses";
 
+// My Orders & Technicians
+import MyOrders from "../modules/orders/pages/MyOrders";
+import OrderOffers from "../modules/orders/pages/OrderOffers";
+import OrderTracking from "../modules/orders/pages/OrderTracking";
+import TechnicianProfile from "../modules/technicians/pages/TechnicianProfile";
+import { ORDERS_ROUTES } from "../modules/orders/constants/ordersRoutes";
+
+// 👇 1. استدعاء مكون المحادثة/الشات من الموديول الخاص به
+import Chat from "../modules/chat/pages/Chat"; // تأكد من مسار الملف لديك
+
+// The technician portal.
 import { TECHNICIAN_ROUTES } from "../modules/technician/constants/technicianRoutes.js";
 import TechnicianDashboard from "../modules/technician/pages/TechnicianDashboard.jsx";
 import TechnicianOrders from "../modules/technician/pages/TechnicianOrders.jsx";
@@ -30,81 +54,106 @@ import TechnicianMessages from "../modules/technician/pages/TechnicianMessages.j
 import TechnicianJobTracking from "../modules/technician/pages/TechnicianJobTracking.jsx";
 import TechnicianJobArrival from "../modules/technician/pages/TechnicianJobArrival.jsx";
 import TechnicianJobCompletion from "../modules/technician/pages/TechnicianJobCompletion.jsx";
+import TechnicianWallet from "../modules/technician/pages/TechnicianWallet.jsx";
+import TechnicianPaymentDetails from "../modules/technician/pages/TechnicianPaymentDetails.jsx";
+import TechnicianPaymentMethod from "../modules/technician/pages/TechnicianPaymentMethod.jsx";
+import TechnicianPaymentConfirm from "../modules/technician/pages/TechnicianPaymentConfirm.jsx";
+import TechnicianPaymentComplete from "../modules/technician/pages/TechnicianPaymentComplete.jsx";
 import TechnicianRoute from "./TechnicianRoute.jsx";
+import ScrollToTop from "./ScrollToTop.jsx";
 
-import Profile from "../modules/profile/pages/Profile";
-import Settings from "../modules/profile/pages/Settings";
-
-import ChangePassword from "../modules/profile/pages/ChangePassword";
-import Notifications from "../modules/profile/pages/Notifications";
-import Language from "../modules/profile/pages/Language";
-import HelpSupport from "../modules/profile/pages/HelpSupport.jsx";
-import PrivacyPolicy from "../modules/profile/pages/PrivacyPolicy";
-import Terms from "../modules/profile/pages/Terms";
-import About from "../modules/profile/pages/About";
-import SavedAddresses from "../modules/profile/pages/SavedAddresses.jsx";
-
-import ReviewPage from "../modules/reviews/pages/ReviewPage";
-import Services from "../modules/services/pages/Services";
+// The admin console keeps its own route table and mounts here as one branch.
+import AdminRoutes from "./AdminRoutes.jsx";
 
 function AppRoutes() {
   return (
+    <>
+      {/* Route changes keep the old scroll position, which lands a screen
+          reached from the bottom of a long page partway down its own. */}
+      <ScrollToTop />
+
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
-      <Route path="/review" element={<ReviewPage />} />
+
       <Route path="/services" element={<Services />} />
-      
+      <Route path="/AccountRestricted" element={<AccountRestricted />}/>
 
       <Route path={AUTH_ROUTES.login} element={<Login />} />
       <Route path={AUTH_ROUTES.forgotPassword} element={<ForgotPassword />} />
 
-      {/* Landing page for the confirmation mail. The backend has to point the
-          link here instead of at its own dev address for it to be reachable
-          from an inbox. */}
-      <Route path={AUTH_ROUTES.confirmEmail} element={<ConfirmEmail />} />
-
-      {/* Landing page for the reset mail. The link must point here rather than
-          at the API's POST endpoint, which a browser cannot open. */}
-      <Route path={AUTH_ROUTES.resetPassword} element={<ResetPassword />} />
-
-      {/* The site header links here for "إنشاء حساب". Sign up is split by role
-          and starts on the customer step, so /register is an entry point into
-          that flow rather than a screen of its own. Without this the catch-all
-          below sends the button back to the landing page. */}
       <Route
         path="/register"
         element={<Navigate to={AUTH_ROUTES.customerSignUp} replace />}
       />
 
       <Route path={SIGN_UP_INFO_PATTERN} element={<SignUpInfo />} />
+
       <Route
         path={AUTH_ROUTES.customerSignUpTerms}
         element={<CustomerSignUpTerms />}
       />
+
       <Route
         path={AUTH_ROUTES.technicianSignUpTerms}
         element={<TechnicianSignUpTerms />}
       />
 
-      {/* Emergency service. The home screen's quick actions already point at
-          /emergency-diagnosis, so that path is kept as an alias rather than
-          changing a link this feature does not own. */}
-      <Route path={EMERGENCY_ROUTES.request} element={<EmergencyRequest />} />
+      {/* Emergency */}
+      <Route
+        path={EMERGENCY_ROUTES.request}
+        element={<EmergencyRequest />}
+      />
+
       <Route
         path={EMERGENCY_ROUTES.requestAlias}
         element={<EmergencyRequest />}
       />
+
       <Route
         path={EMERGENCY_ROUTES.tracking}
         element={<EmergencyTracking />}
       />
-      <Route path={EMERGENCY_ROUTES.rating} element={<EmergencyRating />} />
 
-      {/* Technician portal. Kept under its own /technician prefix so it can
-          never be confused with the customer screens above.
+      <Route
+        path={EMERGENCY_ROUTES.rating}
+        element={<EmergencyRating />}
+      />
 
-          The four screens are one flow: the dashboard leads to the job board,
+      {/* Profile */}
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/change-password" element={<ChangePassword />} />
+      <Route path="/notifications" element={<Notifications />} />
+      <Route path="/language" element={<Language />} />
+      <Route path="/help-support" element={<HelpSupport />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/savedaddresses" element={<SavedAddresses />} />
+
+      {/* The customer's own orders. Every card in the list links to one of
+          these three, and none of them was registered — the screens were built
+          and imported but no path reached them. */}
+      <Route path={ORDERS_ROUTES.myOrders} element={<MyOrders />} />
+      <Route path={ORDERS_ROUTES.orderDetails} element={<OrderOffers />} />
+      <Route path={ORDERS_ROUTES.orderOffers} element={<OrderOffers />} />
+      <Route path={ORDERS_ROUTES.orderTracking} element={<OrderTracking />} />
+
+      {/* Reached from an offer card, which links to the technician behind the
+          offer rather than to the offer itself. */}
+      <Route
+        path="/my-orders/:id/technicians/:technicianId"
+        element={<TechnicianProfile />}
+      />
+
+      <Route path="/chat" element={<Chat />} />
+
+      {/* The technician portal. Named Technician* on both the route and the
+          component so these can never be confused with the customer screens
+          above.
+
+          The first four are one flow: the dashboard leads to the job board,
           the board opens a request, and the request leads to the offer that
           bids for it. Every one of them sits behind the same guard — a
           customer who reaches these paths has nothing to do here. */}
@@ -187,22 +236,73 @@ function AppRoutes() {
         }
       />
 
+      {/* عروضي — every offer the technician has sent, whatever became of it.
+          It shares its screen with the public /services page above; only this
+          path is behind the guard, so a signed-out visitor still reaches the
+          public one and only a technician reaches their own offers. */}
+      <Route
+        path={TECHNICIAN_ROUTES.offers}
+        element={
+          <TechnicianRoute>
+            <Services />
+          </TechnicianRoute>
+        }
+      />
+
+      {/* The wallet, and the settlement that runs out of it. The technician
+          owes the platform its commission, so this flow goes the other way from
+          the job screens above: the wallet states what is due, the payment
+          screens collect it, and the receipt closes it out. Each screen leads
+          to the next, and the wallet is the only way in. */}
+      <Route
+        path={TECHNICIAN_ROUTES.wallet}
+        element={
+          <TechnicianRoute>
+            <TechnicianWallet />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentDetails}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentDetails />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentMethod}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentMethod />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentConfirm}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentConfirm />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path={TECHNICIAN_ROUTES.paymentComplete}
+        element={
+          <TechnicianRoute>
+            <TechnicianPaymentComplete />
+          </TechnicianRoute>
+        }
+      />
+
+      {/* Admin console. It has to be registered before the catch-all below,
+          which would otherwise answer every /admin path and redirect out. */}
+      <Route path="/admin/*" element={<AdminRoutes />} />
+
+      {/* 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
-
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/settings" element={<Settings />} />
-
-      <Route path="/change-password" element={<ChangePassword />} />
-      <Route path="/notifications" element={<Notifications />} />
-      <Route path="/language" element={<Language />} />
-      <Route path="/help-support" element={<HelpSupport />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/savedaddresses" element={<SavedAddresses />} />
-
-      
     </Routes>
+    </>
   );
 }
 

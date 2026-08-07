@@ -21,6 +21,8 @@ import {
   SCHEDULED_JOBS,
   TECHNICIAN,
   TODAY_STATS,
+  WALLET,
+  walletTotals,
 } from '../services/technicianService.js'
 
 /**
@@ -86,7 +88,16 @@ function TechnicianDashboard() {
             onAvailabilityChange={setAvailable}
           />
 
-          <TechnicianStats stats={TODAY_STATS} />
+          {/* The platform-due tile and the wallet both answer "what do I owe",
+              so both take the answer from the same place. Left to its own
+              stand-in figure the tile said 155 while the wallet said 432.30. */}
+          <TechnicianStats
+            stats={{
+              ...TODAY_STATS,
+              platformDue: walletTotals().due.toFixed(2),
+              dueDays: WALLET.dueDays,
+            }}
+          />
 
           <section
             aria-labelledby="new-requests-heading"

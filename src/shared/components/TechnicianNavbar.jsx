@@ -7,6 +7,8 @@ import { signOut } from '../../modules/auth/services/authService.js'
 import { readSession } from '../../modules/auth/services/authSession.js'
 import { TECHNICIAN_NAV_ITEMS } from '../../modules/technician/constants/technicianRoutes.js'
 
+import TechnicianNotificationPanel from "./TechnicianNotificationPanel";
+
 /**
  * Header for the technician portal (Figma node 21:2235).
  *
@@ -17,6 +19,7 @@ import { TECHNICIAN_NAV_ITEMS } from '../../modules/technician/constants/technic
  */
 function TechnicianNavbar() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
@@ -64,128 +67,122 @@ function TechnicianNavbar() {
       dir="rtl"
       className="sticky top-0 z-50 w-full border-b border-line bg-white"
     >
-      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-[16px] px-[24px] pt-[16px] pb-[17px] lg:px-[80px]">
-        {/* Brand sits at the start of the row — the right edge in RTL. */}
-        <Link to={TECHNICIAN_NAV_ITEMS[0].to} className="shrink-0">
-          <img
-            src={logo}
-            alt="عمّرها"
-            className="h-[58px] w-[127px] object-contain"
-          />
+<div className="mx-auto flex max-w-[1440px] items-center justify-between gap-[16px] px-[24px] pt-[16px] pb-[17px] lg:px-[80px]">
+  <Link to={TECHNICIAN_NAV_ITEMS[0].to} className="shrink-0">
+    <img
+      src={logo}
+      alt="عمّرها"
+      className="h-[58px] w-[127px] object-contain"
+    />
+  </Link>
+
+  {/* The desktop tabs. A placeholder had been left in their place, so the
+      header rendered the literal text "..." and every technician screen lost
+      its navigation above `md`. */}
+  <ul className="hidden items-center gap-[24px] md:flex">
+    {TECHNICIAN_NAV_ITEMS.map((item) => (
+      <li key={item.key}>
+        {item.ready ? (
+          <Link
+            to={item.to}
+            aria-current={pathname === item.to ? 'page' : undefined}
+            className={`block text-[20px] transition-colors ${
+              pathname === item.to
+                ? 'border-b-2 border-primary-500 pb-[6px] text-primary-500'
+                : 'rounded-[8px] px-[8px] py-[4px] text-text-400 hover:text-primary-500'
+            }`}
+          >
+            {item.label}
+          </Link>
+        ) : (
+          // Not built yet. A <Link> to an unregistered path would fall through
+          // to the catch-all and throw the technician back to the landing page.
+          <span className="block px-[8px] py-[4px] text-[20px] text-text-200">
+            {item.label}
+          </span>
+        )}
+      </li>
+    ))}
+  </ul>
+
+
+{/* Right Actions */}
+<div className="relative flex items-center gap-3">
+
+  {/* User Menu */}
+  <div className="relative" ref={menuRef}>
+    <button
+      type="button"
+      onClick={() => setMenuOpen((open) => !open)}
+      aria-label="حساب الفني"
+      aria-expanded={menuOpen}
+      className="flex size-[42px] items-center justify-center rounded-full bg-primary-50 text-primary-500 transition hover:ring-2 hover:ring-primary-300"
+    >
+      <User size={21} />
+    </button>
+
+    {menuOpen && (
+      <div className="absolute left-0 top-[50px] z-50 w-[240px] rounded-[12px] border border-line bg-white py-[8px] shadow-raised">
+        {email && (
+          <p className="border-b border-line px-[16px] pb-[8px] text-right text-[13px] break-all text-text-300">
+            {email}
+          </p>
+        )}
+
+        <Link
+          to="/profile"
+          onClick={() => setMenuOpen(false)}
+          className="flex items-center gap-[10px] px-[16px] py-[10px] text-text-400 hover:bg-primary-50"
+        >
+          <User size={16} />
+          الملف الشخصي
         </Link>
 
-        <ul className="hidden items-center gap-[24px] md:flex">
-          {TECHNICIAN_NAV_ITEMS.map((item) => {
-            const active = pathname === item.to
+        <Link
+          to="/settings"
+          onClick={() => setMenuOpen(false)}
+          className="flex items-center gap-[10px] px-[16px] py-[10px] text-text-400 hover:bg-primary-50"
+        >
+          <Settings size={16} />
+          الإعدادات
+        </Link>
 
-            return (
-              <li key={item.key}>
-                {/* A tab whose screen has not been built yet is text, not a
-                    link: routing to an unregistered path would hit the
-                    catch-all and leave the portal entirely. */}
-                {item.ready ? (
-                  <Link
-                    to={item.to}
-                    aria-current={active ? 'page' : undefined}
-                    className={`block text-[20px] leading-[1.5] whitespace-nowrap transition-colors ${
-                      active
-                        ? 'border-b-2 border-primary-500 pb-[6px] text-primary-500'
-                        : 'rounded-[8px] px-[8px] py-[4px] text-text-400 hover:text-primary-500'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <span className="block cursor-default rounded-[8px] px-[8px] py-[4px] text-[20px] leading-[1.5] whitespace-nowrap text-text-400">
-                    {item.label}
-                  </span>
-                )}
-              </li>
-            )
-          })}
-        </ul>
+        <span className="my-[4px] block h-px bg-line" />
 
-        {/* Avatar first, bell last: in an RTL row the last child is the
-            leftmost, and the frame puts the bell at the far left. */}
-        <div className="flex items-center gap-[26px]">
-          <div ref={menuRef} className="relative">
-            {/* The frame fills this circle with the technician's photo. No
-                account carries one, so the same circle holds the account icon
-                rather than a stock face belonging to nobody. */}
-            <button
-              type="button"
-              onClick={() => setMenuOpen((open) => !open)}
-              aria-label="حساب الفني"
-              aria-expanded={menuOpen}
-              className="flex size-[42px] items-center justify-center rounded-full bg-primary-50 text-primary-500 transition hover:ring-2 hover:ring-primary-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
-            >
-              <User size={21} aria-hidden="true" />
-            </button>
-
-            {/* Same menu the customer header has — profile, settings, sign
-                out — so the two portals behave the same way, with the signed-in
-                address above it. */}
-            {menuOpen ? (
-              <div className="absolute left-0 z-50 mt-[8px] w-[240px] rounded-[12px] border border-line bg-white py-[8px] text-[14px] shadow-raised">
-                {email ? (
-                  <p className="border-b border-line px-[16px] pb-[8px] text-right text-[13px] break-all text-text-300">
-                    {email}
-                  </p>
-                ) : null}
-
-                <Link
-                  to="/profile"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-[10px] px-[16px] py-[10px] text-text-400 transition-colors hover:bg-primary-50 hover:text-primary-500"
-                >
-                  <User size={16} aria-hidden="true" />
-                  الملف الشخصي
-                </Link>
-
-                <Link
-                  to="/settings"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-[10px] px-[16px] py-[10px] text-text-400 transition-colors hover:bg-primary-50 hover:text-primary-500"
-                >
-                  <Settings size={16} aria-hidden="true" />
-                  الإعدادات
-                </Link>
-
-                <span
-                  aria-hidden="true"
-                  className="my-[4px] block h-px bg-line"
-                />
-
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="flex w-full items-center gap-[10px] px-[16px] py-[10px] text-right font-bold text-error-500 transition-colors hover:bg-error-50"
-                >
-                  <LogOut size={16} aria-hidden="true" />
-                  تسجيل الخروج
-                </button>
-              </div>
-            ) : null}
-          </div>
-
-          <span aria-hidden="true" className="h-[28px] w-px bg-primary-100" />
-
-          <button
-            type="button"
-            aria-label="الإشعارات"
-            className="relative flex size-[41px] items-center justify-center rounded-[20px] bg-primary-50 text-primary-500 transition-colors hover:bg-primary-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
-          >
-            <Bell size={21} aria-hidden="true" />
-            {/* Unread marker, flush with the top-right of the circle as the
-                frame draws it. Decorative — the count belongs to the
-                notifications screen, which is outside this scope. */}
-            <span
-              aria-hidden="true"
-              className="absolute top-0 right-0 size-[12px] rounded-full bg-success-500"
-            />
-          </button>
-        </div>
+        <button
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-[10px] px-[16px] py-[10px] text-error-500 hover:bg-error-50"
+        >
+          <LogOut size={16} />
+          تسجيل الخروج
+        </button>
       </div>
+    )}
+  </div>
+
+  {/* Notification */}
+  <div className="relative">
+    <button
+      type="button"
+      onClick={() => setNotificationsOpen((prev) => !prev)}
+      aria-label="الإشعارات"
+      className="flex size-[41px] items-center justify-center rounded-full bg-primary-50 text-primary-500 hover:bg-primary-100"
+    >
+      <Bell size={22} />
+    </button>
+
+    {notificationsOpen && (
+      <div className="absolute left-0 top-[52px] z-[999]">
+        <TechnicianNotificationPanel
+          open={notificationsOpen}
+          onClose={() => setNotificationsOpen(false)}
+        />
+      </div>
+    )}
+  </div>
+
+</div>
+</div>
 
       {/* Under `md` the tabs move to a row of their own rather than a burger:
           five short labels fit, and a technician on a phone should not lose the

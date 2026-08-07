@@ -59,29 +59,37 @@ const [showNotifications, setShowNotifications] = useState(false);
             )}
           </Link>
 
-          <button
-  onClick={onRequestClick}
-  className="transition-colors text-gray-600 hover:text-blue-600"
->
-  طلب خدمة
-</button>
+          <Link
+            to="/request-service"
+            className={`transition-colors ${
+              isActive("/request-service") ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"
+            }`}
+          >
+            طلب خدمة
+          </Link>
 
           <Link
             to="/my-orders"
-            className={`transition-colors ${
-              isActive("/my-orders") ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"
+            className={`relative py-1 transition-colors ${
+              isActive("/my-orders") || isActive("/orders") ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"
             }`}
           >
             طلباتي
+            {(isActive("/my-orders") || isActive("/orders")) && (
+              <span className="absolute bottom-[-13px] right-0 w-full h-[2px] bg-blue-600 rounded-full"></span>
+            )}
           </Link>
 
           <Link
             to="/messages"
-            className={`transition-colors ${
+            className={`relative py-1 transition-colors ${
               isActive("/messages") ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"
             }`}
           >
             الرسائل
+            {isActive("/messages") && (
+              <span className="absolute bottom-[-13px] right-0 w-full h-[2px] bg-blue-600 rounded-full"></span>
+            )}
           </Link>
         </div>
 
