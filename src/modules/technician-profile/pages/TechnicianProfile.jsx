@@ -1,4 +1,4 @@
-import HomeNavbar from "../../../shared/components/technicianNavbar";
+import HomeNavbar from "../../../shared/components/TechnicianNavbar";
 import Footer from "../../../shared/components/Footer";
 
 import ProfileHeader from "../components/ProfileHeader";
