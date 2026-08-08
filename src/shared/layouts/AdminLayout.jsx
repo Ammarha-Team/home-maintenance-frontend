@@ -1,8 +1,32 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { LogOut, Settings } from 'lucide-react'
 
-import AdminSidebar from '../../modules/admin/components/AdminSidebar.jsx'
-import AdminTopbar from '../../modules/admin/components/AdminTopbar.jsx'
+import AdminSidebar from '../components/AdminSidebar.jsx'
+import AdminTopbar from '../components/AdminTopbar.jsx'
+import {
+  ADMIN_NAV_ITEMS,
+  ADMIN_ROUTES,
+} from '../../modules/admin/constants/adminRoutes.js'
+
+// The rail draws whatever it is handed, so the two rows the console wants under
+// its nav are described here rather than built into the shared component.
+const SIDEBAR_FOOTER = (
+  <>
+    <span className="flex items-center gap-[12px] px-[24px] py-[12px] text-[16px] text-text-400">
+      <Settings size={20} aria-hidden="true" />
+      الإعدادات
+    </span>
+    <span className="flex items-center gap-[12px] px-[24px] py-[12px] text-[16px] text-error-500">
+      <LogOut size={20} aria-hidden="true" />
+      تسجيل خروج
+    </span>
+  </>
+)
+
+// Stands in until the console reads the signed-in admin from the session, which
+// waits on the backend admin role.
+const ADMIN_USER = { name: 'احمد حمدي', avatar: '/technician_avatar.jpg' }
 
 /**
  * The chrome every console screen sits inside. `dir` is set here rather than on
@@ -18,7 +42,15 @@ function AdminLayout() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-surface font-sans">
-      <AdminSidebar open={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
+      <AdminSidebar
+        items={ADMIN_NAV_ITEMS}
+        homeTo={ADMIN_ROUTES.dashboard}
+        subtitle="إدارة الصيانة المنزلية"
+        footer={SIDEBAR_FOOTER}
+        label="أقسام لوحة التحكم"
+        open={sidebarOpen}
+        onNavigate={() => setSidebarOpen(false)}
+      />
 
       {/* Below `md` the sidebar covers the page, and a tap anywhere off it is
           the expected way back out. */}
@@ -32,7 +64,11 @@ function AdminLayout() {
       ) : null}
 
       <div className="md:mr-[260px]">
-        <AdminTopbar onOpenSidebar={() => setSidebarOpen(true)} />
+        <AdminTopbar
+          user={ADMIN_USER}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onNotifications={() => {}}
+        />
         <main className="px-[24px] py-[24px]">
           <Outlet />
         </main>
