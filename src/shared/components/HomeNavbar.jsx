@@ -122,7 +122,7 @@ const [showNotifications, setShowNotifications] = useState(false);
             {dropdownOpen && (
               <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 text-sm">
                 <Link
-                  to="/profile"
+                  to="/technician/profile"
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
                 >
@@ -165,7 +165,7 @@ const [showNotifications, setShowNotifications] = useState(false);
       {open && (
         <div className="md:hidden px-6 pb-5 pt-3 flex flex-col gap-4 text-gray-700 bg-white border-b border-gray-100">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-2">
-            <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3">
+            <Link to="/technician/profile" onClick={() => setOpen(false)} className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
                 <User size={18} className="text-gray-500" />
               </div>
