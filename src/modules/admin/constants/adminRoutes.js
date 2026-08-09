@@ -14,7 +14,7 @@ export const ADMIN_ROUTES = {
   orders: "/admin/orders",
   commissions: "/admin/commissions",
   customers: "/admin/customers",
-  earnings: "/admin/earnings",
+  profits: "/admin/profits",
   settings: "/admin/settings",
 };
 
@@ -55,10 +55,10 @@ export const ADMIN_NAV_ITEMS = [
     ready: true,
   },
   {
-    key: "earnings",
+    key: "profits",
     label: "الأرباح",
     icon: ReceiptText,
-    to: ADMIN_ROUTES.earnings,
+    to: ADMIN_ROUTES.profits,
     ready: true,
   },
 ];
