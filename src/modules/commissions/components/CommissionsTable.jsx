@@ -1,64 +1,15 @@
 import { useEffect, useMemo } from "react";
 
-const commissionsData = [
-  {
-    id: 1,
-    week: "الأسبوع 42",
-    date: "15 - 21 أغسطس",
-    technician: "أحمد محمود",
-    code: "#TECH-001",
-    initials: "أ.م",
-    earnings: "1,250",
-    commission: "187.5",
-    dueDate: "25 أغسطس 2023",
-    status: "paid",
-  },
-  {
-    id: 2,
-    week: "الأسبوع 42",
-    date: "15 - 21 أغسطس",
-    technician: "أحمد محمود",
-    code: "#TECH-001",
-    initials: "أ.م",
-    earnings: "1,250",
-    commission: "187.5",
-    dueDate: "25 أغسطس 2023",
-    status: "paid",
-  },
-  {
-    id: 3,
-    week: "الأسبوع 42",
-    date: "15 - 21 أغسطس",
-    technician: "أحمد محمود",
-    code: "#TECH-001",
-    initials: "أ.م",
-    earnings: "1,250",
-    commission: "187.5",
-    dueDate: "--------",
-    status: "pending",
-  },
-  {
-    id: 4,
-    week: "الأسبوع 42",
-    date: "15 - 21 أغسطس",
-    technician: "أحمد محمود",
-    code: "#TECH-001",
-    initials: "أ.م",
-    earnings: "1,250",
-    commission: "187.5",
-    dueDate: "--------",
-    status: "pending",
-  },
-];
+import { COMMISSIONS } from "../constants/commissionsData";
 
 export default function CommissionsTable({
-  search,
-  statusFilter,
+  search = "",
+  statusFilter = "all",
 }) {
   const filteredData = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
-    return commissionsData.filter((item) => {
+    return COMMISSIONS.filter((item) => {
       const matchesSearch =
         item.technician.toLowerCase().includes(normalizedSearch) ||
         item.code.toLowerCase().includes(normalizedSearch);
