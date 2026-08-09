@@ -9,23 +9,28 @@ export default function Commissions() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   return (
-    <div dir="rtl">
-      {/* Header */}
+    <div
+      dir="rtl"
+      className="w-full px-6 py-5"
+    >
+      {/* ================= Header ================= */}
       <div className="mb-5">
-        <h1 className="text-[18px] font-bold text-[#333]">
+        <h1 className="text-[24px] font-bold text-[#333]">
           عمولات الفنيين
         </h1>
 
-        <p className="mt-1 text-[11px] text-[#9B9B9B]">
-          إدارة وتسوية عمولات الفنيين بناءً على أرباحهم
+        <p className="mt-1 text-[15px] text-[#9B9B9B]">
+          إدارة وتسوية عمولات الفنيين الخاصة بالصيانة
         </p>
       </div>
 
-      {/* Stats */}
-      <CommissionsStats />
+      {/* ================= Stats ================= */}
+      <div className="w-full">
+        <CommissionsStats />
+      </div>
 
-      {/* Table */}
-      <section className="mt-5 overflow-hidden rounded-[8px] border border-[#E6E8ED] bg-white shadow-[0_1px_5px_rgba(0,0,0,0.04)]">
+      {/* ================= Table ================= */}
+      <section className="mt-5 w-full overflow-hidden rounded-[8px] border border-[#E6E8ED] bg-white shadow-[0_1px_5px_rgba(0,0,0,0.04)]">
         <CommissionFilters
           search={search}
           setSearch={setSearch}
