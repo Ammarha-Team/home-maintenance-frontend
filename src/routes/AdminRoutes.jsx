@@ -4,6 +4,7 @@ import AdminLayout from "../shared/layouts/AdminLayout.jsx";
 import Dashboard from "../modules/admin/pages/Dashboard.jsx";
 import Technicians from "../modules/admin/pages/Technicians.jsx";
 import TechnicianSummary from "../modules/technician-management/pages/TechnicianSummary.jsx";
+import OrderManagement from "../modules/admin-order-management/pages/OrderManagement.jsx";
 
 function AdminRoutes() {
   return (
@@ -11,11 +12,20 @@ function AdminRoutes() {
       <Route element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
 
-        <Route path="technicians" element={<Technicians />} />
+        <Route
+          path="technicians"
+          element={<Technicians />}
+        />
 
         <Route
           path="technicians/summary"
           element={<TechnicianSummary />}
+        />
+
+        {/* Orders */}
+        <Route
+          path="orders"
+          element={<OrderManagement />}
         />
 
         <Route
