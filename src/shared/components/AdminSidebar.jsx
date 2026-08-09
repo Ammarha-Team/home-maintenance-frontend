@@ -71,21 +71,25 @@ function AdminSidebar({
             }
 
             return (
-              <li key={item.key}>
-                <Link
-                  to={item.to}
-                  onClick={onNavigate}
-                  aria-current={active ? 'page' : undefined}
-                  className={`flex items-center gap-[12px] px-[24px] py-[12px] text-[16px] transition-colors ${
-                    active
-                      ? 'border-r-[3px] border-primary-500 bg-primary-50 font-bold text-primary-500'
-                      : 'text-text-400 hover:bg-card hover:text-primary-500'
-                  }`}
-                >
-                  {Icon ? <Icon size={20} aria-hidden="true" /> : null}
-                  {item.label}
-                </Link>
-              </li>
+             <li key={item.key}>
+  <Link
+    to={item.to}
+    onClick={() => {
+      console.log("CLICKED:", item.label);
+      console.log("TO:", item.to);
+      onNavigate?.();
+    }}
+    aria-current={active ? "page" : undefined}
+    className={`flex items-center gap-[12px] px-[24px] py-[12px] text-[16px] transition-colors ${
+      active
+        ? "border-r-[3px] border-primary-500 bg-primary-50 font-bold text-primary-500"
+        : "text-text-400 hover:bg-card hover:text-primary-500"
+    }`}
+  >
+    {Icon ? <Icon size={20} aria-hidden="true" /> : null}
+    {item.label}
+  </Link>
+</li>
             )
           })}
         </ul>

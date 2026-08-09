@@ -7,20 +7,17 @@ import {
   Wrench,
 } from "lucide-react";
 
-// Admin console paths
+
 export const ADMIN_ROUTES = {
   dashboard: "/admin",
   technicians: "/admin/technicians",
   orders: "/admin/orders",
   commissions: "/admin/commissions",
-    customers: "/admin/customers",
+  customers: "/admin/customers",
   earnings: "/admin/earnings",
   settings: "/admin/settings",
 };
 
-/**
- * Sidebar items
- */
 export const ADMIN_NAV_ITEMS = [
   {
     key: "dashboard",
@@ -29,16 +26,13 @@ export const ADMIN_NAV_ITEMS = [
     to: ADMIN_ROUTES.dashboard,
     ready: true,
   },
-
   {
     key: "technicians",
-    label: "الفنين",
+    label: "الفنيين",
     icon: Wrench,
     to: ADMIN_ROUTES.technicians,
     ready: true,
   },
-
-
   {
     key: "orders",
     label: "الطلبات",
@@ -46,7 +40,6 @@ export const ADMIN_NAV_ITEMS = [
     to: ADMIN_ROUTES.orders,
     ready: true,
   },
-
   {
     key: "commissions",
     label: "العمولات",
@@ -54,15 +47,13 @@ export const ADMIN_NAV_ITEMS = [
     to: ADMIN_ROUTES.commissions,
     ready: true,
   },
-
-    {
+  {
     key: "customers",
     label: "العملاء",
     icon: Users,
     to: ADMIN_ROUTES.customers,
     ready: true,
   },
-
   {
     key: "earnings",
     label: "الأرباح",
