@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, Bell, User, Settings, LogOut } from "lucide-react";
 import logo from "../../assets/logo.png";
 import NotificationModal from "../../shared/components/NotificationModal";
+import ThemeToggle from "./ThemeToggle.jsx";
 import { AUTH_ROUTES } from "../../modules/auth/constants/authRoutes.js";
 import { signOut } from "../../modules/auth/services/authService.js";
 
@@ -95,6 +96,11 @@ const [showNotifications, setShowNotifications] = useState(false);
 
         {/* 3. الإشعارات، الفاصل، وبروفايل المستخدم على اليسار */}
         <div className="hidden md:flex items-center gap-4">
+          {/* Beside the bell rather than inside the account menu: it is a
+              display setting, not an account one, and the two round controls
+              read as a pair at this end of the bar. */}
+          <ThemeToggle />
+
            <button
   onClick={() => setShowNotifications(true)}
   className="relative w-10 h-10 rounded-full bg-blue-50/50 flex items-center justify-center text-blue-600 hover:bg-blue-100/55 transition"
@@ -153,12 +159,19 @@ const [showNotifications, setShowNotifications] = useState(false);
           </div>
         </div>
 
-        <button
-          className="md:hidden text-blue-600"
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X size={28} /> : <Menu size={28} />}
-        </button>
+        {/* Beside the burger rather than inside the sheet it opens: a setting
+            that changes the whole page should not be reachable only after
+            opening a menu. */}
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle compact />
+
+          <button
+            className="text-blue-600"
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
 
       </div>
 

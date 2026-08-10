@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import iconApple from '../../../assets/auth/icon-apple.svg'
 import iconFacebook from '../../../assets/auth/icon-facebook.svg'
 import iconGoogle from '../../../assets/auth/icon-google.svg'
+import AppleIcon from '../../../shared/components/icons/AppleIcon.jsx'
 import {
   AUTH_METHODS,
   AUTH_METHOD_AVAILABILITY,
@@ -22,8 +22,12 @@ import EmailField from './EmailField.jsx'
 import PasswordField from './PasswordField.jsx'
 import PhoneField from './PhoneField.jsx'
 
+// Apple is drawn from markup and the other two from their files. The Apple
+// mark is one solid shape, so it has to take its colour from the page to stay
+// visible in both themes; Facebook and Google are multi-coloured brand marks
+// that read on either background and must not be recoloured.
 const SOCIAL_PROVIDERS = [
-  { id: 'apple', label: 'Apple', icon: iconApple },
+  { id: 'apple', label: 'Apple', Icon: AppleIcon },
   { id: 'facebook', label: 'Facebook', icon: iconFacebook },
   { id: 'google', label: 'Google', icon: iconGoogle },
 ]
@@ -213,18 +217,18 @@ function LoginForm() {
             </div>
 
             <div dir="ltr" className="flex items-center gap-[24px] sm:gap-[36px]">
-              {SOCIAL_PROVIDERS.map((provider) => (
+              {SOCIAL_PROVIDERS.map(({ id, label, icon, Icon }) => (
                 <button
-                  key={provider.id}
+                  key={id}
                   type="button"
-                  aria-label={`المتابعة عبر ${provider.label}`}
-                  className="cursor-pointer transition-opacity hover:opacity-80"
+                  aria-label={`المتابعة عبر ${label}`}
+                  className="cursor-pointer text-text-500 transition-opacity hover:opacity-80"
                 >
-                  <img
-                    src={provider.icon}
-                    alt=""
-                    className="size-[38px] sm:size-[45px]"
-                  />
+                  {Icon ? (
+                    <Icon className="size-[38px] sm:size-[45px]" />
+                  ) : (
+                    <img src={icon} alt="" className="size-[38px] sm:size-[45px]" />
+                  )}
                 </button>
               ))}
             </div>

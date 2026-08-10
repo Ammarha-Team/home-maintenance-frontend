@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
 @import "tailwindcss";
+/* Dark values for the colours older screens wrote as literals. Loaded here so
+   its rules stay outside `@layer` and outrank the utilities they correct. */
+@import "./shared/theme/darkModeCompat.css";
 
 /* Design tokens for the auth screens. Names follow the design system
    collections so design and code stay in sync. */
@@ -49,11 +52,79 @@
   --color-surface: #fafafa;
   --color-card: #f6f7f9;
   --color-line: #e8ebf1;
+  /* The sheet a card is drawn on. It was always the literal white, which left
+     nothing for the dark theme to move; naming it gives every card one place
+     to change. */
+  --color-panel: #ffffff;
 
   /* The card elevation used across the emergency frames. It was an unnamed
      effect style in the library, so it becomes a token here. */
   --shadow-card: 0 4px 12px rgba(37, 99, 235, 0.06);
   --shadow-raised: 0 8px 24px rgba(37, 99, 235, 0.1);
+}
+
+/* The dark theme.
+ *
+ * Not a second design system — the same one with the ramps read from the other
+ * end. Every utility in the project resolves through these variables, so a
+ * screen written against the tokens turns dark without being edited.
+ *
+ * The attribute is set by `themePreference.js`, and by the inline script in
+ * `index.html` before the first paint so the page never flashes white.
+ *
+ * Three colours carry both a fill and body text — `error-500`, `success-800`
+ * and `primary-700` — and a value cannot be dark enough to sit under white
+ * lettering and light enough to be read on a dark card. Each follows its
+ * commoner use, which in all three is type: 40 text uses against 3 fills, 18
+ * against 4, 20 against 26 fills that are hover states rather than resting
+ * ones. The fills stay legible; they simply read as a tint rather than a slab.
+ */
+:root[data-theme='dark'] {
+  --color-primary-50: #16233a;
+  --color-primary-100: #1d3153;
+  --color-primary-300: #7dabf6;
+  --color-primary-400: #6b9df3;
+  --color-primary-500: #3f83ef;
+  --color-primary-600: #5a95f2;
+  --color-primary-700: #5b93f2;
+  --color-primary-900: #cbdefc;
+
+  --color-error-50: #3b1c1c;
+  --color-error-100: #5c2b2b;
+  --color-error-500: #e26a6a;
+
+  --color-success-100: #17351f;
+  --color-success-200: #204628;
+  --color-success-500: #57c05c;
+  --color-success-600: #68cd6d;
+  --color-success-800: #7fd98c;
+  --color-success-900: #a4e6ad;
+
+  /* The text ramp keeps its meaning: 500 is the strongest, 100 the faintest.
+     Only the direction of the ramp turns over. */
+  --color-text-100: #6c7787;
+  --color-text-200: #8a94a3;
+  --color-text-300: #a8b2c1;
+  --color-text-400: #dde3ec;
+  --color-text-500: #f2f5f9;
+  --color-text-secondary: #b6bfcc;
+  --color-text-tertiary: #8a94a3;
+
+  --color-accent-100: #2b3441;
+  --color-accent-600: #9aa4b2;
+
+  --color-warning-500: #ffab33;
+  --color-dark: #101728;
+
+  --color-surface: #0d1219;
+  --color-card: #161d27;
+  --color-line: #2a3441;
+  --color-panel: #1b2431;
+
+  /* A shadow on a dark page cannot be a darker blue than the page already is,
+     so the elevation comes from black at a higher opacity instead. */
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 html,
@@ -65,6 +136,11 @@ body,
 body {
   margin: 0;
   background: var(--color-surface);
+  /* Text that names no colour of its own used to fall through to the browser's
+     black, which is invisible on a dark page. Giving the body the ink colour
+     from the ramp means anything unstyled follows the theme. In light this is
+     #161616 where it was #000000 — the design's own body colour. */
+  color: var(--color-text-500);
   font-family: var(--font-cairo);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

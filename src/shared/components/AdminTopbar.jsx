@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Bell, Menu, Search } from 'lucide-react'
 
+import ThemeToggle from './ThemeToggle.jsx'
+
 /**
  * The bar above a screen that sits inside an AdminSidebar layout: a search
  * field, a notification bell and the signed-in user. The menu button only
@@ -47,7 +49,7 @@ function AdminTopbar({
   }
 
   return (
-    <header className="flex items-center gap-[16px] border-b border-line bg-white px-[24px] py-[14px]">
+    <header className="flex items-center gap-[16px] border-b border-line bg-panel px-[24px] py-[14px]">
       {onOpenSidebar ? (
         <button
           type="button"
@@ -86,6 +88,10 @@ function AdminTopbar({
 
       <div className="flex items-center gap-[12px]">
         {actions}
+
+        {/* After any screen-specific controls and before the bell, so the two
+            standing controls of the console stay together. */}
+        <ThemeToggle />
 
         {onNotifications ? (
           <button
