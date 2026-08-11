@@ -1,12 +1,36 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import { AUTH_ROUTES } from "../../modules/auth/constants/authRoutes.js";
 import logo from "../../assets/logo.png";
 import ThemeToggle from "./ThemeToggle.jsx";
 
+// The three links beside the home link. Each points at a page that already
+// exists in AppRoutes; "تواصل معنا" is the help and support screen, which is
+// where the contact details live — there is no separate /contact route.
+//
+// "الخدمات" opens the login screen instead of the services page: browsing the
+// catalogue is for people with an account. It keeps its own address so the
+// link is still a link — one that can be opened in a new tab, and one that
+// says where it would go — and the click is what redirects.
+const NAV_LINKS = [
+  { to: "/services", label: "الخدمات", signInFirst: true },
+  { to: "/about", label: "عن المنصة" },
+  { to: "/help-support", label: "تواصل معنا" },
+];
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const followLink = (link) => (event) => {
+    setOpen(false);
+
+    if (link.signInFirst) {
+      event.preventDefault();
+      navigate(AUTH_ROUTES.login);
+    }
+  };
 
   return (
     <nav className="w-full bg-panel border-b border-gray-100" dir="rtl">
@@ -31,39 +55,24 @@ export default function Navbar() {
             الرئيسية
           </Link>
 
-          <a
-            href="#services"
-            className="cursor-pointer hover:text-blue-600 transition"
-          >
-            الخدمات
-          </a>
-
-          <a
-            href="#about"
-            className="cursor-pointer hover:text-blue-600 transition"
-          >
-            عن المنصة
-          </a>
-
-          <a
-            href="#reviews"
-            className="cursor-pointer hover:text-blue-600 transition"
-          >
-            آراء العملاء
-          </a>
-
-          <a
-            href="#contact"
-            className="cursor-pointer hover:text-blue-600 transition"
-          >
-            تواصل معنا
-          </a>
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={followLink(link)}
+              className="hover:text-blue-600 transition"
+            >
+              {link.label}
+            </Link>
+          ))}
 
         </div>
 
         {/* Desktop Buttons */}
         <div className="hidden md:flex items-center gap-3">
 
+          {/* First in the markup, so under RTL it sits at the right of the
+              pair of buttons and does not come between them. */}
           <ThemeToggle />
 
           <Link
@@ -102,12 +111,12 @@ export default function Navbar() {
         <div className="flex items-center gap-2 md:hidden">
           <ThemeToggle compact />
 
-          <button
-            className="text-blue-600"
-            onClick={() => setOpen(!open)}
-          >
-            {open ? <X size={28} /> : <Menu size={28} />}
-          </button>
+        <button
+          className="text-blue-600"
+          onClick={() => setOpen(!open)}
+        >
+          {open ? <X size={28} /> : <Menu size={28} />}
+        </button>
         </div>
 
       </div>
@@ -123,33 +132,15 @@ export default function Navbar() {
             الرئيسية
           </Link>
 
-          <a
-            href="#services"
-            onClick={() => setOpen(false)}
-          >
-            الخدمات
-          </a>
-
-          <a
-            href="#about"
-            onClick={() => setOpen(false)}
-          >
-            عن المنصة
-          </a>
-
-          <a
-            href="#reviews"
-            onClick={() => setOpen(false)}
-          >
-            آراء العملاء
-          </a>
-
-          <a
-            href="#contact"
-            onClick={() => setOpen(false)}
-          >
-            تواصل معنا
-          </a>
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={followLink(link)}
+            >
+              {link.label}
+            </Link>
+          ))}
 
           <Link
             to="/login"
@@ -181,6 +172,7 @@ export default function Navbar() {
 
         </div>
       )}
+
     </nav>
   );
 }

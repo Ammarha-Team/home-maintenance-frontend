@@ -47,7 +47,12 @@ function Select({
           style={{ fontSize }}
           // h-full so the whole field opens the picker — the native control is
           // ~31px inside a 52px wrapper, leaving the padding dead to touch.
-          className="h-full w-full cursor-pointer bg-transparent text-right leading-[1.5] text-text-500 outline-none"
+          //
+          // `bg-card` rather than `bg-transparent`: the browser draws the open
+          // list on the control's own background, and a transparent one falls
+          // back to white however dark the page is. It is the token the wrapper
+          // already paints, so the closed field is unchanged in both themes.
+          className="h-full w-full cursor-pointer bg-card text-right leading-[1.5] text-text-500 outline-none"
           {...props}
         >
           <option value="" disabled>
