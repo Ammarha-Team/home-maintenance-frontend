@@ -2,8 +2,6 @@ import { X } from "lucide-react";
 import ServiceSelector from "./ServiceSelector";
 import ProblemDescription from "./ProblemDescription";
 import UploadImages from "./UploadImages";
-import ScheduleSection from "./ScheduleSection";
-import HiringMethod  from "./HiringMethod.jsx";
 import SubmitRequest from "./SubmitRequest";
 export default function RequestServiceModal({ open, onClose }) {
   if (!open) return null;
@@ -34,8 +32,6 @@ export default function RequestServiceModal({ open, onClose }) {
           <ServiceSelector />
           <ProblemDescription />
           <UploadImages />
-          <ScheduleSection />
-          <HiringMethod /> 
           <SubmitRequest />
         </div>
 

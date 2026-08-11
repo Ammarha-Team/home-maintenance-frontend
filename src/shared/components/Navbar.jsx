@@ -2,12 +2,13 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import logo from "../../assets/logo.png";
+import ThemeToggle from "./ThemeToggle.jsx";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <nav className="w-full bg-white border-b border-gray-100" dir="rtl">
+    <nav className="w-full bg-panel border-b border-gray-100" dir="rtl">
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
 
         {/* Logo */}
@@ -44,7 +45,11 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Buttons */}
-        <div className="hidden md:flex gap-3">
+        <div className="hidden md:flex items-center gap-3">
+
+          {/* First in the markup, so under RTL it sits at the right of the
+              pair of buttons and does not come between them. */}
+          <ThemeToggle />
 
           <Link
             to="/login"
@@ -79,12 +84,16 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Menu Button */}
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle compact />
+
         <button
-          className="md:hidden text-blue-600"
+          className="text-blue-600"
           onClick={() => setOpen(!open)}
         >
           {open ? <X size={28} /> : <Menu size={28} />}
         </button>
+        </div>
 
       </div>
 

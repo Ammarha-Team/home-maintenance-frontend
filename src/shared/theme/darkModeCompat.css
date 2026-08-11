@@ -1,0 +1,530 @@
+/* Dark mode for the colours that were written as literals.
+ *
+ * Everything drawn with a design token — `bg-card`, `text-text-500`,
+ * `border-line`, the primary and status ramps — turns dark on its own, because
+ * `index.css` redefines those variables under `[data-theme="dark"]`.
+ *
+ * The screens built before the tokens existed reach for a colour directly:
+ * `bg-white`, `text-gray-500`, `border-[#E1E5EB]`. Those classes carry a fixed
+ * value that no variable can move, and there are around a thousand of them
+ * across 260 components. Rewriting each one would touch nearly every file in
+ * the project for a change that is meant to leave the light theme exactly as
+ * it is, so instead each literal is redefined here in terms of the token it
+ * stands for. A component keeps the class it always had; in dark mode the
+ * class resolves to the dark value.
+ *
+ * These rules sit outside `@layer`, so they win over Tailwind's utilities
+ * without `!important`. They apply under `[data-theme="dark"]` only — in light
+ * mode this file contributes nothing.
+ *
+ * Two deliberate exceptions: `text-white` and the solid brand fills
+ * (`bg-blue-600`, `bg-[#2563eb]`, the solid greens and reds) are left alone.
+ * They are the label and the fill of coloured buttons and badges, which are as
+ * readable on a dark page as on a light one, and turning them down would take
+ * the accent out of the interface.
+ */
+
+:root[data-theme='dark'] {
+  /* Surfaces ordered by how raised they read:
+     surface (the page) < card (a recessed fill) < panel (a card on the page). */
+  --compat-panel: var(--color-panel);
+  --compat-inset: var(--color-card);
+  --compat-raised: #222c3a;
+}
+
+/* ---------------------------------------------------------------------------
+ * Panels: what used to be a white card.
+ * ------------------------------------------------------------------------- */
+
+:root[data-theme='dark'] .bg-white,
+:root[data-theme='dark'] .bg-white\/95,
+:root[data-theme='dark'] .bg-white\/90,
+:root[data-theme='dark'] .bg-\[\#FAFBFC\],
+:root[data-theme='dark'] .bg-\[\#FAFBFD\] {
+  background-color: var(--compat-panel);
+}
+
+:root[data-theme='dark'] .bg-white\/20,
+:root[data-theme='dark'] .bg-white\/10 {
+  background-color: rgb(255 255 255 / 0.08);
+}
+
+/* ---------------------------------------------------------------------------
+ * Recessed fills: the near-white greys that sit inside a card.
+ * ------------------------------------------------------------------------- */
+
+:root[data-theme='dark'] .bg-gray-50,
+:root[data-theme='dark'] .bg-gray-50\/80,
+:root[data-theme='dark'] .bg-gray-50\/60,
+:root[data-theme='dark'] .bg-gray-100,
+:root[data-theme='dark'] .bg-\[\#F5F7FA\],
+:root[data-theme='dark'] .bg-\[\#F8F9FC\],
+:root[data-theme='dark'] .bg-\[\#F7F9FC\],
+:root[data-theme='dark'] .bg-\[\#F7F8FC\],
+:root[data-theme='dark'] .bg-\[\#F8FAFC\],
+:root[data-theme='dark'] .bg-\[\#F8FAFD\],
+:root[data-theme='dark'] .bg-\[\#f8fafc\],
+:root[data-theme='dark'] .bg-\[\#f8fafc\]\/50,
+:root[data-theme='dark'] .bg-\[\#F8F6F2\],
+:root[data-theme='dark'] .bg-\[\#F3F4F6\] {
+  background-color: var(--compat-inset);
+}
+
+:root[data-theme='dark'] .bg-gray-200,
+:root[data-theme='dark'] .bg-gray-200\/80,
+:root[data-theme='dark'] .bg-gray-200\/70,
+:root[data-theme='dark'] .bg-gray-300,
+:root[data-theme='dark'] .bg-\[\#E5E7EB\] {
+  background-color: var(--compat-raised);
+}
+
+/* ---------------------------------------------------------------------------
+ * Tinted fills: the pale blue, green, red and amber wash behind a status.
+ * ------------------------------------------------------------------------- */
+
+:root[data-theme='dark'] .bg-blue-50,
+:root[data-theme='dark'] .bg-blue-50\/50,
+:root[data-theme='dark'] .bg-blue-100,
+:root[data-theme='dark'] .bg-blue-100\/55,
+:root[data-theme='dark'] .bg-blue-200,
+:root[data-theme='dark'] .bg-\[\#EAF2FF\],
+:root[data-theme='dark'] .bg-\[\#EEF5FF\],
+:root[data-theme='dark'] .bg-\[\#EEF4FF\],
+:root[data-theme='dark'] .bg-\[\#EEF3FD\],
+:root[data-theme='dark'] .bg-\[\#EDF4FF\],
+:root[data-theme='dark'] .bg-\[\#EAF4FF\],
+:root[data-theme='dark'] .bg-\[\#E8F0FF\],
+:root[data-theme='dark'] .bg-\[\#E8F0FE\],
+:root[data-theme='dark'] .bg-\[\#e8f0fe\],
+:root[data-theme='dark'] .bg-\[\#e8f0fe\]\/70,
+:root[data-theme='dark'] .bg-\[\#DCEBFF\],
+:root[data-theme='dark'] .bg-\[\#DCEAFF\],
+:root[data-theme='dark'] .bg-\[\#DCE8FF\],
+:root[data-theme='dark'] .bg-\[\#BFD6FF\] {
+  background-color: var(--color-primary-50);
+}
+
+:root[data-theme='dark'] .bg-green-100,
+:root[data-theme='dark'] .bg-\[\#EAF8EF\],
+:root[data-theme='dark'] .bg-\[\#EAF8EE\],
+:root[data-theme='dark'] .bg-\[\#EAF8EC\],
+:root[data-theme='dark'] .bg-\[\#E8F6EC\],
+:root[data-theme='dark'] .bg-\[\#E8F7EC\],
+:root[data-theme='dark'] .bg-\[\#EEF8F1\],
+:root[data-theme='dark'] .bg-\[\#e6f7ed\],
+:root[data-theme='dark'] .bg-\[\#dcfce7\] {
+  background-color: var(--color-success-100);
+}
+
+:root[data-theme='dark'] .bg-red-50,
+:root[data-theme='dark'] .bg-red-100,
+:root[data-theme='dark'] .bg-red-200,
+:root[data-theme='dark'] .bg-rose-50,
+:root[data-theme='dark'] .bg-rose-100,
+:root[data-theme='dark'] .bg-\[\#FBE8E8\],
+:root[data-theme='dark'] .bg-\[\#F9E8E8\],
+:root[data-theme='dark'] .bg-\[\#F8E8E8\],
+:root[data-theme='dark'] .bg-\[\#FDECEC\],
+:root[data-theme='dark'] .bg-\[\#fef2f2\] {
+  background-color: var(--color-error-50);
+}
+
+:root[data-theme='dark'] .bg-\[\#FFF7ED\],
+:root[data-theme='dark'] .bg-\[\#fff7ed\],
+:root[data-theme='dark'] .bg-\[\#FFF5E8\],
+:root[data-theme='dark'] .bg-\[\#FFF4E5\],
+:root[data-theme='dark'] .bg-\[\#fff4e5\],
+:root[data-theme='dark'] .bg-\[\#FFF4DF\],
+:root[data-theme='dark'] .bg-\[\#FFF3E0\],
+:root[data-theme='dark'] .bg-\[\#F3E8D7\] {
+  background-color: #3a2a12;
+}
+
+/* ---------------------------------------------------------------------------
+ * Text: the near-black headings, the grey body copy, the accents.
+ * ------------------------------------------------------------------------- */
+
+:root[data-theme='dark'] .text-gray-900,
+:root[data-theme='dark'] .text-gray-800,
+:root[data-theme='dark'] .text-\[\#333\],
+:root[data-theme='dark'] .text-\[\#333333\],
+:root[data-theme='dark'] .text-\[\#222\],
+:root[data-theme='dark'] .text-\[\#202124\],
+:root[data-theme='dark'] .text-\[\#1F2937\] {
+  color: var(--color-text-500);
+}
+
+:root[data-theme='dark'] .text-gray-700,
+:root[data-theme='dark'] .text-\[\#374151\],
+:root[data-theme='dark'] .text-\[\#434655\],
+:root[data-theme='dark'] .text-\[\#4A4A4A\],
+:root[data-theme='dark'] .text-\[\#454545\],
+:root[data-theme='dark'] .text-\[\#444\],
+:root[data-theme='dark'] .text-\[\#4B5563\],
+:root[data-theme='dark'] .text-\[\#55585D\],
+:root[data-theme='dark'] .text-\[\#555D68\],
+:root[data-theme='dark'] .text-\[\#555\] {
+  color: var(--color-text-400);
+}
+
+:root[data-theme='dark'] .text-gray-600,
+:root[data-theme='dark'] .text-gray-500,
+:root[data-theme='dark'] .text-\[\#666\],
+:root[data-theme='dark'] .text-\[\#6B7280\],
+:root[data-theme='dark'] .text-\[\#777\],
+:root[data-theme='dark'] .text-\[\#777C84\],
+:root[data-theme='dark'] .text-\[\#8C929B\],
+:root[data-theme='dark'] .text-\[\#8e9aaf\] {
+  color: var(--color-text-300);
+}
+
+:root[data-theme='dark'] .text-gray-400,
+:root[data-theme='dark'] .text-gray-300,
+:root[data-theme='dark'] .text-gray-200,
+:root[data-theme='dark'] .placeholder-gray-400::placeholder,
+:root[data-theme='dark'] .text-\[\#888\],
+:root[data-theme='dark'] .text-\[\#999\],
+:root[data-theme='dark'] .text-\[\#9AA0A8\],
+:root[data-theme='dark'] .text-\[\#9B9B9B\],
+:root[data-theme='dark'] .text-\[\#9CA3AF\],
+:root[data-theme='dark'] .text-\[\#A4A7AE\],
+:root[data-theme='dark'] .text-\[\#B0B2B8\],
+:root[data-theme='dark'] .text-\[\#b7b7b7\] {
+  color: var(--color-text-200);
+}
+
+/* Two surface colours are used as ink rather than as ground: `text-surface`
+   and `text-card` letter the auth hero, the technician stats banner, the
+   selected segment of a segmented control and the label of a primary button —
+   all of them dark or brand-coloured fills in either theme. Inverting them
+   with the rest of the ramp turned that lettering dark on dark, which is the
+   one place the theme became unreadable rather than merely different, so here
+   they hold their light value. */
+:root[data-theme='dark'] .text-surface {
+  color: #fafafa;
+}
+
+:root[data-theme='dark'] .text-card {
+  color: #f6f7f9;
+}
+
+/* Brand blue as type. The light theme's blue is too dark to read on a dark
+   page, so it moves one step up the ramp instead of being replaced. */
+:root[data-theme='dark'] .text-blue-500,
+:root[data-theme='dark'] .text-blue-600,
+:root[data-theme='dark'] .text-blue-700,
+:root[data-theme='dark'] .text-blue-900,
+:root[data-theme='dark'] .text-\[\#2563eb\],
+:root[data-theme='dark'] .text-\[\#2563EB\],
+:root[data-theme='dark'] .text-\[\#2878D8\],
+:root[data-theme='dark'] .text-\[\#2878E8\],
+:root[data-theme='dark'] .text-\[\#2879F6\],
+:root[data-theme='dark'] .text-\[\#2666d5\],
+:root[data-theme='dark'] .text-\[\#2F6FED\],
+:root[data-theme='dark'] .text-\[\#4775C9\],
+:root[data-theme='dark'] .text-\[\#3B82F6\],
+:root[data-theme='dark'] .text-\[\#0062e0\] {
+  color: var(--color-primary-400);
+}
+
+:root[data-theme='dark'] .text-green-500,
+:root[data-theme='dark'] .text-green-600,
+:root[data-theme='dark'] .text-\[\#059669\],
+:root[data-theme='dark'] .text-\[\#36A45A\],
+:root[data-theme='dark'] .text-\[\#22A447\],
+:root[data-theme='dark'] .text-\[\#22C55E\],
+:root[data-theme='dark'] .text-\[\#4BA35A\],
+:root[data-theme='dark'] .text-\[\#35B65B\],
+:root[data-theme='dark'] .text-\[\#16A34A\],
+:root[data-theme='dark'] .text-\[\#15803d\] {
+  color: var(--color-success-800);
+}
+
+:root[data-theme='dark'] .text-red-400,
+:root[data-theme='dark'] .text-red-500,
+:root[data-theme='dark'] .text-red-600,
+:root[data-theme='dark'] .text-rose-500,
+:root[data-theme='dark'] .text-rose-600,
+:root[data-theme='dark'] .text-rose-700,
+:root[data-theme='dark'] .text-\[\#DC2626\],
+:root[data-theme='dark'] .text-\[\#dc2626\],
+:root[data-theme='dark'] .text-\[\#D55A5A\],
+:root[data-theme='dark'] .text-\[\#DC5A5A\],
+:root[data-theme='dark'] .text-\[\#C84D4D\],
+:root[data-theme='dark'] .text-\[\#C71F1F\],
+:root[data-theme='dark'] .text-\[\#E56B6B\] {
+  color: var(--color-error-500);
+}
+
+:root[data-theme='dark'] .text-amber-500,
+:root[data-theme='dark'] .text-yellow-500,
+:root[data-theme='dark'] .text-orange-500,
+:root[data-theme='dark'] .text-\[\#F59E0B\],
+:root[data-theme='dark'] .text-\[\#F3A623\],
+:root[data-theme='dark'] .text-\[\#d97706\],
+:root[data-theme='dark'] .text-\[\#8a5200\] {
+  color: var(--color-warning-500);
+}
+
+/* ---------------------------------------------------------------------------
+ * Brand blue as a fill.
+ *
+ * The blue ramp moves up in dark mode so that blue *type* can be read against
+ * a dark card. A fill wants the opposite: white lettering on a lightened blue
+ * loses contrast, and the buttons, the active page number and the auth hero
+ * are all white on blue.
+ *
+ * So the fills keep the light theme's own blues. White on them then reads
+ * exactly as well as it does in light mode — the brand colour is unchanged,
+ * and no button becomes harder to read for having switched theme. Only the
+ * 50 and 100 tints stay dark, because those are grounds rather than fills and
+ * carry dark text of their own.
+ * ------------------------------------------------------------------------- */
+
+:root[data-theme='dark'] .bg-primary-300,
+:root[data-theme='dark'] .hover\:bg-primary-300:hover {
+  background-color: #709ff1;
+}
+
+:root[data-theme='dark'] .bg-primary-400,
+:root[data-theme='dark'] .hover\:bg-primary-400:hover {
+  background-color: #558dee;
+}
+
+:root[data-theme='dark'] .bg-primary-500,
+:root[data-theme='dark'] .hover\:bg-primary-500:hover {
+  background-color: #2a70ea;
+}
+
+:root[data-theme='dark'] .bg-primary-600,
+:root[data-theme='dark'] .hover\:bg-primary-600:hover {
+  background-color: #2666d5;
+}
+
+:root[data-theme='dark'] .bg-primary-700,
+:root[data-theme='dark'] .hover\:bg-primary-700:hover {
+  background-color: #1e50a6;
+}
+
+/* ---------------------------------------------------------------------------
+ * Borders and rules.
+ * ------------------------------------------------------------------------- */
+
+:root[data-theme='dark'] .border-gray-50,
+:root[data-theme='dark'] .border-gray-100,
+:root[data-theme='dark'] .border-gray-200,
+:root[data-theme='dark'] .border-gray-300,
+:root[data-theme='dark'] .border-white,
+:root[data-theme='dark'] .divide-gray-50 > :not([hidden]) ~ :not([hidden]),
+:root[data-theme='dark'] .border-\[\#E1E5EB\],
+:root[data-theme='dark'] .border-\[\#E1E4E8\],
+:root[data-theme='dark'] .border-\[\#E2E5EB\],
+:root[data-theme='dark'] .border-\[\#E3E5EA\],
+:root[data-theme='dark'] .border-\[\#E4E7EC\],
+:root[data-theme='dark'] .border-\[\#E4E7EE\],
+:root[data-theme='dark'] .border-\[\#E5E7EB\],
+:root[data-theme='dark'] .border-\[\#E6E8ED\],
+:root[data-theme='dark'] .border-\[\#E6EAF0\],
+:root[data-theme='dark'] .border-\[\#E8EAF0\],
+:root[data-theme='dark'] .border-\[\#E8ECF2\],
+:root[data-theme='dark'] .border-\[\#E8ECF4\],
+:root[data-theme='dark'] .border-\[\#EEF0F3\],
+:root[data-theme='dark'] .border-\[\#EEF1F5\],
+:root[data-theme='dark'] .border-\[\#F0F1F4\],
+:root[data-theme='dark'] .border-\[\#D9DEE7\],
+:root[data-theme='dark'] .border-\[\#D9DDE5\],
+:root[data-theme='dark'] .border-\[\#e6e8ea\],
+:root[data-theme='dark'] .border-\[\#e8e8e8\] {
+  border-color: var(--color-line);
+}
+
+:root[data-theme='dark'] .border-white\/50,
+:root[data-theme='dark'] .border-white\/20 {
+  border-color: rgb(255 255 255 / 0.14);
+}
+
+:root[data-theme='dark'] .border-blue-100,
+:root[data-theme='dark'] .border-blue-200,
+:root[data-theme='dark'] .border-\[\#B9CBEF\],
+:root[data-theme='dark'] .border-\[\#BFD6FF\] {
+  border-color: var(--color-primary-100);
+}
+
+:root[data-theme='dark'] .border-red-100,
+:root[data-theme='dark'] .border-red-200,
+:root[data-theme='dark'] .border-rose-200,
+:root[data-theme='dark'] .border-\[\#fecaca\] {
+  border-color: var(--color-error-100);
+}
+
+:root[data-theme='dark'] .border-\[\#bbf7d0\],
+:root[data-theme='dark'] .border-\[\#a7f3d0\],
+:root[data-theme='dark'] .border-\[\#DDEFE4\] {
+  border-color: var(--color-success-200);
+}
+
+:root[data-theme='dark'] .border-\[\#fed7aa\],
+:root[data-theme='dark'] .border-\[\#ffd9a8\],
+:root[data-theme='dark'] .border-\[\#F3E8D7\] {
+  border-color: #5a4320;
+}
+
+:root[data-theme='dark'] .ring-blue-100 {
+  --tw-ring-color: var(--color-primary-100);
+}
+
+:root[data-theme='dark'] .ring-white {
+  --tw-ring-color: var(--compat-panel);
+}
+
+/* ---------------------------------------------------------------------------
+ * States, and colours carrying an opacity.
+ *
+ * A utility written `hover:bg-gray-50` produces the class `hover:bg-gray-50`,
+ * which is a different class from `bg-gray-50` — correcting the resting colour
+ * says nothing about the hovered one. That is why rows, menu items and list
+ * entries kept flashing white under the cursor while sitting correctly dark at
+ * rest: every rule above matched only the resting class.
+ *
+ * The same is true of an opacity suffix: `bg-blue-50/60` is its own class, not
+ * `bg-blue-50` with a modifier applied afterwards.
+ *
+ * Both lists below come from a sweep of every colour utility in `src` that
+ * carries a state prefix or an opacity, so this covers the whole project
+ * rather than the screens the problem was noticed on.
+ *
+ * Hover on a dark surface lifts rather than bleaches: the feedback is a step
+ * up from the card it sits on, which is the dark-theme equivalent of the light
+ * theme's step down towards grey.
+ * ------------------------------------------------------------------------- */
+
+:root[data-theme='dark'] .focus\:bg-white:focus,
+:root[data-theme='dark'] .hover\:bg-gray-50:hover,
+:root[data-theme='dark'] .hover\:bg-gray-50\/60:hover,
+:root[data-theme='dark'] .hover\:bg-gray-100:hover,
+:root[data-theme='dark'] .hover\:bg-\[\#F5F7FA\]:hover,
+:root[data-theme='dark'] .hover\:bg-\[\#F7F9FC\]:hover,
+:root[data-theme='dark'] .hover\:bg-\[\#F8F9FC\]:hover,
+:root[data-theme='dark'] .hover\:bg-\[\#FAFBFD\]:hover {
+  background-color: var(--compat-raised);
+}
+
+:root[data-theme='dark'] .hover\:bg-gray-200:hover,
+:root[data-theme='dark'] .hover\:bg-gray-300:hover,
+:root[data-theme='dark'] .disabled\:bg-gray-300:disabled {
+  background-color: #2b3646;
+}
+
+:root[data-theme='dark'] .hover\:bg-blue-50:hover,
+:root[data-theme='dark'] .hover\:bg-blue-50\/30:hover,
+:root[data-theme='dark'] .hover\:bg-blue-100\/55:hover,
+:root[data-theme='dark'] .bg-blue-50\/30,
+:root[data-theme='dark'] .bg-blue-50\/40,
+:root[data-theme='dark'] .bg-blue-50\/60,
+:root[data-theme='dark'] .bg-blue-50\/70 {
+  background-color: var(--color-primary-50);
+}
+
+:root[data-theme='dark'] .hover\:bg-red-50:hover,
+:root[data-theme='dark'] .hover\:bg-red-100:hover,
+:root[data-theme='dark'] .hover\:bg-red-200:hover,
+:root[data-theme='dark'] .hover\:bg-rose-50:hover,
+:root[data-theme='dark'] .hover\:bg-rose-100:hover {
+  background-color: var(--color-error-50);
+}
+
+:root[data-theme='dark'] .hover\:text-gray-700:hover,
+:root[data-theme='dark'] .hover\:text-gray-900:hover {
+  color: var(--color-text-500);
+}
+
+:root[data-theme='dark'] .disabled\:text-gray-500:disabled {
+  color: var(--color-text-200);
+}
+
+/* A hovered link brightens, so it steps one further up the ramp than the
+   resting blue does. */
+:root[data-theme='dark'] .hover\:text-blue-500:hover,
+:root[data-theme='dark'] .hover\:text-blue-600:hover,
+:root[data-theme='dark'] .hover\:text-blue-700:hover,
+:root[data-theme='dark'] .hover\:text-\[\#2563eb\]:hover,
+:root[data-theme='dark'] .hover\:text-\[\#2878D8\]:hover,
+:root[data-theme='dark'] .group:hover .group-hover\:text-blue-600 {
+  color: var(--color-primary-300);
+}
+
+:root[data-theme='dark'] .hover\:text-red-500:hover,
+:root[data-theme='dark'] .hover\:text-red-600:hover,
+:root[data-theme='dark'] .hover\:text-rose-600:hover {
+  color: var(--color-error-500);
+}
+
+:root[data-theme='dark'] .hover\:border-blue-400:hover,
+:root[data-theme='dark'] .hover\:border-blue-500:hover,
+:root[data-theme='dark'] .focus\:border-\[\#B9CBEF\]:focus {
+  border-color: var(--color-primary-400);
+}
+
+:root[data-theme='dark'] .border-blue-100\/40 {
+  border-color: var(--color-primary-100);
+}
+
+:root[data-theme='dark'] .focus\:ring-blue-100:focus {
+  --tw-ring-color: var(--color-primary-100);
+}
+
+/* The footer's gradient is written as two literal stops, so neither end can
+   follow the theme. Restating the whole image is steadier than reaching into
+   Tailwind's gradient variables. It runs from the brand tint at the bottom up
+   into the page colour, which is the same climb the light theme makes and
+   leaves no seam where the footer meets the page above it. */
+:root[data-theme='dark'] .bg-gradient-to-t.from-\[\#abc6f6\] {
+  background-image: linear-gradient(to top, var(--color-primary-50), var(--color-surface));
+}
+
+/* ---------------------------------------------------------------------------
+ * Third-party stylesheets. Both ship a light theme of their own, imported in
+ * `main.jsx`, and neither reads our variables.
+ * ------------------------------------------------------------------------- */
+
+:root[data-theme='dark'] .react-calendar {
+  background-color: var(--compat-panel);
+  border-color: var(--color-line);
+  color: var(--color-text-500);
+}
+
+:root[data-theme='dark'] .react-calendar button {
+  color: var(--color-text-400);
+}
+
+:root[data-theme='dark'] .react-calendar__month-view__days__day--neighboringMonth {
+  color: var(--color-text-200);
+}
+
+:root[data-theme='dark'] .react-calendar__tile:enabled:hover,
+:root[data-theme='dark'] .react-calendar__tile:enabled:focus,
+:root[data-theme='dark'] .react-calendar__navigation button:enabled:hover,
+:root[data-theme='dark'] .react-calendar__navigation button:enabled:focus {
+  background-color: var(--color-primary-50);
+}
+
+:root[data-theme='dark'] .react-calendar__tile--now {
+  background-color: var(--color-primary-100);
+}
+
+/* Map tiles are photographs of a lit world, so there is no dark version of
+   them to switch to. Taking the brightness down stops the map from being the
+   one blinding rectangle on an otherwise dark page. */
+:root[data-theme='dark'] .leaflet-tile-pane {
+  filter: brightness(0.75) saturate(0.85);
+}
+
+:root[data-theme='dark'] .leaflet-container {
+  background-color: var(--color-card);
+}
+
+:root[data-theme='dark'] .leaflet-popup-content-wrapper,
+:root[data-theme='dark'] .leaflet-popup-tip {
+  background-color: var(--compat-panel);
+  color: var(--color-text-500);
+}
