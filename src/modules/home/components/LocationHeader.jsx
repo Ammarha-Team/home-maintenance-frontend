@@ -2,7 +2,6 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { readDisplayName, readSession } from '../../auth/services/authSession.js';
-import { Link } from "react-router-dom";
 export default function LocationHeader({ onRequestClick }) {
   const navigate = useNavigate();
 
