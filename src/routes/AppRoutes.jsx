@@ -27,7 +27,7 @@ import EmergencyRequest from "../modules/emergency/pages/EmergencyRequest";
 import EmergencyTracking from "../modules/emergency/pages/EmergencyTracking";
 import EmergencyRating from "../modules/emergency/pages/EmergencyRating";
 
-import Profile from "../modules/profile/pages/Profile";
+import CustomerProfile from "../modules/profile/pages/Profile.jsx";
 import Settings from "../modules/profile/pages/Settings";
 import ChangePassword from "../modules/profile/pages/ChangePassword";
 import Notifications from "../modules/profile/pages/Notifications";
@@ -166,10 +166,11 @@ function AppRoutes() {
         />
 
         {/* Profile */}
-        <Route
-          path="/profile"
-          element={<Profile />}
-        />
+ 
+<Route
+  path="/profile"
+  element={<CustomerProfile />}
+/>
 
         <Route
           path="/settings"
