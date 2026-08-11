@@ -18,7 +18,7 @@ const services = [
 
 export default function ServicesSection() {
   return (
-    <section className="py-16" dir="rtl">
+    <section id="services" className="scroll-mt-24 py-16" dir="rtl">
       <div className="container mx-auto px-6">
 
         <div className="flex justify-between items-center mb-8">

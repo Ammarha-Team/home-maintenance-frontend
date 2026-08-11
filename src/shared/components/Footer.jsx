@@ -59,7 +59,7 @@ function Footer() {
       <div className="flex w-[620px] items-start justify-end gap-[56px]">
         <div className="flex w-[149px] flex-col gap-[16px]">
           <h2 className="text-[20px] font-bold leading-[1.5] text-text-500">
-            اللينكات السريعه
+            روابط سريعة
           </h2>
           <ul className="flex flex-col gap-[4px] text-[20px] leading-[1.5] text-text-300">
             {QUICK_LINKS.map((link) => (

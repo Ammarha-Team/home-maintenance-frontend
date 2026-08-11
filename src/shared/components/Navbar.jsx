@@ -1,11 +1,36 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import { AUTH_ROUTES } from "../../modules/auth/constants/authRoutes.js";
 import logo from "../../assets/logo.png";
 import ThemeToggle from "./ThemeToggle.jsx";
 
+// The three links beside the home link. Each points at a page that already
+// exists in AppRoutes; "تواصل معنا" is the help and support screen, which is
+// where the contact details live — there is no separate /contact route.
+//
+// "الخدمات" opens the login screen instead of the services page: browsing the
+// catalogue is for people with an account. It keeps its own address so the
+// link is still a link — one that can be opened in a new tab, and one that
+// says where it would go — and the click is what redirects.
+const NAV_LINKS = [
+  { to: "/services", label: "الخدمات", signInFirst: true },
+  { to: "/about", label: "عن المنصة" },
+  { to: "/help-support", label: "تواصل معنا" },
+];
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const followLink = (link) => (event) => {
+    setOpen(false);
+
+    if (link.signInFirst) {
+      event.preventDefault();
+      navigate(AUTH_ROUTES.login);
+    }
+  };
 
   return (
     <nav className="w-full bg-panel border-b border-gray-100" dir="rtl">
@@ -30,17 +55,16 @@ export default function Navbar() {
             الرئيسية
           </Link>
 
-          <span className="cursor-pointer hover:text-blue-600 transition">
-            الخدمات
-          </span>
-
-          <span className="cursor-pointer hover:text-blue-600 transition">
-            عن المنصة
-          </span>
-
-          <span className="cursor-pointer hover:text-blue-600 transition">
-            تواصل معنا
-          </span>
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={followLink(link)}
+              className="hover:text-blue-600 transition"
+            >
+              {link.label}
+            </Link>
+          ))}
 
         </div>
 
@@ -108,26 +132,15 @@ export default function Navbar() {
             الرئيسية
           </Link>
 
-          <span
-            className="cursor-pointer"
-            onClick={() => setOpen(false)}
-          >
-            الخدمات
-          </span>
-
-          <span
-            className="cursor-pointer"
-            onClick={() => setOpen(false)}
-          >
-            عن المنصة
-          </span>
-
-          <span
-            className="cursor-pointer"
-            onClick={() => setOpen(false)}
-          >
-            تواصل معنا
-          </span>
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={followLink(link)}
+            >
+              {link.label}
+            </Link>
+          ))}
 
           <Link
             to="/login"

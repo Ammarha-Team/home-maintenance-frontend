@@ -24,7 +24,7 @@ export default function Reviews() {
 
   return (
 
-    <section 
+    <section id="reviews"
       dir="rtl"
       className="bg-white py-16 font-sans"
     >

@@ -548,3 +548,28 @@
   border-bottom-color: var(--color-line);
   color: var(--color-text-500);
 }
+
+/* ---------------------------------------------------------------------------
+ * Native dropdowns.
+ *
+ * The open list of a <select> is drawn by the browser, not the page. Chromium
+ * takes its plate from the control's own background and Firefox from each row's
+ * own, so both are named here: the closed field keeps whatever surface its
+ * component gives it, and the list that drops out of it reads as a panel
+ * floating above the page.
+ *
+ * `color-scheme: dark` on the root (themePreference.js) already hands the
+ * browser the highlight and caret colours for the hovered and selected rows,
+ * which is why neither is restated — those are the one part of the control the
+ * page cannot paint.
+ * ------------------------------------------------------------------------- */
+
+:root[data-theme='dark'] option,
+:root[data-theme='dark'] optgroup {
+  background-color: var(--compat-panel);
+  color: var(--color-text-500);
+}
+
+:root[data-theme='dark'] option:disabled {
+  color: var(--color-text-100);
+}

@@ -21,7 +21,11 @@ import axios from 'axios'
 // the caller's origin and adds `Access-Control-Allow-Credentials: true`.
 // Everything else works today.
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  // Empty in development so the calls stay on the page's own origin and reach
+  // the dev server's /api proxy, which forwards them to VITE_API_URL. The API
+  // allowlists the deployed origin only, so a direct call from localhost never
+  // gets past the browser. A build talks to the API itself.
+  baseURL: import.meta.env.DEV ? '' : import.meta.env.VITE_API_URL,
   withCredentials: false,
   headers: { 'Content-Type': 'application/json' },
 })

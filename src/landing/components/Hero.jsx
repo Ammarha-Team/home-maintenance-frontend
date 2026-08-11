@@ -1,4 +1,23 @@
+import { useNavigate } from "react-router-dom";
+
+import { AUTH_ROUTES } from "../../modules/auth/constants/authRoutes.js";
+
 export default function Hero() {
+  const navigate = useNavigate();
+
+  // Requesting a service starts at the login screen, not at the request form
+  // and not at sign up. Signing in lands the visitor on their own home, which
+  // is where the request is made from.
+  const requestService = () => {
+    navigate(AUTH_ROUTES.login);
+  };
+
+  const scrollToServices = () => {
+    document
+      .getElementById("services")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <section dir="rtl" className="bg-white py-16 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
@@ -42,6 +61,8 @@ export default function Hero() {
 
           <div className="flex gap-4 mt-10">
             <button
+              type="button"
+              onClick={requestService}
               className="
               bg-blue-600
               text-white
@@ -57,6 +78,8 @@ export default function Hero() {
             </button>
 
             <button
+              type="button"
+              onClick={scrollToServices}
               className="
               bg-white
               text-gray-700
