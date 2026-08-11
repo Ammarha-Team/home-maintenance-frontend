@@ -18,6 +18,7 @@ function AdminRoutes() {
         <Route index element={<Dashboard />} />
 
         <Route path="technicians" element={<Technicians />} />
+        <Route path="technicians/:id" element={<TechnicianSummary />} />
 
         <Route
           path="technicians/summary"

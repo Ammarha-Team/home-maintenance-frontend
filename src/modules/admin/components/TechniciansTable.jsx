@@ -1,4 +1,5 @@
 import { Ban, CircleCheck, Eye, Star } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 import TablePagination from './TablePagination.jsx'
 import { technicianStatusLabel } from '../services/adminService.js'
@@ -19,6 +20,7 @@ const STATUS_CLASS = {
  * the paging stay together on the screen above.
  */
 function TechniciansTable({ rows, page, pageCount, total, from, to, onPageChange }) {
+  const navigate = useNavigate()
   return (
     <section className="overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
       {/* A ten-column table cannot narrow indefinitely; below the breakpoint it
@@ -45,7 +47,10 @@ function TechniciansTable({ rows, page, pageCount, total, from, to, onPageChange
               const suspended = technician.status === 'suspended'
 
               return (
-                <tr key={technician.id} className="border-t border-line">
+                <tr
+  key={technician.id}
+  onClick={() => navigate(`/admin/technicians/${technician.id}`)}
+  className="cursor-pointer border-t border-line transition-colors hover:bg-primary-50">
                   <td className={CELL_CLASS}>
                     <span className="relative inline-block">
                       <img
@@ -100,13 +105,17 @@ function TechniciansTable({ rows, page, pageCount, total, from, to, onPageChange
 
                   <td className={CELL_CLASS}>
                     <span className="flex items-center gap-[8px]">
-                      <button
-                        type="button"
-                        aria-label={`عرض ملف ${technician.name}`}
-                        className="rounded-[8px] p-[6px] text-text-300 transition-colors hover:bg-card hover:text-primary-500"
-                      >
-                        <Eye size={18} aria-hidden="true" />
-                      </button>
+                   <button
+  type="button"
+  aria-label={`عرض ملف ${technician.name}`}
+  onClick={(event) => {
+    event.stopPropagation()
+    navigate(`/admin/technicians/${technician.id}`)
+  }}
+  className="rounded-[8px] p-[6px] text-text-300 transition-colors hover:bg-card hover:text-primary-500"
+>
+  <Eye size={18} aria-hidden="true" />
+</button>
                       <button
                         type="button"
                         aria-label={
