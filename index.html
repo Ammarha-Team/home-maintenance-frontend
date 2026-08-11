@@ -5,6 +5,33 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ammarha</title>
+    <!--
+      The theme has to be on the document before the first paint. React cannot
+      do it: the bundle is fetched, parsed and mounted after the browser has
+      already drawn the page, so someone who chose dark would watch a white
+      page flash first. This runs synchronously in the head instead.
+
+      It reads the same key and the same fallback as themePreference.js — a
+      stored choice, otherwise the system preference — so the two never
+      disagree about what the page should look like.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = window.localStorage.getItem("ammarha-theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch (error) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

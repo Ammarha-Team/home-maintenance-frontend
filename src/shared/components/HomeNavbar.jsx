@@ -5,6 +5,7 @@ import { Menu, X, Bell, User, Settings, LogOut } from "lucide-react";
 
 import logo from "../../assets/logo.png";
 import NotificationModal from "../../shared/components/NotificationModal";
+import ThemeToggle from "./ThemeToggle.jsx";
 import { AUTH_ROUTES } from "../../modules/auth/constants/authRoutes.js";
 import { signOut } from "../../modules/auth/services/authService.js";
 
@@ -131,6 +132,11 @@ export default function UserNavbar() {
         {/* Notifications + Profile */}
         <div className="hidden md:flex items-center gap-4">
 
+          {/* Beside the bell rather than inside the account menu: it is a
+              display setting, not an account one, and the two round controls
+              read as a pair at this end of the bar. */}
+          <ThemeToggle />
+
           {/* Notifications */}
           <button
             onClick={() => setShowNotifications(true)}
@@ -199,12 +205,19 @@ export default function UserNavbar() {
         </div>
 
         {/* Mobile Menu Button */}
-        <button
-          className="md:hidden text-blue-600"
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X size={28} /> : <Menu size={28} />}
-        </button>
+        {/* The toggle sits beside the burger rather than inside the sheet it
+            opens: a setting that changes the whole page should not be
+            reachable only after opening a menu. */}
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle compact />
+
+          <button
+            className="text-blue-600"
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}

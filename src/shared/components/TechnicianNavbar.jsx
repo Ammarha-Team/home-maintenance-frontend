@@ -8,6 +8,7 @@ import { readSession } from '../../modules/auth/services/authSession.js'
 import { TECHNICIAN_NAV_ITEMS } from '../../modules/technician/constants/technicianRoutes.js'
 
 import TechnicianNotificationPanel from "./TechnicianNotificationPanel";
+import ThemeToggle from './ThemeToggle.jsx'
 
 /**
  * Header for the technician portal (Figma node 21:2235).
@@ -65,7 +66,7 @@ function TechnicianNavbar() {
   return (
     <nav
       dir="rtl"
-      className="sticky top-0 z-50 w-full border-b border-line bg-white"
+      className="sticky top-0 z-50 w-full border-b border-line bg-panel"
     >
 <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-[16px] px-[24px] pt-[16px] pb-[17px] lg:px-[80px]">
   <Link to={TECHNICIAN_NAV_ITEMS[0].to} className="shrink-0">
@@ -108,6 +109,11 @@ function TechnicianNavbar() {
 
 {/* Right Actions */}
 <div className="relative flex items-center gap-3">
+
+  {/* Ahead of the account and notification circles in the markup, which under
+      RTL puts it at the right of the group — the same relation the customer
+      header has between its toggle and its bell. */}
+  <ThemeToggle />
 
   {/* User Menu */}
   <div className="relative" ref={menuRef}>

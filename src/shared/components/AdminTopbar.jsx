@@ -104,7 +104,7 @@ function AdminTopbar({
   }
 
   return (
-    <header className="flex items-center gap-[16px] border-b border-line bg-white px-[24px] py-[14px]">
+    <header className="flex items-center gap-[16px] border-b border-line bg-panel px-[24px] py-[14px]">
 
       {/* Mobile Menu */}
       {onOpenSidebar ? (

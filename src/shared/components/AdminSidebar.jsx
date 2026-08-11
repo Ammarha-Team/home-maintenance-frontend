@@ -9,10 +9,12 @@ import {
   Bell,
   Globe,
   Moon,
+  Sun,
   ChevronDown,
 } from 'lucide-react'
 
 import logo from '../../assets/brand/logo.png'
+import { useTheme } from '../theme/themeContext.js'
 
 function AdminSidebar({
   items = [],
@@ -25,6 +27,11 @@ function AdminSidebar({
 }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
+
+  // The console's light/dark switch lives in the settings popup below. It
+  // reads the same store as the rest of the site, so a theme chosen here is
+  // the theme everywhere.
+  const { isDark, toggleTheme } = useTheme()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -154,12 +161,20 @@ function AdminSidebar({
 </button>
 
 
+        {/* The row was already here with a moon on it and nothing behind it.
+            It is wired to the same theme store the rest of the site uses, so
+            the console has one switch rather than two that could disagree.
+            The icon shows the theme that is on now; the label says what
+            pressing it will do. */}
         <button
           type="button"
+          onClick={toggleTheme}
+          role="switch"
+          aria-checked={isDark}
           className="flex w-full items-center gap-[14px] rounded-[10px] px-[16px] py-[12px] text-[16px] text-text-400 hover:bg-card"
         >
-          <Moon size={22} />
-          <span>الوضع الليلي</span>
+          {isDark ? <Sun size={22} /> : <Moon size={22} />}
+          <span>{isDark ? 'الوضع النهاري' : 'الوضع الليلي'}</span>
         </button>
 
       </div>
