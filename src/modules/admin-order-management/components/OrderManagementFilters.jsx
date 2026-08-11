@@ -26,7 +26,7 @@ export default function OrderManagementFilters({
       {/* Search */}
       <div className="relative w-[182px]">
         <Search
-          size={12}
+          size={20}
           strokeWidth={1.8}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6B7280]"
         />
@@ -118,7 +118,7 @@ export default function OrderManagementFilters({
                   px-3
                   py-2
                   text-right
-                  text-[10px]
+                  text-[12px]
                   ${
                     activeTab === filter
                       ? "bg-[#EEF5FF] font-medium text-[#2878D8]"

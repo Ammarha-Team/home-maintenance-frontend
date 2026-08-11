@@ -95,31 +95,31 @@ export default function OrderManagementTable({ activeTab }) {
         {/* Table Header */}
         <thead>
           <tr className="h-[42px] border-b border-[#E1E5EB] bg-[#F8FAFC]">
-            <th className="px-3 text-[10px] font-medium text-[#4B5563]">
+            <th className="px-3 text-[15px] font-medium text-[#4B5563]">
               رقم الطلب
             </th>
 
-            <th className="px-3 text-[10px] font-medium text-[#4B5563]">
+            <th className="px-3 text-[15px] font-medium text-[#4B5563]">
               العميل
             </th>
 
-            <th className="px-3 text-[10px] font-medium text-[#4B5563]">
+            <th className="px-3 text-[15px] font-medium text-[#4B5563]">
               الفني
             </th>
 
-            <th className="px-3 text-[10px] font-medium text-[#4B5563]">
+            <th className="px-3 text-[15px] font-medium text-[#4B5563]">
               الخدمة
             </th>
 
-            <th className="px-3 text-[10px] font-medium text-[#4B5563]">
+            <th className="px-3 text-[15px] font-medium text-[#4B5563]">
               السعر
             </th>
 
-            <th className="px-3 text-[10px] font-medium text-[#4B5563]">
+            <th className="px-3 text-[15px] font-medium text-[#4B5563]">
               الحالة
             </th>
 
-            <th className="px-3 text-[10px] font-medium text-[#4B5563]">
+            <th className="px-3 text-[15px] font-medium text-[#4B5563]">
               التاريخ
             </th>
           </tr>
@@ -145,8 +145,7 @@ export default function OrderManagementTable({ activeTab }) {
                   <button
                     type="button"
                     className="
-                      text-[10px]
-                      font-medium
+                      text-[12px]
                       text-[#2878D8]
                       hover:underline
                     "
@@ -168,32 +167,31 @@ export default function OrderManagementTable({ activeTab }) {
                         justify-center
                         rounded-full
                         bg-[#DCEAFF]
-                        text-[9px]
-                        font-medium
+                        text-[10px]
                         text-[#2878D8]
                       "
                     >
                       {order.clientInitial}
                     </span>
 
-                    <span className="whitespace-nowrap text-[10px] text-[#374151]">
+                    <span className="whitespace-nowrap text-[12px] text-[#374151]">
                       {order.client}
                     </span>
                   </div>
                 </td>
 
                 {/* Technician */}
-                <td className="px-3 text-[10px] text-[#4B5563]">
+                <td className="px-3 text-[13px] text-[#4B5563]">
                   {order.technician}
                 </td>
 
                 {/* Service */}
-                <td className="px-3 text-[10px] text-[#374151]">
+                <td className="px-3 text-[13px] text-[#374151]">
                   {order.service}
                 </td>
 
                 {/* Price */}
-                <td className="px-3 text-[10px] text-[#374151]">
+                <td className="px-3 text-[13px] text-[#374151]">
                   {order.price}
                 </td>
 
@@ -203,7 +201,7 @@ export default function OrderManagementTable({ activeTab }) {
                 </td>
 
                 {/* Date */}
-                <td className="whitespace-nowrap px-3 text-[10px] text-[#4B5563]">
+                <td className="whitespace-nowrap px-3 text-[13px] text-[#4B5563]">
                   {order.date}
                 </td>
               </tr>
@@ -212,7 +210,7 @@ export default function OrderManagementTable({ activeTab }) {
             <tr>
               <td
                 colSpan="7"
-                className="h-[100px] text-center text-[11px] text-[#9CA3AF]"
+                className="h-[100px] text-center text-[13px] text-[#9CA3AF]"
               >
                 لا توجد طلبات بهذه الحالة
               </td>
