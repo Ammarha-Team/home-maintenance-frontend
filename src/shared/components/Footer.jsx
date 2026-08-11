@@ -29,7 +29,7 @@ const CONTACT_EMAIL = 'support@platform.com'
 
 function Footer() {
   return (
-    <footer id="contact"
+    <footer
       dir="rtl"
       className="flex w-full items-start justify-between bg-gradient-to-t from-[#abc6f6] to-[#eaeaea] pt-[56px] pr-[112px] pb-[80px] pl-[78px]"
     >
@@ -59,7 +59,7 @@ function Footer() {
       <div className="flex w-[620px] items-start justify-end gap-[56px]">
         <div className="flex w-[149px] flex-col gap-[16px]">
           <h2 className="text-[20px] font-bold leading-[1.5] text-text-500">
-            الروابط السريعه
+            روابط سريعة
           </h2>
           <ul className="flex flex-col gap-[4px] text-[20px] leading-[1.5] text-text-300">
             {QUICK_LINKS.map((link) => (
