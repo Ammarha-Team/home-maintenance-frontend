@@ -11,6 +11,8 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { AUTH_ROUTES } from "../../auth/constants/authRoutes.js";
+import { signOut } from "../../auth/services/authService.js";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -66,8 +68,12 @@ export default function Settings() {
     },
   ];
 
-  const handleLogout = () => {
-    navigate("/");
+  // Signing out revokes the refresh token server side and clears the stored
+  // session. This previously only navigated away, which left the account signed
+  // in — the next visit to a protected screen walked straight back in.
+  const handleLogout = async () => {
+    await signOut();
+    navigate(AUTH_ROUTES.login, { replace: true });
   };
 
   return (

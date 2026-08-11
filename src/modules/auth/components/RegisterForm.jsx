@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import experienceIcon from '../../../assets/icons/experience.svg'
 import specialisationIcon from '../../../assets/icons/specialisation.svg'
@@ -17,9 +17,12 @@ import {
   validateSpecialisation,
 } from '../../../shared/utils/validation.js'
 import { AUTH_ROUTES } from '../constants/authRoutes.js'
-import { SPECIALISATIONS } from '../constants/technician.js'
+import { passwordMeetsRules } from '../constants/passwordReset.js'
+import { PROFESSION_LABELS_AR } from '../constants/technician.js'
+import { getProfessions } from '../services/authService.js'
 import EmailField from './EmailField.jsx'
 import PasswordField from './PasswordField.jsx'
+import PasswordRules from './PasswordRules.jsx'
 import PhoneField from './PhoneField.jsx'
 
 // Personal information form, step 2 of both sign up flows (Figma nodes 1:494
@@ -47,8 +50,46 @@ function RegisterForm({ role, nextRoute }) {
   const navigate = useNavigate()
   const [values, setValues] = useState(EMPTY_VALUES)
   const [errors, setErrors] = useState({})
+  const [professions, setProfessions] = useState([])
 
   const isTechnician = role === 'technician'
+
+  // The trades come from the API, because what the register endpoint wants for
+  // a technician is a profession id, not a label. The list is only needed on
+  // the technician form, so the customer one never asks for it.
+  //
+  // The API returns English names; the app is Arabic, so each is shown through
+  // PROFESSION_LABELS_AR and falls back to the server's own name for a trade
+  // that has not been translated yet — better an English option than none.
+  useEffect(() => {
+    if (!isTechnician) return undefined
+
+    let cancelled = false
+
+    getProfessions()
+      .then((list) => {
+        if (cancelled) return
+
+        setProfessions(
+          list.map(({ id, name }) => ({
+            value: id,
+            label: PROFESSION_LABELS_AR[name] ?? name,
+          })),
+        )
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setErrors((current) => ({
+            ...current,
+            specialisation: 'تعذر تحميل قائمة التخصصات، حاول تحديث الصفحة.',
+          }))
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isTechnician])
 
   const setField = (name) => (value) => {
     setValues((current) => ({ ...current, [name]: value }))
@@ -62,7 +103,13 @@ function RegisterForm({ role, nextRoute }) {
       fullName: validateFullName(values.fullName),
       email: validateEmail(values.email),
       phone: validatePhone(values.phone),
-      password: validatePassword(values.password),
+      // Judged against the same list shown under the field, so the checklist
+      // and the submit check can never disagree.
+      password:
+        validatePassword(values.password) ||
+        (passwordMeetsRules(values.password)
+          ? ''
+          : 'كلمة السر لا تحقق الشروط المطلوبة'),
       confirmPassword: validateConfirmPassword(
         values.confirmPassword,
         values.password,
@@ -169,6 +216,11 @@ function RegisterForm({ role, nextRoute }) {
             error={errors.password}
           />
 
+          {/* The requirements sit under the field and tick themselves off as
+              they are met, so the rules are visible while the password is being
+              chosen rather than only after a rejected submit. */}
+          <PasswordRules password={values.password} />
+
           <PasswordField
             id={`${role}-confirm-password`}
             label="تاكيد كلمه السر"
@@ -190,7 +242,7 @@ function RegisterForm({ role, nextRoute }) {
               label="التخصص"
               placeholder="اختر التخصص"
               leadingIcon={specialisationIcon}
-              options={SPECIALISATIONS}
+              options={professions}
               height={FIELD_HEIGHT}
               fontSize={FIELD_FONT_SIZE}
               value={values.specialisation}

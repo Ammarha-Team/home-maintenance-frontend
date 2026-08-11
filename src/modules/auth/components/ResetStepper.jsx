@@ -6,17 +6,20 @@ import { RESET_STEP_LABELS } from '../constants/passwordReset.js'
 // the cards keep their width. Below that it lays out as a row above them —
 // same marks, same colours, same order — so the step you are on is still
 // visible on a phone instead of disappearing with the rail.
-function ResetStepper({ currentStep }) {
+// `labels` defaults to the frame's three OTP steps. The link-based flow passes
+// its own shorter list, which is why the rail counts what it is given rather
+// than the constant.
+function ResetStepper({ currentStep, labels = RESET_STEP_LABELS }) {
   return (
     <ol
       aria-label="مراحل إعادة تعيين كلمة المرور"
       className="flex w-full items-start justify-center gap-[8px] xl:h-full xl:w-[118px] xl:flex-col xl:items-stretch xl:gap-0"
     >
-      {RESET_STEP_LABELS.map((label, index) => {
+      {labels.map((label, index) => {
         const step = index + 1
         const done = step < currentStep
         const active = step === currentStep
-        const isLast = step === RESET_STEP_LABELS.length
+        const isLast = step === labels.length
 
         return (
           <li

@@ -1,39 +1,7 @@
 import { useState } from "react";
 import { MapPin, LocateFixed } from "lucide-react";
 
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
-
-import "leaflet/dist/leaflet.css";
-
-
-function LocationMarker({ setPosition }) {
-
-  useMapEvents({
-    click(e) {
-      setPosition([
-        e.latlng.lat,
-        e.latlng.lng
-      ]);
-    },
-  });
-
-  return null;
-}
-
-
-function ChangeView({ position }) {
-  const map = useMap();
-
-  map.setView(position, 15);
-
-  return null;
-}
+import ServiceMap from "../../../shared/components/ServiceMap";
 
 
 export default function MapPicker() {
@@ -73,29 +41,11 @@ export default function MapPicker() {
 
       <div className="relative">
 
-        <MapContainer
-          center={position}
-          zoom={13}
+        <ServiceMap
+          value={{ lat: position[0], lng: position[1] }}
+          onChange={(next) => setPosition([next.lat, next.lng])}
           className="h-[300px] w-full"
-        >
-
-          <TileLayer
-            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-
-
-          <Marker position={position}/>
-
-
-          <LocationMarker
-            setPosition={setPosition}
-          />
-
-
-          <ChangeView position={position}/>
-
-
-        </MapContainer>
+        />
 
 
         <button
