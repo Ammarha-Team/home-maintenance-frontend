@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
@@ -30,25 +31,39 @@ export default function Navbar() {
             الرئيسية
           </Link>
 
-          <span className="cursor-pointer hover:text-blue-600 transition">
+          <a
+            href="#services"
+            className="cursor-pointer hover:text-blue-600 transition"
+          >
             الخدمات
-          </span>
+          </a>
 
-          <span className="cursor-pointer hover:text-blue-600 transition">
+          <a
+            href="#about"
+            className="cursor-pointer hover:text-blue-600 transition"
+          >
             عن المنصة
-          </span>
+          </a>
 
-          <span className="cursor-pointer hover:text-blue-600 transition">
+          <a
+            href="#reviews"
+            className="cursor-pointer hover:text-blue-600 transition"
+          >
+            آراء العملاء
+          </a>
+
+          <a
+            href="#contact"
+            className="cursor-pointer hover:text-blue-600 transition"
+          >
             تواصل معنا
-          </span>
+          </a>
 
         </div>
 
         {/* Desktop Buttons */}
         <div className="hidden md:flex items-center gap-3">
 
-          {/* First in the markup, so under RTL it sits at the right of the
-              pair of buttons and does not come between them. */}
           <ThemeToggle />
 
           <Link
@@ -87,12 +102,12 @@ export default function Navbar() {
         <div className="flex items-center gap-2 md:hidden">
           <ThemeToggle compact />
 
-        <button
-          className="text-blue-600"
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X size={28} /> : <Menu size={28} />}
-        </button>
+          <button
+            className="text-blue-600"
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X size={28} /> : <Menu size={28} />}
+          </button>
         </div>
 
       </div>
@@ -108,26 +123,33 @@ export default function Navbar() {
             الرئيسية
           </Link>
 
-          <span
-            className="cursor-pointer"
+          <a
+            href="#services"
             onClick={() => setOpen(false)}
           >
             الخدمات
-          </span>
+          </a>
 
-          <span
-            className="cursor-pointer"
+          <a
+            href="#about"
             onClick={() => setOpen(false)}
           >
             عن المنصة
-          </span>
+          </a>
 
-          <span
-            className="cursor-pointer"
+          <a
+            href="#reviews"
+            onClick={() => setOpen(false)}
+          >
+            آراء العملاء
+          </a>
+
+          <a
+            href="#contact"
             onClick={() => setOpen(false)}
           >
             تواصل معنا
-          </span>
+          </a>
 
           <Link
             to="/login"
@@ -159,7 +181,6 @@ export default function Navbar() {
 
         </div>
       )}
-
     </nav>
   );
 }

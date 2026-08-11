@@ -47,7 +47,7 @@ const experts = [
 
 export default function HowItWorksAndExperts() {
   return (
-    <section className="bg-gray-50 py-12 px-4" dir="rtl">
+    <section className="bg-gray-50 py-12 px-4" dir="rtl" id="about">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
 
