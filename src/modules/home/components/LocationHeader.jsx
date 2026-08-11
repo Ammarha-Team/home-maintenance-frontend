@@ -2,7 +2,7 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { readDisplayName, readSession } from '../../auth/services/authSession.js';
-
+import { Link } from "react-router-dom";
 export default function LocationHeader({ onRequestClick }) {
   const navigate = useNavigate();
 
@@ -50,12 +50,12 @@ export default function LocationHeader({ onRequestClick }) {
           />
         </div>
 
-        <button
-          onClick={onRequestClick}
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all text-sm whitespace-nowrap order-1 sm:order-none"
-        >
-          <span>احجز خدمة الآن</span>
-        </button>
+        <Link
+  to="/request-service"
+  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all text-sm whitespace-nowrap order-1 sm:order-none"
+>
+  احجز خدمة الآن
+</Link>
       </div>
 
     </div>

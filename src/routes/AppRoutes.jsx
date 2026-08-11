@@ -9,6 +9,8 @@ import { EMERGENCY_ROUTES } from "../modules/emergency/constants/emergency";
 
 import LandingPage from "../landing/pages/LandingPage";
 import Home from "../modules/home/pages/Home";
+import RequestService from "../modules/requests/pages/RequestService";
+
 import Services from "../modules/services/pages/Services";
 import AccountRestricted from "../modules/account-restriction/pages/AccountRestricted";
 import TechnicianProfile from "../modules/technician-profile/pages/TechnicianProfile";
@@ -77,6 +79,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/request-service" element={<RequestService />} />
 
       <Route path="/services" element={<Services />} />
       <Route path="/AccountRestricted" element={<AccountRestricted />} />
