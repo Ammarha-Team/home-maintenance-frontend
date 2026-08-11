@@ -9,6 +9,7 @@ import OrderManagement from "../modules/admin-order-management/pages/OrderManage
 import Commissions from "../modules/commissions/pages/Commissions.jsx";
 import Customers from "../modules/admin/pages/Customers.jsx";
 import Profits from "../modules/admin/pages/Profits.jsx";
+import Settings from "../modules/admin/pages/Settings.jsx";
 
 function AdminRoutes() {
   return (
@@ -17,6 +18,7 @@ function AdminRoutes() {
         <Route index element={<Dashboard />} />
 
         <Route path="technicians" element={<Technicians />} />
+        <Route path="technicians/:id" element={<TechnicianSummary />} />
 
         <Route
           path="technicians/summary"
@@ -33,6 +35,8 @@ function AdminRoutes() {
         <Route path="customers" element={<Customers />} />
 
         <Route path="profits" element={<Profits />} />
+
+        <Route path="settings" element={<Settings />} />
 
         <Route
           path="*"

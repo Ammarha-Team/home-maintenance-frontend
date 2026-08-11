@@ -9,7 +9,7 @@ export default function OrderManagementPagination() {
   return (
     <div className="flex items-center justify-between border-t border-[#E1E5EB] bg-white px-4 py-3">
       {/* Results Count */}
-      <span className="text-[10px] text-[#6B7280]">
+      <span className="text-[12px] text-[#6B7280]">
         عرض 1 إلى 10 من 50 طلب
       </span>
 
@@ -55,7 +55,7 @@ export default function OrderManagementPagination() {
               items-center
               justify-center
               rounded-[4px]
-              text-[9px]
+              text-[15px]
               transition
               ${
                 currentPage === page
@@ -76,7 +76,7 @@ export default function OrderManagementPagination() {
           className={`
             flex
             h-[25px]
-            w-[25px]
+            w-[30px]
             items-center
             justify-center
             rounded-[4px]
@@ -92,7 +92,7 @@ export default function OrderManagementPagination() {
             }
           `}
         >
-          <ChevronLeft size={12} strokeWidth={1.8} />
+          <ChevronLeft size={20} strokeWidth={1.8} />
         </button>
       </div>
     </div>

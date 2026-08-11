@@ -364,8 +364,13 @@
 }
 
 :root[data-theme='dark'] .border-\[\#fed7aa\],
-:root[data-theme='dark'] .border-\[\#ffd9a8\] {
+:root[data-theme='dark'] .border-\[\#ffd9a8\],
+:root[data-theme='dark'] .border-\[\#F3E8D7\] {
   border-color: #5a4320;
+}
+
+:root[data-theme='dark'] .ring-blue-100 {
+  --tw-ring-color: var(--color-primary-100);
 }
 
 :root[data-theme='dark'] .ring-white {

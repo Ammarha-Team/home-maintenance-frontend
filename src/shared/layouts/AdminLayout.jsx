@@ -40,6 +40,82 @@ const ADMIN_USER = { name: 'احمد حمدي', avatar: '/technician_avatar.jpg'
 function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+const [notifications] = useState([
+  {
+    id: 1,
+    type: 'order',
+    title: 'طلب صيانة جديد',
+    message: 'تم إنشاء طلب صيانة جديد من أحد العملاء',
+    time: 'منذ 5 دقائق',
+    read: false,
+  },
+  {
+    id: 2,
+    type: 'technician',
+    title: 'طلب انضمام فني جديد',
+    message: 'يوجد فني جديد بانتظار مراجعة طلبه',
+    time: 'منذ 20 دقيقة',
+    read: false,
+  },
+  {
+    id: 3,
+    type: 'payment',
+    title: 'عملية دفع جديدة',
+    message: 'تم استلام دفعة مقابل طلب صيانة',
+    time: 'منذ ساعة',
+    read: true,
+  },
+  {
+    id: 4,
+    type: 'review',
+    title: 'تقييم جديد',
+    message: 'تم إضافة تقييم جديد لأحد الفنيين',
+    time: 'منذ ساعتين',
+    read: true,
+  },
+])
+
+  return (
+    <div dir="rtl" className="min-h-screen bg-surface font-sans">
+
+      <AdminSidebar
+        items={ADMIN_NAV_ITEMS}
+        homeTo={ADMIN_ROUTES.dashboard}
+        subtitle="إدارة الصيانة المنزلية"
+        footer={SIDEBAR_FOOTER}
+        label="أقسام لوحة التحكم"
+        open={sidebarOpen}
+        onNavigate={() => setSidebarOpen(false)}
+      />
+
+      {sidebarOpen ? (
+        <button
+          type="button"
+          aria-label="إغلاق القائمة"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-dark/40 md:hidden"
+        />
+      ) : null}
+
+      <div className="md:mr-[260px]">
+
+        <AdminTopbar
+          user={ADMIN_USER}
+          notifications={notifications}
+          onOpenSidebar={() => setSidebarOpen(true)}
+        />
+
+        <main className="px-[24px] py-[24px]">
+          <Outlet />
+        </main>
+
+      </div>
+    </div>
+  )
+
+const handleNotifications = () => {
+  setNotificationsOpen((prev) => !prev)
+}
   return (
     <div dir="rtl" className="min-h-screen bg-surface font-sans">
       <AdminSidebar
@@ -64,11 +140,12 @@ function AdminLayout() {
       ) : null}
 
       <div className="md:mr-[260px]">
-        <AdminTopbar
-          user={ADMIN_USER}
-          onOpenSidebar={() => setSidebarOpen(true)}
-          onNotifications={() => {}}
-        />
+<AdminTopbar
+  user={ADMIN_USER}
+  notifications={notifications}
+  onOpenSidebar={() => setSidebarOpen(true)}
+  onNotifications={handleNotifications}
+/>
         <main className="px-[24px] py-[24px]">
           <Outlet />
         </main>

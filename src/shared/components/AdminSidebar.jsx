@@ -1,27 +1,21 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+
+
+import {
+  Settings,
+  LogOut,
+  User,
+  Bell,
+  Globe,
+  Moon,
+  Sun,
+  ChevronDown,
+} from 'lucide-react'
 
 import logo from '../../assets/brand/logo.png'
+import { useTheme } from '../theme/themeContext.js'
 
-/**
- * A fixed navigation rail, which under RTL sits against the right edge. It
- * stays put on desktop and slides in over the page below `md`, where 260px of
- * permanent navigation would leave the content no room.
- *
- * Everything it shows is passed in, so any section can mount its own: the
- * console uses it for the admin nav, but nothing here knows about the console.
- *
- * @param {object}   props
- * @param {Array}    props.items        `{ key, label, to, icon?, ready? }` per
- *                                      row. `icon` is a component, not a name.
- *                                      `ready` defaults to true; a false one is
- *                                      drawn but not linked.
- * @param {string}   [props.homeTo]     Where the logo links. Defaults to `/`.
- * @param {string}   [props.subtitle]   Small line under the logo.
- * @param {node}     [props.footer]     Pinned to the bottom, below the nav.
- * @param {boolean}  [props.open]       Whether it is showing below `md`.
- * @param {Function} [props.onNavigate] Fires on any row, to close it again.
- * @param {string}   [props.label]      Accessible name for the nav landmark.
- */
 function AdminSidebar({
   items = [],
   homeTo = '/',
@@ -32,6 +26,25 @@ function AdminSidebar({
   label = 'التنقل',
 }) {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+
+  // The console's light/dark switch lives in the settings popup below. It
+  // reads the same store as the rest of the site, so a theme chosen here is
+  // the theme everywhere.
+  const { isDark, toggleTheme } = useTheme()
+
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const handleLogout = () => {
+    // لو عندكم authentication حقيقي بعدين:
+    // localStorage.removeItem('token')
+    // localStorage.removeItem('user')
+
+    setSettingsOpen(false)
+    onNavigate?.()
+
+    navigate('/')
+  }
 
   return (
     <aside
@@ -39,10 +52,16 @@ function AdminSidebar({
         open ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
+      {/* Logo */}
       <div className="border-b border-line px-[24px] py-[20px]">
         <Link to={homeTo} onClick={onNavigate} className="block">
-          <img src={logo} alt="عمّرها" className="h-[40px] w-auto" />
+          <img
+            src={logo}
+            alt="عمّرها"
+            className="h-[40px] w-auto"
+          />
         </Link>
+
         {subtitle ? (
           <p className="mt-[10px] text-[14px] leading-[20px] text-text-300">
             {subtitle}
@@ -50,20 +69,24 @@ function AdminSidebar({
         ) : null}
       </div>
 
-      <nav aria-label={label} className="flex-1 overflow-y-auto py-[16px]">
+      {/* Navigation */}
+      <nav
+        aria-label={label}
+        className="flex-1 overflow-y-auto py-[16px]"
+      >
         <ul>
           {items.map((item) => {
             const Icon = item.icon
             const active = pathname === item.to
 
-            // An unbuilt screen is drawn but not linked: a <Link> to a path no
-            // route answers falls through to the catch-all and throws the
-            // visitor back out to the landing page.
             if (item.ready === false) {
               return (
                 <li key={item.key}>
                   <span className="flex items-center gap-[12px] px-[24px] py-[12px] text-[16px] text-text-200">
-                    {Icon ? <Icon size={20} aria-hidden="true" /> : null}
+                    {Icon ? (
+                      <Icon size={20} aria-hidden="true" />
+                    ) : null}
+
                     {item.label}
                   </span>
                 </li>
@@ -71,33 +94,107 @@ function AdminSidebar({
             }
 
             return (
-             <li key={item.key}>
-  <Link
-    to={item.to}
-    onClick={() => {
-      console.log("CLICKED:", item.label);
-      console.log("TO:", item.to);
-      onNavigate?.();
-    }}
-    aria-current={active ? "page" : undefined}
-    className={`flex items-center gap-[12px] px-[24px] py-[12px] text-[16px] transition-colors ${
-      active
-        ? "border-r-[3px] border-primary-500 bg-primary-50 font-bold text-primary-500"
-        : "text-text-400 hover:bg-card hover:text-primary-500"
-    }`}
-  >
-    {Icon ? <Icon size={20} aria-hidden="true" /> : null}
-    {item.label}
-  </Link>
-</li>
+              <li key={item.key}>
+                <Link
+                  to={item.to}
+                  onClick={() => {
+                    console.log('CLICKED:', item.label)
+                    console.log('TO:', item.to)
+                    onNavigate?.()
+                  }}
+                  aria-current={active ? 'page' : undefined}
+                  className={`flex items-center gap-[12px] px-[24px] py-[12px] text-[16px] transition-colors ${
+                    active
+                      ? 'border-r-[3px] border-primary-500 bg-primary-50 font-bold text-primary-500'
+                      : 'text-text-400 hover:bg-card hover:text-primary-500'
+                  }`}
+                >
+                  {Icon ? (
+                    <Icon size={20} aria-hidden="true" />
+                  ) : null}
+
+                  {item.label}
+                </Link>
+              </li>
             )
           })}
         </ul>
       </nav>
 
-      {footer ? (
-        <div className="border-t border-line py-[12px]">{footer}</div>
-      ) : null}
+{/* Bottom actions */}
+<div className="border-t border-line px-[12px] py-[12px]">
+
+  {/* Settings */}
+  <div className="relative">
+    <button
+      type="button"
+      onClick={() => setSettingsOpen((prev) => !prev)}
+      className="flex w-full items-center justify-between rounded-[10px] px-[12px] py-[12px] text-[16px] text-text-400 transition-colors hover:bg-card hover:text-primary-500"
+    >
+      <span className="flex items-center gap-[12px]">
+        <Settings size={22} />
+        <span>الإعدادات</span>
+      </span>
+
+      <ChevronDown
+        size={18}
+        className={`transition-transform ${
+          settingsOpen ? 'rotate-180' : ''
+        }`}
+      />
+    </button>
+
+    {/* Settings popup */}
+    {settingsOpen && (
+      <div className="absolute bottom-full right-0 mb-[8px] w-[294px] rounded-[16px] border border-line bg-white p-[10px] shadow-lg">
+
+   <button
+  type="button"
+  onClick={() => {
+    setSettingsOpen(false)
+    navigate('/admin/settings')
+  }}
+  className="flex w-full items-center gap-[14px] rounded-[10px] px-[16px] py-[12px] text-[16px] hover:bg-card"
+>
+  <User size={22} />
+  إعدادات الحساب
+</button>
+
+
+        {/* The row was already here with a moon on it and nothing behind it.
+            It is wired to the same theme store the rest of the site uses, so
+            the console has one switch rather than two that could disagree.
+            The icon shows the theme that is on now; the label says what
+            pressing it will do. */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          role="switch"
+          aria-checked={isDark}
+          className="flex w-full items-center gap-[14px] rounded-[10px] px-[16px] py-[12px] text-[16px] text-text-400 hover:bg-card"
+        >
+          {isDark ? <Sun size={22} /> : <Moon size={22} />}
+          <span>{isDark ? 'الوضع النهاري' : 'الوضع الليلي'}</span>
+        </button>
+
+      </div>
+    )}
+  </div>
+
+  {/* Logout - stays OUTSIDE the popup */}
+  <button
+    type="button"
+    onClick={() => {
+      onNavigate?.()
+      navigate('/')
+    }}
+    className="mt-[4px] flex w-full items-center gap-[12px] rounded-[10px] px-[12px] py-[12px] text-[16px] text-red-500 transition-colors hover:bg-red-50"
+  >
+    <LogOut size={22} />
+    <span>تسجيل خروج</span>
+  </button>
+
+</div>
     </aside>
   )
 }

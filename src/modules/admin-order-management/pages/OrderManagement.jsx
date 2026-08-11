@@ -8,7 +8,7 @@ export default function OrderManagement() {
 
   return (
     <main dir="rtl" className="min-h-screen bg-[#F8F9FC]">
-      <div className="mx-auto w-full max-w-[1180px] px-8 py-7">
+      <div className="m-auto w-full min-w-[1240px] px-5 py-5">
 
         <OrderManagementHeader
           activeTab={activeTab}
