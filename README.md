@@ -1,16 +1,57 @@
-# React + Vite
+# عمرها | Ammarha
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A home maintenance platform that connects customers with professional technicians
+for different home maintenance services.
 
-Currently, two official plugins are available:
+## 📌 About The Project
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**عمرها (Ammarha)** is a home maintenance web application that allows customers
+to request maintenance services and connect with qualified technicians.
 
-## React Compiler
+The frontend is built using React and Vite, with a responsive RTL interface
+designed primarily for Arabic users.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Features
 
-## Expanding the Oxlint configuration
+### Customer
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- Browse available maintenance services
+- Request a maintenance service
+- Select service date and time
+- Track service requests and orders
+- Review and rate technicians
+- Chat with technicians
+- Receive notifications
+- Manage profile and settings
+
+### Technician
+
+- Manage technician profile
+- Add personal and professional information
+- Add experience and portfolio
+- Upload certificates
+- View and manage orders
+- Receive notifications
+- Communicate with customers
+
+### Admin
+
+- Admin dashboard
+- Manage technicians
+- Manage customers
+- Manage orders
+- Manage commissions
+- Manage earnings
+- Manage system settings
+
+## 🛠️ Technologies
+
+- React.js
+- Vite
+- JavaScript (ES6+)
+- Tailwind CSS
+- React Router
+- Lucide React
+- shadcn/ui
+- Radix UI
+- Git & GitHub
