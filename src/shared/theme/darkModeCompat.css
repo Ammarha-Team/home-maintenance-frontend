@@ -528,3 +528,23 @@
   background-color: var(--compat-panel);
   color: var(--color-text-500);
 }
+
+/* Leaflet draws its own chrome — the attribution strip and the zoom buttons —
+   on a white plate that stays lit while the tiles behind it dim. Every screen
+   with a map carries them, so they are corrected here with the rest of the
+   sheet rather than in any one flow. */
+:root[data-theme='dark'] .leaflet-control-attribution {
+  background-color: rgba(22, 29, 39, 0.8);
+  color: var(--color-text-300);
+}
+
+:root[data-theme='dark'] .leaflet-control-attribution a {
+  color: var(--color-primary-300);
+}
+
+:root[data-theme='dark'] .leaflet-bar a,
+:root[data-theme='dark'] .leaflet-bar a:hover {
+  background-color: var(--compat-panel);
+  border-bottom-color: var(--color-line);
+  color: var(--color-text-500);
+}
