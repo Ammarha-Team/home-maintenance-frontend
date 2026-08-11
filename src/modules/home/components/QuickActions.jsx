@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-
+import { Link } from "react-router-dom";
 export default function QuickActions({ onRequestClick }) {
   const navigate = useNavigate();
 
@@ -79,21 +79,21 @@ export default function QuickActions({ onRequestClick }) {
           </p>
 
 
-          <button
-            onClick={onRequestClick}
-            className="
-              bg-blue-600
-              hover:bg-blue-700
-              text-white
-              text-sm
-              px-25
-              py-2
-              rounded-lg
-              transition
-            "
-          >
-            إنشاء طلب جديد
-          </button>
+<Link
+  to="/request-service"
+  className="
+    bg-blue-600
+    hover:bg-blue-700
+    text-white
+    text-sm
+    px-25
+    py-2
+    rounded-lg
+    transition
+  "
+>
+  إنشاء طلب جديد
+</Link>
 
         </div>
 
