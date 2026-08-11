@@ -17,7 +17,7 @@ export default function Home() {
       <UserNavbar />
 
       <main className="max-w-7xl mx-auto px-6 py-6 flex-1 w-full space-y-6">
-        <UserNavbar />
+
 
         <LocationHeader
           onRequestClick={() => setOpenRequestModal(true)}
