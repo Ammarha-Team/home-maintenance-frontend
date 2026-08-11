@@ -18,8 +18,7 @@ export default function OrderStatusBadge({ status }) {
         rounded-full
         px-2
         py-[5px]
-        text-[8px]
-        font-medium
+        text-[12px]
         leading-none
         whitespace-nowrap
         ${statusStyles[status] || "bg-gray-100 text-gray-500"}
