@@ -166,11 +166,10 @@ function AppRoutes() {
         />
 
         {/* Profile */}
- 
-<Route
-  path="/profile"
-  element={<CustomerProfile />}
-/>
+        <Route
+          path="/profile"
+          element={<CustomerProfile />}
+        />
 
         <Route
           path="/settings"
