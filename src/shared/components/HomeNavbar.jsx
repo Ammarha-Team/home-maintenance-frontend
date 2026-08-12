@@ -172,12 +172,10 @@ export default function UserNavbar() {
               <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 text-sm">
 
                 <Link
-  to="/profile"
-  onClick={(e) => {
-    e.stopPropagation();
-    setDropdownOpen(false);
-  }}
->
+                  to="/profile"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
+                >
                   <User size={16} />
                   <span>الملف الشخصي</span>
                 </Link>
