@@ -65,6 +65,7 @@ import TechnicianPaymentConfirm from "../modules/technician/pages/TechnicianPaym
 import TechnicianPaymentComplete from "../modules/technician/pages/TechnicianPaymentComplete.jsx";
 
 import TechnicianRoute from "./TechnicianRoute.jsx";
+import ProtectedRoute from "./ProtectedRoute.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
 import AdminRoutes from "./AdminRoutes.jsx";
 
@@ -166,11 +167,14 @@ function AppRoutes() {
         />
 
         {/* Profile */}
- 
-<Route
-  path="/profile"
-  element={<CustomerProfile />}
-/>
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <CustomerProfile />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/settings"
