@@ -172,7 +172,7 @@ export default function UserNavbar() {
               <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 text-sm">
 
                 <Link
-                  to="/technician/profile"
+                  to="/profile"
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
                 >
@@ -228,7 +228,7 @@ export default function UserNavbar() {
           <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-2">
 
             <Link
-              to="/technician/profile"
+              to="/profile"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3"
             >
