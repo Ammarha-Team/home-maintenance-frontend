@@ -1,6 +1,7 @@
 import { MapPin, LocateFixed } from "lucide-react";
 
 import ServiceMap from "../../../shared/components/ServiceMap";
+import { useToast } from "../../../shared/toast/toastContext.js";
 
 /**
  * The service-location picker for the request flow.
@@ -13,9 +14,16 @@ import ServiceMap from "../../../shared/components/ServiceMap";
  * @param {(next: {lat: number, lng: number}) => void} onChange
  */
 export default function MapPicker({ value, onChange }) {
+  const { showToast } = useToast();
+
   const getCurrentLocation = () => {
+    // A refused or unavailable location is worth saying, not worth stopping the
+    // form for — the map is still there to tap.
+    const reportFailure = () =>
+      showToast({ message: "لم نتمكن من تحديد موقعك", variant: "error" });
+
     if (!navigator.geolocation) {
-      alert("لم نتمكن من تحديد موقعك");
+      reportFailure();
       return;
     }
 
@@ -25,7 +33,7 @@ export default function MapPicker({ value, onChange }) {
           lat: location.coords.latitude,
           lng: location.coords.longitude,
         }),
-      () => alert("لم نتمكن من تحديد موقعك"),
+      reportFailure,
     );
   };
 

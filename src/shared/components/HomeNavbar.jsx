@@ -114,16 +114,16 @@ export default function UserNavbar() {
 
           {/* الرسائل */}
           <Link
-            to="/messages"
+            to="/chat"
             className={`relative py-1 transition-colors ${
-              isActive("/messages")
+              isActive("/chat")
                 ? "text-blue-600 font-semibold"
                 : "text-gray-600 hover:text-blue-600"
             }`}
           >
             الرسائل
 
-            {isActive("/messages") && (
+            {isActive("/chat") && (
               <span className="absolute bottom-[-13px] right-0 w-full h-[2px] bg-blue-600 rounded-full" />
             )}
           </Link>
@@ -276,7 +276,7 @@ export default function UserNavbar() {
           </Link>
 
           <Link
-            to="/messages"
+            to="/chat"
             onClick={() => setOpen(false)}
             className="hover:text-blue-600"
           >

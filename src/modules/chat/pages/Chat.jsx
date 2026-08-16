@@ -56,16 +56,18 @@ export default function Chat() {
 
   // قائمة الرسائل مقسمة بحسب ID كل محادثة
   const [allMessages, setAllMessages] = useState({
+    // الشاشة شاشة العميل: هو من يسأل عن موعد الوصول، والفني هو من يرد بأنه في
+    // الطريق — وهي آخر رسالة تظهر في قائمة المحادثات باسم الفني.
     1: [
       {
         id: 1,
-        sender: "technician",
+        sender: "user",
         text: "انت فين ؟؟",
         time: "09:42 ص",
       },
       {
         id: 2,
-        sender: "user",
+        sender: "technician",
         text: "علي الطريق السريع 5 دقايق هكون عند حضرتك",
         time: "09:42 ص",
       },
@@ -277,30 +279,42 @@ export default function Chat() {
               </div>
 
               <div className="space-y-4 flex flex-col">
-                {activeMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col ${
-                      msg.sender === "user" ? "items-start" : "items-end"
-                    }`}
-                  >
+                {activeMessages.map((msg) => {
+                  // رسائل العميل جهة اليمين، ورسائل الفني جهة اليسار. الصفحة
+                  // كلها RTL، فبداية المحور هي اليمين ونهايته اليسار.
+                  const isCustomer = msg.sender === "user";
+
+                  return (
                     <div
-                      className={`max-w-[80%] sm:max-w-[60%] p-4 rounded-2xl text-sm font-medium leading-relaxed ${
-                        msg.sender === "user"
-                          ? "bg-[#0062e0] text-white rounded-br-2xl rounded-tr-xs rounded-tl-2xl rounded-bl-2xl"
-                          : "bg-gray-200/70 text-gray-800 rounded-bl-2xl rounded-tl-xs rounded-tr-2xl rounded-br-2xl"
+                      key={msg.id}
+                      className={`flex flex-col ${
+                        isCustomer ? "items-start" : "items-end"
                       }`}
                     >
-                      {msg.text}
+                      <div
+                        className={`max-w-[80%] sm:max-w-[60%] p-4 rounded-2xl text-sm font-medium leading-relaxed ${
+                          isCustomer
+                            ? "bg-[#0062e0] text-white rounded-br-2xl rounded-tr-xs rounded-tl-2xl rounded-bl-2xl"
+                            : "bg-gray-200/70 text-gray-800 rounded-bl-2xl rounded-tl-xs rounded-tr-2xl rounded-br-2xl"
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+
+                      {/* علامة القراءة تخص ما أرسله العميل نفسه، لا ما يصله */}
+                      <div
+                        className={`flex items-center gap-1 mt-1 text-[11px] text-gray-400 px-1 ${
+                          isCustomer ? "flex-row-reverse" : ""
+                        }`}
+                      >
+                        {isCustomer && (
+                          <CheckCheck size={14} className="text-[#0062e0]" />
+                        )}
+                        <span>{msg.time}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 mt-1 text-[11px] text-gray-400 px-1">
-                      {msg.sender === "technician" && (
-                        <CheckCheck size={14} className="text-[#0062e0]" />
-                      )}
-                      <span>{msg.time}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {/* شارة شارك موقعك المباشر */}
                 <div className="flex justify-center my-4">

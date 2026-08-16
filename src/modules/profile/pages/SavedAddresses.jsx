@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { MapPin, Pencil, Trash2, Plus, X } from "lucide-react";
 
+import { useToast } from "../../../shared/toast/toastContext.js";
+
 export default function SavedAddresses() {
+  const { showToast } = useToast();
+
   const [addresses, setAddresses] = useState([
     {
       id: 1,
@@ -70,7 +74,10 @@ export default function SavedAddresses() {
       !formData.city ||
       !formData.address
     ) {
-      alert("يرجى إدخال جميع البيانات");
+      showToast({
+        message: "يرجى إدخال جميع البيانات",
+        variant: "error",
+      });
       return;
     }
 
