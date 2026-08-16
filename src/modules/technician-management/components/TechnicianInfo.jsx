@@ -5,38 +5,48 @@ import {
   Briefcase,
 } from "lucide-react";
 
-const information = [
+/**
+ * The four lines under the photograph, read off the technician the console
+ * loaded. A field the API left empty prints an em dash rather than nothing, so
+ * the row reads as "not set" instead of looking broken.
+ */
+const informationFor = (technician = {}) => [
   {
     label: "رقم الهاتف",
-    value: "+966 50 123 4567",
+    value: technician.phoneNumber || "—",
     icon: Phone,
   },
   {
     label: "البريد الإلكتروني",
-    value: "ahmed.m@example.com",
+    value: technician.email || "—",
     icon: Mail,
   },
   {
     label: "المدينة / العنوان",
-    value: "الرياض - حي الياسمين",
+    value: technician.location || "—",
     icon: MapPin,
   },
   {
     label: "سنوات الخبرة",
-    value: "7 سنوات",
+    value:
+      technician?.yearsOfExperience == null
+        ? "—"
+        : `${technician.yearsOfExperience} سنوات`,
     icon: Briefcase,
   },
 ];
 
-export default function TechnicianInfo() {
+export default function TechnicianInfo({ technician }) {
+  const information = informationFor(technician ?? {});
+  const name = technician?.fullName ?? "—";
   return (
     <div className="h-fit rounded-[10px] border border-[#E8ECF2] bg-white px-5 py-5">
       {/* Profile */}
       <div className="flex flex-col items-center border-b border-[#EEF1F5] pb-5">
         <div className="relative">
           <img
-            src="/technician_avatar.jpg"
-            alt="أحمد محمود"
+            src={technician?.profilePictureUrl || "/technician_avatar.jpg"}
+            alt={name}
             className="h-[72px] w-[72px] rounded-full object-cover"
           />
 
@@ -44,11 +54,11 @@ export default function TechnicianInfo() {
         </div>
 
         <h2 className="mt-3 text-[15px] font-bold text-text-500">
-          أحمد محمود
+          {name}
         </h2>
 
         <span className="mt-2 rounded-full bg-primary-50 px-3 py-1 text-[9px] text-primary-500">
-          فني صيانة عامة
+          {technician?.professionName || "—"}
         </span>
       </div>
 

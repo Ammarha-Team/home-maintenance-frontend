@@ -1,27 +1,14 @@
-// Stand-in data for the admin console. The console is being built against the
-// design before the admin endpoints exist, so every figure here comes from the
-// frame rather than from the API. Swapping these for real calls should not need
-// the screens to change: each export is already shaped the way the screens read
-// it.
-
-/**
- * The eight tiles across the top of the dashboard, in the order the frame draws
- * them (right to left, two rows of four).
- *
- * `delta` is the change against the previous period and `trend` says which way
- * to point the arrow — kept apart from the number itself so a fall in a figure
- * that is good when it falls can still be coloured by hand.
- */
-export const DASHBOARD_STATS = [
-  { key: 'customers', label: 'إجمالي العملاء', value: '15,420', delta: '12%', trend: 'up', tone: 'primary' },
-  { key: 'technicians', label: 'إجمالي الفنيين', value: '1,245', delta: '5%', trend: 'up', tone: 'primary' },
-  { key: 'newOrders', label: 'الطلبات الجديدة اليوم', value: '342', delta: '24%', trend: 'up', tone: 'success' },
-  { key: 'openOrders', label: 'الطلبات قيد التنفيذ', value: '128', delta: '2%', trend: 'down', tone: 'primary' },
-  { key: 'doneOrders', label: 'الطلبات المكتملة', value: '45,210', delta: '8%', trend: 'up', tone: 'success' },
-  { key: 'revenue', label: 'الإيرادات الشهرية', value: '324K', unit: 'ج.م', delta: '15%', trend: 'up', tone: 'primary' },
-  { key: 'commission', label: 'العمولات المستحقة', value: '12.5K', unit: 'ج.م', delta: '3%', trend: 'down', tone: 'error' },
-  { key: 'satisfaction', label: 'نسبة رضا العملاء', value: '96%', delta: '1.2%', trend: 'up', tone: 'primary' },
-]
+// What the admin console draws that the backend has no answer for.
+//
+// The rosters and the dashboard figures now come from the API — those calls
+// live in `adminApi.js`. What is left here is the part of the console the
+// backend does not publish yet: the revenue series, the business notes, the
+// profit periods, and the vocabulary the tables share (page sizes, status
+// labels, the filters they run on the client).
+//
+// The written-down city and profession lists stay as the fallback the filter
+// components fall back to; the screens hand them the values the API actually
+// returned.
 
 /**
  * The ranges the chart dropdown offers. Only six months is drawn in the frame;
@@ -98,61 +85,6 @@ export const TECHNICIAN_STATUSES = [
 export const technicianStatusLabel = (status) =>
   TECHNICIAN_STATUSES.find((item) => item.key === status)?.label ?? status
 
-// The technicians the frame draws, alternating down the table. Fifty rows are
-// generated from them so the pagination has real pages to move through rather
-// than one short list.
-const TECHNICIAN_SEED = [
-  {
-    name: 'أحمد محمد',
-    email: 'ahmed@example.com',
-    phone: '0501234567',
-    city: 'الرياض',
-    specialty: 'كهرباء',
-    experienceYears: 5,
-    rating: 4.8,
-    orders: 120,
-    status: 'active',
-  },
-  {
-    name: 'محمود علي',
-    email: 'mahmoud@example.com',
-    phone: '0559876543',
-    city: 'جدة',
-    specialty: 'سباكة',
-    experienceYears: 8,
-    rating: 4.6,
-    orders: 85,
-    status: 'suspended',
-  },
-  {
-    name: 'خالد سعيد',
-    email: 'khaled@example.com',
-    phone: '0532223344',
-    city: 'الدمام',
-    specialty: 'تكييف',
-    experienceYears: 3,
-    rating: 4.9,
-    orders: 64,
-    status: 'active',
-  },
-  {
-    name: 'ياسر إبراهيم',
-    email: 'yasser@example.com',
-    phone: '0547778899',
-    city: 'مكة',
-    specialty: 'نجارة',
-    experienceYears: 11,
-    rating: 4.4,
-    orders: 203,
-    status: 'active',
-  },
-]
-
-export const TECHNICIANS = Array.from({ length: 50 }, (_, index) => {
-  const seed = TECHNICIAN_SEED[index % TECHNICIAN_SEED.length]
-  return { ...seed, id: `TECH-${String(index + 1).padStart(3, '0')}` }
-})
-
 /**
  * The table's filter. Every filter is optional and an empty value means "all",
  * which is what the three selects start on.
@@ -179,56 +111,6 @@ export const CUSTOMER_STATUSES = [
 export const customerStatusLabel = (status) =>
   CUSTOMER_STATUSES.find((item) => item.key === status)?.label ?? status
 
-// The two customers the frame alternates down the table, plus two more so the
-// city filter has somewhere to go — the frame only ever draws الرياض and جدة,
-// but the select beside it offers four.
-const CUSTOMER_SEED = [
-  {
-    name: 'خالد عبدالله',
-    email: 'khalid@example.com',
-    phone: '+966 50 123 4567',
-    city: 'الرياض',
-    orders: 24,
-    status: 'active',
-    avatar: '/technician_avatar.jpg',
-  },
-  {
-    name: 'سالم فهد',
-    email: 'salem.f@example.com',
-    phone: '+966 55 987 6543',
-    city: 'جدة',
-    orders: 5,
-    status: 'banned',
-  },
-  {
-    name: 'نورة عبدالعزيز',
-    email: 'noura@example.com',
-    phone: '+966 53 445 8812',
-    city: 'الدمام',
-    orders: 17,
-    status: 'active',
-  },
-  {
-    name: 'فهد الشمري',
-    email: 'fahad.s@example.com',
-    phone: '+966 56 220 7734',
-    city: 'مكة',
-    orders: 9,
-    status: 'active',
-  },
-]
-
-// The frame's footer counts 245 customers, so that many are generated from the
-// seed rather than the handful drawn — the pagination then has the pages the
-// design shows instead of a single short list.
-export const CUSTOMERS = Array.from({ length: 245 }, (_, index) => {
-  const seed = CUSTOMER_SEED[index % CUSTOMER_SEED.length]
-
-  // Ids count down from the newest, which is the order the frame lists them in:
-  // #CUS-8921 above #CUS-8920.
-  return { ...seed, id: `CUS-${8921 - index}` }
-})
-
 /**
  * The customers table's filter. Every filter is optional and an empty value
  * means "all", which is what the toolbar starts on.
@@ -239,13 +121,17 @@ export const CUSTOMERS = Array.from({ length: 245 }, (_, index) => {
 export const filterCustomers = (customers, { search, city, status }) => {
   const needle = search.trim().toLowerCase()
 
+  // A field the API left empty is searched as an empty string rather than
+  // reaching for `toLowerCase` on a null and taking the table down with it.
+  const text = (value) => String(value ?? '').toLowerCase()
+
   return customers.filter((customer) => {
     const matchesSearch =
       !needle ||
-      customer.name.toLowerCase().includes(needle) ||
-      customer.city.toLowerCase().includes(needle) ||
-      customer.email.toLowerCase().includes(needle) ||
-      customer.id.toLowerCase().includes(needle)
+      text(customer.name).includes(needle) ||
+      text(customer.city).includes(needle) ||
+      text(customer.email).includes(needle) ||
+      text(customer.id).includes(needle)
 
     return (
       matchesSearch && (!city || customer.city === city) && (!status || customer.status === status)

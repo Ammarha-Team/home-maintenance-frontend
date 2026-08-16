@@ -1,4 +1,4 @@
-import { Ban, CircleCheck, Eye, Star } from 'lucide-react'
+import { Ban, CircleCheck, Eye, LoaderCircle, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import TablePagination from './TablePagination.jsx'
@@ -12,14 +12,32 @@ const STATUS_CLASS = {
   suspended: 'bg-error-50 text-error-500',
 }
 
+// A state the API introduces that this table has no colour for is drawn in a
+// neutral pill rather than failing the row on a missing lookup.
+const NEUTRAL_STATUS_CLASS = 'bg-card text-text-400'
+
 /**
  * The technicians roster.
  *
  * The rows arrive already filtered and already cut to a page — the table draws
  * what it is given and reports which page was asked for, so the filtering and
  * the paging stay together on the screen above.
+ *
+ * Suspending an account is the screen's business too: this reports which row
+ * was pressed and `busyId` says which one is mid-flight, so the button that was
+ * pressed is the one that goes quiet rather than the whole table.
  */
-function TechniciansTable({ rows, page, pageCount, total, from, to, onPageChange }) {
+function TechniciansTable({
+  rows,
+  page,
+  pageCount,
+  total,
+  from,
+  to,
+  onPageChange,
+  onToggleStatus,
+  busyId = null,
+}) {
   const navigate = useNavigate()
   return (
     <section className="overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
@@ -54,7 +72,7 @@ function TechniciansTable({ rows, page, pageCount, total, from, to, onPageChange
                   <td className={CELL_CLASS}>
                     <span className="relative inline-block">
                       <img
-                        src="/technician_avatar.jpg"
+                        src={technician.avatar || '/technician_avatar.jpg'}
                         alt=""
                         className="h-[40px] w-[40px] rounded-full object-cover"
                       />
@@ -97,7 +115,9 @@ function TechniciansTable({ rows, page, pageCount, total, from, to, onPageChange
 
                   <td className={CELL_CLASS}>
                     <span
-                      className={`inline-block rounded-[8px] px-[12px] py-[6px] text-[13px] font-bold ${STATUS_CLASS[technician.status]}`}
+                      className={`inline-block rounded-[8px] px-[12px] py-[6px] text-[13px] font-bold ${
+                        STATUS_CLASS[technician.status] ?? NEUTRAL_STATUS_CLASS
+                      }`}
                     >
                       {technicianStatusLabel(technician.status)}
                     </span>
@@ -116,16 +136,27 @@ function TechniciansTable({ rows, page, pageCount, total, from, to, onPageChange
 >
   <Eye size={18} aria-hidden="true" />
 </button>
+                      {/* The row itself opens the technician, so this has to
+                          stop the click travelling upwards or suspending an
+                          account would navigate away from the table that is
+                          about to redraw. */}
                       <button
                         type="button"
+                        disabled={!onToggleStatus || busyId === technician.id}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onToggleStatus?.(technician)
+                        }}
                         aria-label={
                           suspended
                             ? `تفعيل حساب ${technician.name}`
                             : `إيقاف حساب ${technician.name}`
                         }
-                        className="rounded-[8px] p-[6px] text-text-300 transition-colors hover:bg-card hover:text-primary-500"
+                        className="rounded-[8px] p-[6px] text-text-300 transition-colors hover:bg-card hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        {suspended ? (
+                        {busyId === technician.id ? (
+                          <LoaderCircle size={18} aria-hidden="true" className="animate-spin" />
+                        ) : suspended ? (
                           <CircleCheck size={18} aria-hidden="true" />
                         ) : (
                           <Ban size={18} aria-hidden="true" />

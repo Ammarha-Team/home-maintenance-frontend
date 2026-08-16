@@ -15,8 +15,19 @@ const FIELD_CLASS =
  * Every filter carries an "all" option with an empty value, so clearing one is
  * the same operation as never having set it and the table needs no separate
  * notion of an unset filter.
+ *
+ * The cities and the professions are handed in by the screen, which reads them
+ * off the roster the API returned — offering a city no technician works in is a
+ * filter that can only ever empty the table. The written-down lists stay as the
+ * fallback for a caller with nothing to hand.
  */
-function TechniciansFilters({ filters, onChange, onReset }) {
+function TechniciansFilters({
+  filters,
+  onChange,
+  onReset,
+  cities = TECHNICIAN_CITIES,
+  specialties = TECHNICIAN_SPECIALTIES,
+}) {
   const update = (key) => (event) => onChange({ ...filters, [key]: event.target.value })
 
   return (
@@ -33,7 +44,7 @@ function TechniciansFilters({ filters, onChange, onReset }) {
             className={FIELD_CLASS}
           >
             <option value="">الكل</option>
-            {TECHNICIAN_CITIES.map((city) => (
+            {cities.map((city) => (
               <option key={city} value={city}>
                 {city}
               </option>
@@ -52,7 +63,7 @@ function TechniciansFilters({ filters, onChange, onReset }) {
             className={FIELD_CLASS}
           >
             <option value="">الكل</option>
-            {TECHNICIAN_SPECIALTIES.map((specialty) => (
+            {specialties.map((specialty) => (
               <option key={specialty} value={specialty}>
                 {specialty}
               </option>

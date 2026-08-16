@@ -5,6 +5,10 @@ import { LogOut, Settings } from 'lucide-react'
 import AdminSidebar from '../components/AdminSidebar.jsx'
 import AdminTopbar from '../components/AdminTopbar.jsx'
 import {
+  readDisplayName,
+  readSession,
+} from '../../modules/auth/services/authSession.js'
+import {
   ADMIN_NAV_ITEMS,
   ADMIN_ROUTES,
 } from '../../modules/admin/constants/adminRoutes.js'
@@ -24,9 +28,16 @@ const SIDEBAR_FOOTER = (
   </>
 )
 
-// Stands in until the console reads the signed-in admin from the session, which
-// waits on the backend admin role.
-const ADMIN_USER = { name: 'احمد حمدي', avatar: '/technician_avatar.jpg' }
+// Who the topbar says is signed in.
+//
+// The login payload names the account — the admin account answers with
+// `fullName` — so the console shows whoever is actually reading it. No picture
+// comes back with it, and the topbar already falls back to the initial of the
+// name when there is none.
+const readAdminUser = () => ({
+  name: readDisplayName(readSession()) || 'المشرف',
+  avatar: null,
+})
 
 /**
  * The chrome every console screen sits inside. `dir` is set here rather than on
@@ -39,6 +50,8 @@ const ADMIN_USER = { name: 'احمد حمدي', avatar: '/technician_avatar.jpg'
  */
 function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const adminUser = readAdminUser()
 
 const [notifications] = useState([
   {
@@ -100,7 +113,7 @@ const [notifications] = useState([
       <div className="md:mr-[260px]">
 
         <AdminTopbar
-          user={ADMIN_USER}
+          user={adminUser}
           notifications={notifications}
           onOpenSidebar={() => setSidebarOpen(true)}
         />
@@ -109,46 +122,6 @@ const [notifications] = useState([
           <Outlet />
         </main>
 
-      </div>
-    </div>
-  )
-
-const handleNotifications = () => {
-  setNotificationsOpen((prev) => !prev)
-}
-  return (
-    <div dir="rtl" className="min-h-screen bg-surface font-sans">
-      <AdminSidebar
-        items={ADMIN_NAV_ITEMS}
-        homeTo={ADMIN_ROUTES.dashboard}
-        subtitle="إدارة الصيانة المنزلية"
-        footer={SIDEBAR_FOOTER}
-        label="أقسام لوحة التحكم"
-        open={sidebarOpen}
-        onNavigate={() => setSidebarOpen(false)}
-      />
-
-      {/* Below `md` the sidebar covers the page, and a tap anywhere off it is
-          the expected way back out. */}
-      {sidebarOpen ? (
-        <button
-          type="button"
-          aria-label="إغلاق القائمة"
-          onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-dark/40 md:hidden"
-        />
-      ) : null}
-
-      <div className="md:mr-[260px]">
-<AdminTopbar
-  user={ADMIN_USER}
-  notifications={notifications}
-  onOpenSidebar={() => setSidebarOpen(true)}
-  onNotifications={handleNotifications}
-/>
-        <main className="px-[24px] py-[24px]">
-          <Outlet />
-        </main>
       </div>
     </div>
   )
