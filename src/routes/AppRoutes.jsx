@@ -70,6 +70,7 @@ import TechnicianRoute from "./TechnicianRoute.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
 import AdminRoutes from "./AdminRoutes.jsx";
+import AdminRoute from "./AdminRoute.jsx";
 
 function AppRoutes() {
   return (
@@ -413,7 +414,11 @@ function AppRoutes() {
         {/* Admin */}
         <Route
           path="/admin/*"
-          element={<AdminRoutes />}
+          element={
+            <AdminRoute>
+              <AdminRoutes />
+            </AdminRoute>
+          }
         />
 
         {/* 404 */}

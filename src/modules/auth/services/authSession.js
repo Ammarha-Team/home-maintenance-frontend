@@ -96,12 +96,23 @@ export const readRole = (session) => {
 }
 
 /**
- * Where a session lands after signing in. A technician goes to their portal,
- * everyone else to the customer home — which is also the fallback when the
- * token names no role, since the customer area is the safe default.
+ * Where a session lands after signing in. A technician goes to their portal, an
+ * admin to the console, everyone else to the customer home — which is also the
+ * fallback when the token names no role, since the customer area is the safe
+ * default.
  */
-export const landingRouteFor = (session) =>
-  readRole(session) === 'technician' ? TECHNICIAN_ROUTES.dashboard : '/home'
+export const landingRouteFor = (session) => {
+  const role = readRole(session)
+
+  if (role === 'technician') return TECHNICIAN_ROUTES.dashboard
+
+  // The admin signs in through the same form as everyone else, and login
+  // answers `roles: ["Admin"]`. Without this the console would only be
+  // reachable by typing its address.
+  if (role === 'admin') return '/admin'
+
+  return '/home'
+}
 
 /**
  * The signed-in user's name, or an empty string when the backend has not told

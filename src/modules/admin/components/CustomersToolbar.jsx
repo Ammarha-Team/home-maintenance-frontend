@@ -16,7 +16,7 @@ const CONTROL_CLASS =
  * the same operation as never having set it and the table needs no separate
  * notion of an unset filter.
  */
-function CustomersToolbar({ filters, onChange, onReset }) {
+function CustomersToolbar({ filters, onChange, onReset, cities = CUSTOMER_CITIES }) {
   const update = (key) => (event) => onChange({ ...filters, [key]: event.target.value })
 
   const filtered = Boolean(filters.search || filters.city || filters.status)
@@ -74,7 +74,7 @@ function CustomersToolbar({ filters, onChange, onReset }) {
           className={CONTROL_CLASS}
         >
           <option value="">جميع المدن</option>
-          {CUSTOMER_CITIES.map((city) => (
+          {cities.map((city) => (
             <option key={city} value={city}>
               {city}
             </option>

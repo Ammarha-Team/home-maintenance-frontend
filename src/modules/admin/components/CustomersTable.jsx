@@ -13,6 +13,10 @@ const STATUS_CLASS = {
   banned: { pill: 'bg-error-50 text-error-500', dot: 'bg-error-500' },
 }
 
+// A state the API introduces that this table has no colour for is drawn in a
+// neutral pill rather than failing the row on a missing lookup.
+const NEUTRAL_STATUS = { pill: 'bg-card text-text-400', dot: 'bg-text-300' }
+
 /**
  * The customers roster.
  *
@@ -40,7 +44,7 @@ function CustomersTable({ rows, page, pageCount, total, from, to, onPageChange }
 
           <tbody>
             {rows.map((customer) => {
-              const status = STATUS_CLASS[customer.status]
+              const status = STATUS_CLASS[customer.status] ?? NEUTRAL_STATUS
 
               return (
                 <tr key={customer.id} className="border-t border-line">
@@ -60,7 +64,7 @@ function CustomersTable({ rows, page, pageCount, total, from, to, onPageChange }
                           aria-hidden="true"
                           className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full bg-primary-100 text-[14px] text-primary-700"
                         >
-                          {customer.name.charAt(0)}
+                          {(customer.name ?? '').charAt(0)}
                         </span>
                       )}
 
