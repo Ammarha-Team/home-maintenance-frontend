@@ -37,7 +37,7 @@ const MOCK_ORDERS = [
     description:
       "تلف شائع في اكياس الكهرباء والاسلاك الكهربائية، يحتاج إلى فحص وتغيير القطع التالفة فوراً لضمان السلامة.",
     image: "/electrical_socket.jpg",
-    actionType: null,
+    actionType: "review",
   },
   {
     id: 4,

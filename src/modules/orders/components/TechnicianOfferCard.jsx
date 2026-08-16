@@ -2,7 +2,12 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Star, Clock, Wrench, X } from "lucide-react";
 
-export default function TechnicianOfferCard({ offer, onAccept, onDismiss }) {
+export default function TechnicianOfferCard({
+  offer,
+  onAccept,
+  onDismiss,
+  orderId = "1",
+}) {
   const {
     id = 1,
     name = "أحمد العتيبي",
@@ -119,7 +124,7 @@ export default function TechnicianOfferCard({ offer, onAccept, onDismiss }) {
         </button>
 
         <Link
-          to={`/my-orders/1/technicians/${id}`}
+          to={`/my-orders/${orderId}/technicians/${id}`}
           className="flex-1 sm:flex-none border border-[#2563eb] text-[#2563eb] hover:bg-blue-50 font-semibold py-2.5 px-3.5 rounded-xl text-xs sm:text-sm transition-colors cursor-pointer text-center whitespace-nowrap"
         >
           عرض صفحه الفني
