@@ -41,6 +41,8 @@ import SavedAddresses from "../modules/profile/pages/SavedAddresses";
 import MyOrders from "../modules/orders/pages/MyOrders";
 import OrderOffers from "../modules/orders/pages/OrderOffers";
 import OrderTracking from "../modules/orders/pages/OrderTracking";
+import TechnicianDetails from "../modules/technician-details/pages/TechnicianDetails";
+import ReviewPage from "../modules/reviews/pages/ReviewPage";
 import { ORDERS_ROUTES } from "../modules/orders/constants/ordersRoutes";
 
 import Chat from "../modules/chat/pages/Chat";
@@ -242,15 +244,32 @@ function AppRoutes() {
           element={<OrderTracking />}
         />
 
+        {/* The technician as the customer sees them, on the way to accepting an
+            offer. Not the technician's own profile screen — that one lives at
+            /technician/profile and belongs to the technician portal. */}
         <Route
-          path="/my-orders/:id/technicians/:technicianId"
-          element={<TechnicianProfile />}
+          path={ORDERS_ROUTES.technicianDetails}
+          element={<TechnicianDetails />}
+        />
+
+        {/* Rating a finished job, reached from the completed order */}
+        <Route
+          path={ORDERS_ROUTES.orderReview}
+          element={<ReviewPage />}
         />
 
         {/* Chat */}
         <Route
           path="/chat"
           element={<Chat />}
+        />
+
+        {/* The customer menu pointed here long before the screen had a path.
+            Kept as a redirect so older links land on the conversation rather
+            than on the landing page. */}
+        <Route
+          path="/messages"
+          element={<Navigate to="/chat" replace />}
         />
 
         {/* Technician Portal */}

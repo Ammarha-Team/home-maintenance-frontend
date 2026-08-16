@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   Check,
@@ -14,6 +14,11 @@ import "leaflet/dist/leaflet.css";
 
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
+import { useToast } from "../../../shared/toast/toastContext.js";
+
+// كم تستغرق الزيارة قبل أن يبلغ الفني بانتهائها. هذه محاكاة للحالة التي
+// سيرسلها الخادم لاحقاً، وضعت في مكان واحد ليسهل استبدالها به.
+const SERVICE_COMPLETION_DELAY = 6000;
 
 // تخصيص ماركر الخريطة ليبدو أنيقاً وبدون مشاكل المسارات الافتراضية في Leaflet
 const customIcon = new L.Icon({
@@ -29,16 +34,40 @@ const customIcon = new L.Icon({
 export default function OrderTracking() {
   const { id = "4920" } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
+
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [orderCancelled, setOrderCancelled] = useState(false);
+
+  // مسار الطلب على هذه الشاشة: جارٍ التنفيذ ← اكتملت الخدمة ← أو ملغي
+  const [status, setStatus] = useState("in_progress");
+
+  const isCompleted = status === "completed";
+  const isCancelled = status === "cancelled";
+
+  // وصول الفني وانتهاء عمله يصل من الخادم لاحقاً؛ حتى ذلك الحين تتقدم الشاشة
+  // بنفسها حتى لا تقف رحلة العميل عند التتبع.
+  useEffect(() => {
+    if (status !== "in_progress") return undefined;
+
+    const timer = setTimeout(() => {
+      setStatus("completed");
+      showToast({ message: "اكتملت الخدمة، بانتظار تأكيدك وتقييمك للفني" });
+    }, SERVICE_COMPLETION_DELAY);
+
+    return () => clearTimeout(timer);
+  }, [status, showToast]);
 
   // إحداثيات مركز الرياض (حي النخيل - KAFD كما بالصورة)
   const position = [24.7556, 46.6389];
 
   const handleConfirmCancel = () => {
-    setOrderCancelled(true);
+    setStatus("cancelled");
     setShowCancelModal(false);
+    showToast({ message: `تم إلغاء الطلب #${id}`, variant: "error" });
   };
+
+  // تأكيد الاستلام ينقل العميل إلى تقييم الفني: آخر خطوة في الرحلة
+  const handleConfirmCompletion = () => navigate(`/my-orders/${id}/review`);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-cairo" dir="rtl">
@@ -76,8 +105,16 @@ export default function OrderTracking() {
             {/* كارت تايم لاين حالة الطلب */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-xs text-right">
               <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-50">
-                <span className="bg-blue-50 text-[#2563eb] text-xs font-bold px-2.5 py-1 rounded-lg">
-                  مباشر
+                <span
+                  className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                    isCancelled
+                      ? "bg-rose-50 text-rose-600"
+                      : isCompleted
+                        ? "bg-[#e6f7ed] text-[#059669]"
+                        : "bg-blue-50 text-[#2563eb]"
+                  }`}
+                >
+                  {isCancelled ? "ملغي" : isCompleted ? "مكتمل" : "مباشر"}
                 </span>
                 <h2 className="font-bold text-gray-900 text-lg">
                   حالة الطلب #{id}
@@ -120,24 +157,69 @@ export default function OrderTracking() {
                 </div>
 
                 {/* الخطوة 3: اكتملت الخدمة */}
-                <div className="relative flex items-start gap-4 opacity-60">
-                  <div className="absolute -right-6 top-0.5 w-6 h-6 rounded-full bg-gray-100 border border-gray-300 text-gray-400 flex items-center justify-center ring-4 ring-white z-10">
+                <div
+                  className={`relative flex items-start gap-4 ${
+                    isCompleted ? "" : "opacity-60"
+                  }`}
+                >
+                  <div
+                    className={`absolute -right-6 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white z-10 ${
+                      isCompleted
+                        ? "bg-[#10b981] text-white shadow-2xs"
+                        : "bg-gray-100 border border-gray-300 text-gray-400"
+                    }`}
+                  >
                     <Check size={13} className="stroke-[2]" />
                   </div>
                   <div className="mr-2">
-                    <h3 className="font-medium text-gray-500 text-sm sm:text-base">
+                    <h3
+                      className={`text-sm sm:text-base ${
+                        isCompleted
+                          ? "font-bold text-[#059669]"
+                          : "font-medium text-gray-500"
+                      }`}
+                    >
                       اكتملت الخدمة
                     </h3>
                     <p className="text-gray-400 text-xs mt-0.5 font-medium">
-                      بانتظار التأكيد النهائي
+                      {isCompleted
+                        ? "أكد استلام الخدمة لتقييم الفني"
+                        : "بانتظار التأكيد النهائي"}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* زر إلغاء الطلب */}
-            {!orderCancelled ? (
+            {/* الإجراءات المتاحة تتبع حالة الطلب: يُلغى ما دام جارياً، ويُؤكد
+                ويُقيَّم بعد انتهائه، ولا شيء منهما بعد إلغائه */}
+            {isCancelled && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-4 text-center font-bold text-sm">
+                تم إلغاء هذا الطلب بنجاح.
+              </div>
+            )}
+
+            {isCompleted && (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={handleConfirmCompletion}
+                  className="w-full py-3 bg-[#10b981] hover:bg-[#059669] text-white rounded-xl font-bold text-sm transition-colors cursor-pointer shadow-2xs flex items-center justify-center gap-2"
+                >
+                  <Check size={18} className="stroke-[2.5]" />
+                  <span>تأكيد استلام الخدمة وتقييم الفني</span>
+                </button>
+
+                <Link
+                  to="/my-orders"
+                  className="block w-full py-3 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl font-semibold text-sm transition-colors text-center"
+                >
+                  العودة إلى طلباتي
+                </Link>
+              </div>
+            )}
+
+            {!isCompleted && !isCancelled && (
               <button
                 type="button"
                 onClick={() => setShowCancelModal(true)}
@@ -146,10 +228,6 @@ export default function OrderTracking() {
                 <X size={18} className="stroke-[2.5]" />
                 <span>إلغاء الطلب</span>
               </button>
-            ) : (
-              <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-4 text-center font-bold text-sm">
-                تم إلغاء هذا الطلب بنجاح.
-              </div>
             )}
           </div>
 
@@ -189,9 +267,9 @@ export default function OrderTracking() {
                     <span>اتصال</span>
                   </a>
 
-                  {/* 👇 استبدال الـ Button بـ Link لتوجيه دقيق ومباشر */}
+                  {/* مراسلة الفني تفتح شاشة المحادثات على مسارها الفعلي */}
                   <Link
-                    to="/messages"
+                    to="/chat"
                     className="flex-1 sm:flex-none bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold px-8 py-2.5 rounded-xl text-sm transition-colors shadow-2xs cursor-pointer flex items-center justify-center gap-2"
                   >
                     <MessageCircle size={17} />

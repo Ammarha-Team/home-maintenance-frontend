@@ -68,9 +68,20 @@ export default function OrderCard({ order }) {
         </button>
       );
     }
+    // الطلب المكتمل ينتهي بالتقييم، وهو المدخل إلى شاشة تقييم الفني
+    if (actionType === "review") {
+      return (
+        <Link
+          to={`/my-orders/${order.id}/review`}
+          className="block w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold rounded-xl text-sm transition-colors shadow-2xs cursor-pointer text-center"
+        >
+          تقييم الفني
+        </Link>
+      );
+    }
     return (
       <Link
-        to={`/my-orders/${order.id}`}
+        to={`/my-orders/${order.id}/track`}
         className="block w-full py-2.5 bg-white border border-[#2563eb] text-[#2563eb] hover:bg-blue-50 font-semibold rounded-xl text-sm transition-colors cursor-pointer text-center"
       >
         تتبع الطلب

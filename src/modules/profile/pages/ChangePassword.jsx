@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { LockKeyhole } from "lucide-react";
 
+import { useToast } from "../../../shared/toast/toastContext.js";
+
 export default function ChangePassword() {
+  const { showToast } = useToast();
+
   const [form, setForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -19,12 +23,15 @@ export default function ChangePassword() {
     e.preventDefault();
 
     if (form.newPassword !== form.confirmPassword) {
-      alert("كلمتا المرور غير متطابقتين");
+      showToast({
+        message: "كلمتا المرور غير متطابقتين",
+        variant: "error",
+      });
       return;
     }
 
     // هنا هيكون استدعاء الـ API بعدين
-    alert("تم تغيير كلمة المرور بنجاح");
+    showToast({ message: "تم تغيير كلمة المرور بنجاح" });
   };
 
   return (

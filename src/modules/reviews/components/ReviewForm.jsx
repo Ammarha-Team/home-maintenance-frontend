@@ -1,15 +1,26 @@
 import { useState } from "react";
 import RatingStars from "./RatingStars";
 
-export default function ReviewForm() {
+/**
+ * تقييم الفني بعد انتهاء الخدمة.
+ *
+ * @param {(review: {rating: number, comment: string}) => void} [onSubmitted]
+ *   يُستدعى بعد تقييم صالح، وهو ما ينقل العميل إلى الخطوة التالية في رحلته
+ */
+export default function ReviewForm({ onSubmitted }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = () => {
-    console.log({
-      rating,
-      comment,
-    });
+    // النجوم هي التقييم نفسه، أما التعليق فاختياري
+    if (!rating) {
+      setError("يرجى اختيار عدد النجوم قبل إرسال التقييم");
+      return;
+    }
+
+    setError("");
+    onSubmitted?.({ rating, comment });
   };
 
   return (
@@ -24,9 +35,18 @@ export default function ReviewForm() {
       <div className="mt-5 flex justify-center">
         <RatingStars
           rating={rating}
-          setRating={setRating}
+          setRating={(next) => {
+            setRating(next);
+            setError("");
+          }}
         />
       </div>
+
+      {error && (
+        <p className="mt-3 text-center text-xs font-medium text-rose-600">
+          {error}
+        </p>
+      )}
 
       <textarea
         rows={5}
