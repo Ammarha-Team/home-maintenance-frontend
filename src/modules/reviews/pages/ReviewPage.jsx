@@ -1,10 +1,23 @@
+import { useNavigate } from "react-router-dom";
+
 import HomeNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
 import TechnicianCard from "../components/TechnicianCard";
 import ReviewForm from "../components/ReviewForm";
+import { useToast } from "../../../shared/toast/toastContext.js";
 import { CheckCircle } from "lucide-react";
 
 export default function ReviewPage() {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  // نهاية الرحلة: يُشكر العميل على تقييمه ثم يعود إلى طلباته بدل أن يبقى على
+  // نموذج أرسله بالفعل
+  const handleSubmitted = () => {
+    showToast({ message: "شكراً لك، تم إرسال تقييمك بنجاح" });
+    navigate("/my-orders");
+  };
+
   const technician = {
     name: "أحمد العناني",
     job: "إصلاح الأجهزة الكهربائية والسباكة",
@@ -31,7 +44,7 @@ export default function ReviewPage() {
 
           <TechnicianCard technician={technician} />
 
-          <ReviewForm />
+          <ReviewForm onSubmitted={handleSubmitted} />
         </div>
       </main>
 
