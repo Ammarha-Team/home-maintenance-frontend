@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
 import TechnicianOfferCard from "../components/TechnicianOfferCard";
+import { useToast } from "../../../shared/toast/toastContext.js";
 
 // قائمة فنيين وهمية مطابقة للتصميم للـ 12 عرضاً
 const INITIAL_OFFERS = [
@@ -70,16 +71,39 @@ const INITIAL_OFFERS = [
 ];
 
 export default function OrderOffers() {
-  const { id: _id } = useParams();
+  // يُمرَّر إلى كارت العرض حتى تفتح صفحة الفني ضمن الطلب نفسه
+  const { id: orderId = "1" } = useParams();
   const [offers, setOffers] = useState(INITIAL_OFFERS);
   const [activeFilter, setActiveFilter] = useState("all");
+
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  // لو غادر العميل الصفحة قبل انتهاء المهلة، يُلغى الانتقال المؤجل
+  const redirectTimer = useRef(null);
+
+  useEffect(
+    () => () => {
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    },
+    [],
+  );
 
   const handleDismissOffer = (offerId) => {
     setOffers((prev) => prev.filter((o) => o.id !== offerId));
   };
 
+  // قبول العرض يؤكد بإشعار عابر ثم ينتقل إلى تتبع الطلب: الطلب صار مسنداً إلى
+  // فني، ومكانه بعد ذلك شاشة التتبع لا قائمة العروض.
   const handleAcceptOffer = (offer) => {
-    alert(`تم قبول عرض الفني ${offer.name} بسعر ${offer.price} ر.س بنجاح!`);
+    showToast({
+      message: `تم قبول عرض الفني ${offer.name} بسعر ${offer.price} ر.س بنجاح!`,
+    });
+
+    redirectTimer.current = setTimeout(
+      () => navigate(`/my-orders/${orderId}/track`),
+      1200,
+    );
   };
 
   // فرز العروض بناءً على التاب النشط
@@ -198,6 +222,7 @@ export default function OrderOffers() {
                   <TechnicianOfferCard
                     key={offer.id}
                     offer={offer}
+                    orderId={orderId}
                     onDismiss={handleDismissOffer}
                     onAccept={handleAcceptOffer}
                   />
