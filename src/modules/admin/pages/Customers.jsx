@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Download } from 'lucide-react'
 
+import AdminDataState from '../components/AdminDataState.jsx'
 import CustomersTable from '../components/CustomersTable.jsx'
 import CustomersToolbar from '../components/CustomersToolbar.jsx'
+import useAdminResource from '../hooks/useAdminResource.js'
+import { fetchAllCustomers } from '../services/adminApi.js'
 import {
-  CUSTOMERS,
   CUSTOMERS_PAGE_SIZE,
   customerStatusLabel,
   filterCustomers,
@@ -58,7 +60,14 @@ function Customers() {
   const [filters, setFilters] = useState(NO_FILTERS)
   const [page, setPage] = useState(1)
 
-  const matches = useMemo(() => filterCustomers(CUSTOMERS, filters), [filters])
+  const { data, error, loading, reload } = useAdminResource(fetchAllCustomers)
+
+  const customers = useMemo(() => data ?? [], [data])
+
+  const matches = useMemo(
+    () => filterCustomers(customers, filters),
+    [customers, filters],
+  )
 
   const pageCount = Math.max(1, Math.ceil(matches.length / CUSTOMERS_PAGE_SIZE))
 
@@ -72,6 +81,19 @@ function Customers() {
     setFilters(next)
     setPage(1)
   }
+
+  // The clients endpoint takes a page number and a page size and nothing else,
+  // so the city filter is applied here — and its options come from the roster
+  // itself, since a city no customer lives in can only ever empty the table.
+  const cities = useMemo(
+    () =>
+      [
+        ...new Set(
+          customers.map((customer) => customer.city).filter((city) => city && city !== '—'),
+        ),
+      ].sort(),
+    [customers],
+  )
 
   return (
     <div className="flex flex-col gap-[24px]">
@@ -91,30 +113,41 @@ function Customers() {
         <button
           type="button"
           onClick={() => exportCustomers(matches)}
-          className="flex h-[46px] items-center gap-[8px] rounded-[8px] border border-primary-500 bg-white px-[17px] text-[13px] font-bold text-primary-500 shadow-card transition-colors hover:bg-primary-50"
+          disabled={loading || Boolean(error)}
+          className="flex h-[46px] items-center gap-[8px] rounded-[8px] border border-primary-500 bg-white px-[17px] text-[13px] font-bold text-primary-500 shadow-card transition-colors hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           تصدير البيانات
           <Download size={14} aria-hidden="true" />
         </button>
       </div>
 
-      <section className="overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
-        <CustomersToolbar
-          filters={filters}
-          onChange={applyFilters}
-          onReset={() => applyFilters(NO_FILTERS)}
+      {loading || error ? (
+        <AdminDataState
+          loading={loading}
+          error={error}
+          onRetry={reload}
+          label="جاري تحميل قائمة العملاء..."
         />
+      ) : (
+        <section className="overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
+          <CustomersToolbar
+            filters={filters}
+            onChange={applyFilters}
+            onReset={() => applyFilters(NO_FILTERS)}
+            cities={cities}
+          />
 
-        <CustomersTable
-          rows={rows}
-          page={safePage}
-          pageCount={pageCount}
-          total={matches.length}
-          from={matches.length === 0 ? 0 : start + 1}
-          to={start + rows.length}
-          onPageChange={setPage}
-        />
-      </section>
+          <CustomersTable
+            rows={rows}
+            page={safePage}
+            pageCount={pageCount}
+            total={matches.length}
+            from={matches.length === 0 ? 0 : start + 1}
+            to={start + rows.length}
+            onPageChange={setPage}
+          />
+        </section>
+      )}
     </div>
   )
 }

@@ -1,9 +1,14 @@
+import { useMemo } from 'react'
 import { Calendar } from 'lucide-react'
 
+import AdminDataState from '../components/AdminDataState.jsx'
 import BusinessInsights from '../components/BusinessInsights.jsx'
 import DashboardStats from '../components/DashboardStats.jsx'
 import RevenueChart from '../components/RevenueChart.jsx'
-import { BUSINESS_INSIGHTS, DASHBOARD_STATS } from '../services/adminService.js'
+import useAdminResource from '../hooks/useAdminResource.js'
+import { fetchDashboard, toDashboardStats } from '../services/adminApi.js'
+import { BUSINESS_INSIGHTS } from '../services/adminService.js'
+import { readDisplayName, readSession } from '../../auth/services/authSession.js'
 
 const DATE_FORMAT = {
   weekday: 'long',
@@ -25,12 +30,21 @@ const stampNow = () => {
 }
 
 function Dashboard() {
+  const { data, error, loading, reload } = useAdminResource(fetchDashboard)
+
+  const stats = useMemo(() => (data ? toDashboardStats(data) : []), [data])
+
+  // The login payload names the signed-in admin, so the greeting says who is
+  // actually reading the screen. An account the API sends no name for is
+  // greeted without one rather than with someone else's.
+  const name = readDisplayName(readSession())
+
   return (
     <div className="flex flex-col gap-[24px]">
       <div className="flex flex-wrap items-start justify-between gap-[16px]">
         <div>
           <h1 className="text-[32px] leading-[44px] font-bold text-text-500">
-            مرحبًا، احمد حمدي
+            {name ? `مرحبًا، ${name}` : 'مرحبًا بك'}
           </h1>
           <p className="mt-[4px] text-[16px] leading-[24px] text-text-300">
             إليك ملخص أداء منصة عمّرها اليوم.
@@ -43,7 +57,16 @@ function Dashboard() {
         </p>
       </div>
 
-      <DashboardStats stats={DASHBOARD_STATS} />
+      {loading || error ? (
+        <AdminDataState
+          loading={loading}
+          error={error}
+          onRetry={reload}
+          label="جاري تحميل مؤشرات المنصة..."
+        />
+      ) : (
+        <DashboardStats stats={stats} />
+      )}
 
       {/* The notes come first in the markup so RTL draws them against the right
           edge, with the chart taking the wider half beside them. */}

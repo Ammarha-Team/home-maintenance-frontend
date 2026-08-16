@@ -34,6 +34,11 @@ const TONES = {
  *
  * Under RTL the first tile in the list is drawn furthest right, which is the
  * order the frame reads them in, so the array needs no reversing here.
+ *
+ * The change chip is drawn only for a tile that carries one. The dashboard
+ * endpoint reports the current figures and nothing about the period before
+ * them, so a tile fed from the API has no movement to show and says nothing
+ * rather than showing one nobody measured.
  */
 function DashboardStats({ stats }) {
   return (
@@ -55,17 +60,20 @@ function DashboardStats({ stats }) {
                 <Icon size={20} aria-hidden="true" />
               </span>
 
-              <span
-                className={`flex items-center gap-[4px] rounded-[8px] px-[8px] py-[4px] text-[12px] font-bold ${
-                  rising ? 'bg-success-100 text-success-800' : 'bg-error-50 text-error-500'
-                }`}
-              >
-                {/* A latin figure drifts to the wrong end of an RTL line unless
-                    it is marked as the LTR run it is. The arrow follows it so
-                    it lands on the left of the chip, as the frame draws it. */}
-                <span dir="ltr">{stat.delta}</span>
-                <Arrow size={14} aria-hidden="true" />
-              </span>
+              {stat.delta ? (
+                <span
+                  className={`flex items-center gap-[4px] rounded-[8px] px-[8px] py-[4px] text-[12px] font-bold ${
+                    rising ? 'bg-success-100 text-success-800' : 'bg-error-50 text-error-500'
+                  }`}
+                >
+                  {/* A latin figure drifts to the wrong end of an RTL line
+                      unless it is marked as the LTR run it is. The arrow
+                      follows it so it lands on the left of the chip, as the
+                      frame draws it. */}
+                  <span dir="ltr">{stat.delta}</span>
+                  <Arrow size={14} aria-hidden="true" />
+                </span>
+              ) : null}
             </div>
 
             <p className="mt-[16px] text-[15px] leading-[22px] text-text-300">{stat.label}</p>
