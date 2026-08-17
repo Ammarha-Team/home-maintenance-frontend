@@ -50,16 +50,16 @@ const withId = (set, id) => {
 }
 
 /**
- * The customer's side of the live chat.
+ * One side of the live chat — whichever side is signed in.
  *
- * The screen keeps no chat state of its own — it renders what this returns and
- * calls back in. The perspective is decided in exactly one place:
- * `currentUserId` is the signed-in account, and every "is this mine?" question
- * is answered by comparing a message's `senderId` against it. Nothing here knows
- * about customers or technicians as such, which is why it cannot quietly show
- * one of them the other's view.
+ * The screen keeps no chat state of its own: it renders what this returns and
+ * calls back in. The perspective is decided in exactly one place,
+ * `currentUserId`, and every "is this mine?" question is answered by comparing
+ * a message's `senderId` against it. Nothing here knows about customers or
+ * technicians as such, which is why both inboxes share it and neither can
+ * quietly acquire the other's view.
  */
-export function useCustomerChat() {
+export function useChatThread() {
   const currentUserId = useMemo(() => readSession()?.user?.id ?? null, [])
 
   const [conversations, setConversations] = useState([])
@@ -404,4 +404,4 @@ export function useCustomerChat() {
   }
 }
 
-export default useCustomerChat
+export default useChatThread

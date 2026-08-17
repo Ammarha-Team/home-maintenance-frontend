@@ -15,7 +15,7 @@ import {
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
 import { useToast } from "../../../shared/toast/toastContext.js";
-import useCustomerChat from "../hooks/useCustomerChat.js";
+import useChatThread from "../hooks/useChatThread.js";
 import { CONNECTION_STATES } from "../services/chatHub.js";
 
 // The API sends no picture with a conversation, so the portrait the design
@@ -49,7 +49,7 @@ export default function Chat() {
     selectConversation,
     sendMessage,
     notifyTyping,
-  } = useCustomerChat();
+  } = useChatThread();
 
   const endOfMessages = useRef(null);
 
