@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Phone,
   MoreVertical,
@@ -10,132 +9,92 @@ import {
   CheckCheck,
   Search,
   SquarePen,
+  LoaderCircle,
 } from "lucide-react";
 
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
+import { useToast } from "../../../shared/toast/toastContext.js";
+import useCustomerChat from "../hooks/useCustomerChat.js";
+import { CONNECTION_STATES } from "../services/chatHub.js";
+
+// The API sends no picture with a conversation, so the portrait the design
+// already ships stands in for everyone.
+const DEFAULT_AVATAR = "/technician_avatar.jpg";
+
+// What the header says under the name. A conversation carries no trade or title
+// — only who the other party is — so the slot holds the one thing about them the
+// hub does report.
+const presenceLabel = (online) => (online ? "متصل الآن" : "غير متصل");
 
 export default function Chat() {
-  const [selectedChatId, setSelectedChatId] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [inputText, setInputText] = useState("");
+  const [sending, setSending] = useState(false);
 
-  // قائمة المحادثات الجانبية
-  const [conversations, setConversations] = useState([
-    {
-      id: 1,
-      name: "أحمد العتيبي",
-      title: "أخصائي تمديدات كهربائية وأنابيب ذكية",
-      avatar: "/technician_avatar.jpg",
-      lastMessage: "علي الطريق السريع 5 دقايق هكون...",
-      time: "الآن",
-      isOnline: true,
-      unreadCount: 0,
-    },
-    {
-      id: 2,
-      name: "خالد محمد",
-      title: "أخصائي صيانة تكييف",
-      avatar: "/technician_avatar.jpg",
-      lastMessage: "شكراً لك، تم إنجاز العمل بنجاح",
-      time: "أمس",
-      isOnline: false,
-      unreadCount: 0,
-    },
-    {
-      id: 3,
-      name: "فريق الدعم",
-      title: "خدمة العملاء",
-      avatar: "/technician_avatar.jpg",
-      lastMessage: "تم تحديث حالة طلبك رقم #1024",
-      time: "12 أكتوبر",
-      isOnline: false,
-      unreadCount: 0,
-    },
-  ]);
+  const { showToast } = useToast();
 
-  // قائمة الرسائل مقسمة بحسب ID كل محادثة
-  const [allMessages, setAllMessages] = useState({
-    // الشاشة شاشة العميل: هو من يسأل عن موعد الوصول، والفني هو من يرد بأنه في
-    // الطريق — وهي آخر رسالة تظهر في قائمة المحادثات باسم الفني.
-    1: [
-      {
-        id: 1,
-        sender: "user",
-        text: "انت فين ؟؟",
-        time: "09:42 ص",
-      },
-      {
-        id: 2,
-        sender: "technician",
-        text: "علي الطريق السريع 5 دقايق هكون عند حضرتك",
-        time: "09:42 ص",
-      },
-    ],
-    2: [
-      {
-        id: 1,
-        sender: "technician",
-        text: "شكراً لك، تم إنجاز العمل بنجاح",
-        time: "أمس",
-      },
-    ],
-    3: [
-      {
-        id: 1,
-        sender: "technician",
-        text: "تم تحديث حالة طلبك رقم #1024",
-        time: "12 أكتوبر",
-      },
-    ],
-  });
+  const {
+    conversations,
+    activeConversation,
+    activeId,
+    messages,
+    loading,
+    error,
+    sendError,
+    connectionState,
+    isPartnerOnline,
+    isPartnerTyping,
+    isOnline,
+    selectConversation,
+    sendMessage,
+    notifyTyping,
+  } = useCustomerChat();
 
-  // المحادثة النشطة حالياً
-  const activeChat = conversations.find((c) => c.id === selectedChatId);
+  const endOfMessages = useRef(null);
 
-  // الرسائل الخاصة بالمحادثة النشطة فقط (لو مفيش بيرجع مصفوفة فاضية)
-  const activeMessages = allMessages[selectedChatId] || [];
+  // The newest message is the one worth seeing. Anything that lengthens the
+  // thread — sending, receiving, opening another conversation — brings the
+  // bottom back into view.
+  useEffect(() => {
+    endOfMessages.current?.scrollIntoView({ block: "end" });
+  }, [messages.length, activeId, isPartnerTyping]);
 
-  const handleSendMessage = (e) => {
+  // A refused send is reported once, where the eye already is.
+  useEffect(() => {
+    if (sendError) {
+      showToast({
+        message: sendError.message || "تعذر إرسال الرسالة. حاول مرة أخرى.",
+        variant: "error",
+      });
+    }
+  }, [sendError, showToast]);
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || sending) return;
 
-    const currentTime = new Date().toLocaleTimeString("ar-EG", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    setSending(true);
+    const sent = await sendMessage(inputText);
+    setSending(false);
 
-    const newMessage = {
-      id: Date.now(),
-      sender: "user",
-      text: inputText,
-      time: currentTime,
-    };
+    // The box is only cleared once the server has the message. A failed send
+    // leaves the words where they were, ready to try again.
+    if (sent) setInputText("");
+  };
 
-    // 1. إضافة الرسالة للمحادثة المحددة فقط
-    setAllMessages((prev) => ({
-      ...prev,
-      [selectedChatId]: [...(prev[selectedChatId] || []), newMessage],
-    }));
-
-    // 2. تحديث أحدث رسالة (lastMessage) في القائمة الجانبية للشات الحالي فقط
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === selectedChatId
-          ? { ...c, lastMessage: inputText, time: "الآن" }
-          : c
-      )
-    );
-
-    setInputText("");
+  const handleInputChange = (e) => {
+    setInputText(e.target.value);
+    notifyTyping();
   };
 
   const filteredConversations = conversations.filter(
-    (c) =>
-      c.name.includes(searchQuery) ||
-      c.lastMessage.includes(searchQuery) ||
-      c.title.includes(searchQuery)
+    (c) => c.name.includes(searchQuery) || c.lastMessage.includes(searchQuery)
   );
+
+  const reconnecting =
+    connectionState === CONNECTION_STATES.reconnecting ||
+    connectionState === CONNECTION_STATES.disconnected;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-cairo" dir="rtl">
@@ -145,7 +104,7 @@ export default function Chat() {
       {/* 2. محتوى المحادثات الرئيسية */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full flex flex-col">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col lg:flex-row min-h-[680px] w-full">
-          
+
           {/* الشريط الجانبي للمحادثات */}
           <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-l border-gray-100 flex flex-col bg-white shrink-0">
             <div className="p-4 sm:p-5 flex items-center justify-between">
@@ -180,13 +139,40 @@ export default function Chat() {
 
             {/* قائمة المحادثات */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
+              {loading ? (
+                <div
+                  role="status"
+                  className="flex items-center justify-center gap-2 p-6 text-xs text-gray-400 font-medium"
+                >
+                  <LoaderCircle size={16} className="animate-spin" />
+                  جاري تحميل المحادثات...
+                </div>
+              ) : null}
+
+              {!loading && error ? (
+                <p
+                  role="alert"
+                  className="p-6 text-center text-xs text-[#e56b6b] font-medium"
+                >
+                  {error.message || "تعذر تحميل المحادثات."}
+                </p>
+              ) : null}
+
+              {!loading && !error && filteredConversations.length === 0 ? (
+                <p className="p-6 text-center text-xs text-gray-400 font-medium">
+                  لا توجد محادثات بعد.
+                </p>
+              ) : null}
+
               {filteredConversations.map((chat) => {
-                const isSelected = chat.id === selectedChatId;
+                const isSelected = chat.id === activeId;
+                const online = isOnline(chat.otherUserId);
+
                 return (
                   <button
                     key={chat.id}
                     type="button"
-                    onClick={() => setSelectedChatId(chat.id)}
+                    onClick={() => selectConversation(chat.id)}
                     className={`w-full p-4 flex items-center gap-3 transition-colors text-right cursor-pointer relative ${
                       isSelected
                         ? "bg-blue-50/40 border-r-4 border-[#2563eb]"
@@ -195,11 +181,11 @@ export default function Chat() {
                   >
                     <div className="relative shrink-0">
                       <img
-                        src={chat.avatar}
+                        src={DEFAULT_AVATAR}
                         alt={chat.name}
                         className="w-12 h-12 rounded-full object-cover border border-gray-100"
                       />
-                      {chat.isOnline && (
+                      {online && (
                         <span className="absolute bottom-0 right-0 bg-[#10b981] w-3.5 h-3.5 rounded-full border-2 border-white"></span>
                       )}
                     </div>
@@ -213,9 +199,19 @@ export default function Chat() {
                           {chat.name}
                         </h3>
                       </div>
-                      <p className="text-xs text-[#2563eb] truncate font-medium dir-rtl">
-                        {chat.lastMessage}
-                      </p>
+
+                      <div className="flex items-center justify-between gap-2">
+                        {/* عدد الرسائل غير المقروءة كما يرسله الخادم */}
+                        {chat.unreadCount > 0 && (
+                          <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-[#2563eb] text-white text-[10px] font-bold flex items-center justify-center">
+                            {chat.unreadCount}
+                          </span>
+                        )}
+
+                        <p className="flex-1 text-xs text-[#2563eb] truncate font-medium dir-rtl">
+                          {chat.lastMessage}
+                        </p>
+                      </div>
                     </div>
                   </button>
                 );
@@ -225,7 +221,7 @@ export default function Chat() {
 
           {/* شباك المحادثة النشطة */}
           <div className="flex-1 flex flex-col bg-white">
-            
+
             {/* الهيدر العلوي */}
             <div className="p-4 sm:px-6 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
               <div className="flex items-center gap-2">
@@ -248,20 +244,24 @@ export default function Chat() {
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <h2 className="font-bold text-gray-900 text-base sm:text-lg">
-                    {activeChat?.name}
+                    {activeConversation?.name}
                   </h2>
                   <p className="text-xs text-gray-400 font-medium">
-                    {activeChat?.title}
+                    {!activeConversation
+                      ? ""
+                      : reconnecting
+                        ? "جاري إعادة الاتصال..."
+                        : presenceLabel(isPartnerOnline)}
                   </p>
                 </div>
 
                 <div className="relative shrink-0">
                   <img
-                    src={activeChat?.avatar || "/technician_avatar.jpg"}
-                    alt={activeChat?.name}
+                    src={DEFAULT_AVATAR}
+                    alt={activeConversation?.name ?? ""}
                     className="w-11 h-11 rounded-full object-cover border border-gray-100"
                   />
-                  {activeChat?.isOnline && (
+                  {isPartnerOnline && (
                     <span className="absolute bottom-0 right-0 bg-[#10b981] w-3.5 h-3.5 rounded-full border-2 border-white flex items-center justify-center">
                       <CheckCheck size={8} className="text-white stroke-[3]" />
                     </span>
@@ -279,10 +279,13 @@ export default function Chat() {
               </div>
 
               <div className="space-y-4 flex flex-col">
-                {activeMessages.map((msg) => {
+                {messages.map((msg) => {
                   // رسائل العميل جهة اليمين، ورسائل الفني جهة اليسار. الصفحة
                   // كلها RTL، فبداية المحور هي اليمين ونهايته اليسار.
-                  const isCustomer = msg.sender === "user";
+                  //
+                  // الجهة تُقرأ من مُرسِل الرسالة مقارنةً بالحساب الحالي، لا من
+                  // نوع الحساب، فلا يمكن أن تظهر شاشة العميل بمنظور الفني.
+                  const isCustomer = msg.mine;
 
                   return (
                     <div
@@ -308,13 +311,27 @@ export default function Chat() {
                         }`}
                       >
                         {isCustomer && (
-                          <CheckCheck size={14} className="text-[#0062e0]" />
+                          <CheckCheck
+                            size={14}
+                            className={
+                              msg.seen ? "text-[#0062e0]" : "text-gray-300"
+                            }
+                          />
                         )}
                         <span>{msg.time}</span>
                       </div>
                     </div>
                   );
                 })}
+
+                {/* مؤشر الكتابة، يظهر ما دام الطرف الآخر يكتب */}
+                {isPartnerTyping && (
+                  <div className="flex flex-col items-end">
+                    <div className="max-w-[60%] px-4 py-3 rounded-2xl bg-gray-200/70 text-gray-500 text-sm font-medium rounded-bl-2xl rounded-tl-xs rounded-tr-2xl rounded-br-2xl">
+                      يكتب الآن...
+                    </div>
+                  </div>
+                )}
 
                 {/* شارة شارك موقعك المباشر */}
                 <div className="flex justify-center my-4">
@@ -323,6 +340,8 @@ export default function Chat() {
                     <span>تمت مشاركة موقعك المباشر للفني</span>
                   </div>
                 </div>
+
+                <div ref={endOfMessages} />
               </div>
             </div>
 
@@ -344,20 +363,25 @@ export default function Chat() {
                   <input
                     type="text"
                     value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    onChange={handleInputChange}
+                    disabled={!activeConversation}
                     placeholder="اكتب رسالة"
                     className="w-full bg-gray-100 text-gray-800 placeholder-gray-400 text-sm rounded-full py-3 pr-5 pl-12 focus:outline-hidden focus:ring-2 focus:ring-[#0062e0]/20 border-none font-medium"
                   />
 
                   <button
                     type="submit"
-                    disabled={!inputText.trim()}
+                    disabled={!inputText.trim() || !activeConversation || sending}
                     className="absolute left-1.5 p-2 bg-[#0062e0] hover:bg-blue-700 disabled:opacity-40 text-white rounded-full transition-all cursor-pointer flex items-center justify-center"
                   >
-                    <Send
-                      size={16}
-                      className="rotate-180 transform -translate-x-0.5"
-                    />
+                    {sending ? (
+                      <LoaderCircle size={16} className="animate-spin" />
+                    ) : (
+                      <Send
+                        size={16}
+                        className="rotate-180 transform -translate-x-0.5"
+                      />
+                    )}
                   </button>
                 </div>
 
