@@ -259,10 +259,16 @@ function AppRoutes() {
           element={<ReviewPage />}
         />
 
-        {/* Chat */}
+        {/* Chat. Guarded because the conversation list, the messages and the
+            hub connection are all read with the signed-in user's token — a
+            visitor without one has nothing to be shown here. */}
         <Route
           path="/chat"
-          element={<Chat />}
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
         />
 
         {/* The customer menu pointed here long before the screen had a path.
