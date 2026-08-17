@@ -162,6 +162,62 @@ body {
   --auth-unit: clamp(2px, calc((100vh - 521px) / 62.875), 8px);
 }
 
+/* The chat shell, shared by both inboxes.
+
+   A conversation has no natural length, so without a ceiling the card grows
+   with the thread: the messages never scroll on their own, the composer is
+   pushed below the fold, and reading anything older means scrolling the whole
+   page past the navbar. Measured on a 962px window before this existed, the
+   card stood at 1515px and the document at 1946px.
+
+   Bounding the card is what makes the panes inside it scroll instead. The
+   subtraction is the chrome above it — the navbar and the page's own padding —
+   so the composer lands just above the fold and the footer stays where it
+   belongs, below the chat rather than competing with it. `dvh` rather than
+   `vh` because a phone's address bar is part of that chrome and changes size
+   as the page moves.
+
+   The floor keeps the thread usable on a short window (the page may scroll
+   then, which is the right trade); the ceiling stops a very tall monitor from
+   stretching one conversation over a metre of glass. */
+.chat-shell {
+  height: calc(100dvh - 9.5rem);
+  min-height: 32rem;
+  max-height: 62rem;
+}
+
+/* The panes that scroll inside that shell.
+
+   `overscroll-behavior` is the important half: without it, reaching the top of
+   a thread hands the gesture to the document and the whole page lurches — the
+   exact thing the shell above exists to prevent. The rest is a quieter
+   scrollbar, drawn in the line colour so it reads as part of the panel, and
+   picking up contrast only while the pointer is in the pane it belongs to. */
+.chat-scroll {
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+.chat-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-line);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 9999px;
+}
+
+.chat-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-text-200);
+}
+
 /* Sign up role switch (customer <-> technician). The panel stays mounted, so
    only the parts that actually differ move: the fields fade up, the
    illustration cross-fades, and the segmented control slides its indicator

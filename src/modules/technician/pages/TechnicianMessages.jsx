@@ -167,10 +167,13 @@ function TechnicianMessages() {
     notifyTyping,
   } = useChatThread()
 
-  const endOfThread = useRef(null)
+  const thread = useRef(null)
 
+  // The pane is scrolled directly rather than through `scrollIntoView`, which
+  // walks every scrollable ancestor and would take the page with it.
   useEffect(() => {
-    endOfThread.current?.scrollIntoView({ block: 'end' })
+    const pane = thread.current
+    if (pane) pane.scrollTop = pane.scrollHeight
   }, [messages.length, activeId, isPartnerTyping])
 
   useEffect(() => {
@@ -251,10 +254,16 @@ function TechnicianMessages() {
   return (
     <TechnicianLayout>
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-[16px] px-[24px] py-[24px] lg:px-[80px]">
-        <div className="flex flex-col overflow-hidden rounded-[12px] border border-line bg-white lg:h-[944px] lg:flex-row">
+        {/* The frame draws this 944 tall, which is taller than most windows and
+            left the page scrolling to reach the composer. The shared shell
+            bounds it to what the window actually has, so the panes inside
+            scroll instead — the same behaviour as the customer's inbox. */}
+        <div className="chat-shell flex flex-col overflow-hidden rounded-[12px] border border-line bg-white lg:flex-row">
           {/* The list first, so it lands on the right. */}
-          <aside className="flex shrink-0 flex-col border-line lg:w-[320px] lg:border-l">
-            <div className="flex flex-col gap-[16px] border-b border-line px-[24px] py-[24px]">
+          {/* Stacked below `lg`, the list takes a share of the card rather than
+              all of it, so the open thread is still on screen underneath. */}
+          <aside className="flex max-h-[38%] min-h-0 shrink-0 flex-col border-line lg:max-h-none lg:w-[320px] lg:border-l">
+            <div className="flex shrink-0 flex-col gap-[16px] border-b border-line px-[24px] py-[24px]">
               {/* Heading right, compose left. */}
               <div className="flex items-center justify-between gap-[16px]">
                 <h1 className="text-[20px] leading-[1.5] font-bold text-text-500">
@@ -314,7 +323,7 @@ function TechnicianMessages() {
               </p>
             ) : null}
 
-            <ul className="flex flex-col overflow-y-auto">
+            <ul className="chat-scroll flex min-h-0 flex-1 flex-col overflow-y-auto">
               {rows.map((entry) => (
                 <ConversationRow
                   key={entry.id}
@@ -326,9 +335,10 @@ function TechnicianMessages() {
             </ul>
           </aside>
 
-          <section className="flex min-w-0 flex-1 flex-col">
-            {/* Partner right, the row of actions left. */}
-            <header className="flex items-center justify-between gap-[16px] border-b border-line px-[24px] py-[12px]">
+          <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+            {/* Partner right, the row of actions left. Pinned by not scrolling:
+                it is a sibling of the thread, not a child of it. */}
+            <header className="flex shrink-0 items-center justify-between gap-[16px] border-b border-line px-[24px] py-[12px]">
               <div className="flex min-w-0 items-center gap-[12px]">
                 <span
                   aria-hidden="true"
@@ -374,7 +384,10 @@ function TechnicianMessages() {
               </div>
             </header>
 
-            <ul className="flex min-h-[320px] flex-1 flex-col gap-[24px] overflow-y-auto px-[24px] py-[24px]">
+            <ul
+              ref={thread}
+              className="chat-scroll flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[24px] py-[24px]"
+            >
               {entries.map((entry) => (
                 <ThreadEntry key={entry.id} entry={entry} />
               ))}
@@ -388,13 +401,12 @@ function TechnicianMessages() {
                 </li>
               ) : null}
 
-              <li ref={endOfThread} aria-hidden="true" />
             </ul>
 
             {/* Attach right, mic left, the field between them. */}
             <form
               onSubmit={handleSend}
-              className="flex items-center gap-[24px] border-t border-line px-[24px] py-[24px]"
+              className="flex shrink-0 items-center gap-[24px] border-t border-line px-[24px] py-[24px]"
             >
               <button
                 type="button"
