@@ -26,6 +26,18 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_API_URL,
           changeOrigin: true,
         },
+
+        // The chat hub, for the same reason and with one addition: `ws` lets
+        // the proxy carry the WebSocket upgrade through. Without it SignalR
+        // still connects, but only by falling back to long polling.
+        //
+        // The path is the one the API actually serves. The integration document
+        // names `/hubs/chat`, which answers 404 on the deployed backend.
+        "/chatHub": {
+          target: env.VITE_API_URL,
+          changeOrigin: true,
+          ws: true,
+        },
       },
     },
   };
