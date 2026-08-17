@@ -261,94 +261,9 @@ export const earningsFor = (amount) => {
   return { total: amount, commission, net: amount - commission }
 }
 
-// The inbox (Figma node 22:3776).
-//
-// `online` drives the dot on the avatar and `unread` the highlight on the row.
-export const CONVERSATIONS = [
-  {
-    id: 'conv-1',
-    name: 'أحمد العتيبي',
-    // The frame subtitles this with a trade, which is what a customer sees when
-    // they open a technician. In the technician's own inbox the person opposite
-    // is the customer, so the job stands in — it is what tells two threads apart
-    // here.
-    subtitle: 'تسريب مفاجئ في المطبخ',
-    preview: 'على الطريق السريع 5 دقايق هكون...',
-    stamp: 'الآن',
-    online: true,
-    unread: true,
-    orderId: 'ord-45821',
-  },
-  {
-    id: 'conv-2',
-    name: 'خالد محمد',
-    subtitle: 'تغيير مفاتيح الإنارة',
-    preview: 'شكراً لك، تم إنجاز العمل بنجاح',
-    stamp: 'أمس',
-    online: false,
-    unread: false,
-    orderId: 'ord-45822',
-  },
-  {
-    id: 'conv-3',
-    name: 'فريق الدعم',
-    subtitle: 'الدعم الفني',
-    preview: 'تم تحديث حالة طلب رقم #1024',
-    stamp: '١٢ أكتوبر',
-    online: false,
-    unread: false,
-    orderId: null,
-  },
-]
-
-// One thread per conversation. `from: 'me'` is the technician — the blue bubbles
-// in the frame — and 'them' the customer.
-export const THREADS = {
-  'conv-1': [
-    { id: 'm1', kind: 'day', text: 'اليوم' },
-    { id: 'm2', kind: 'text', from: 'them', text: 'انت فين ؟؟', time: '09:41 ص' },
-    {
-      id: 'm3',
-      kind: 'text',
-      from: 'me',
-      text: 'علي الطريق السريع 5 دقايق هكون عند حضرتك',
-    },
-    {
-      id: 'm4',
-      kind: 'text',
-      from: 'me',
-      text: 'تم الوصول للموقع',
-      time: '09:42 ص',
-      read: true,
-    },
-    { id: 'm5', kind: 'location', text: 'تمت مشاركة الموقع المباشر من قبل الفني' },
-  ],
-  'conv-2': [
-    { id: 'm1', kind: 'day', text: 'أمس' },
-    {
-      id: 'm2',
-      kind: 'text',
-      from: 'them',
-      text: 'شكراً لك، تم إنجاز العمل بنجاح',
-      time: '05:12 م',
-    },
-  ],
-  'conv-3': [
-    { id: 'm1', kind: 'day', text: '١٢ أكتوبر' },
-    {
-      id: 'm2',
-      kind: 'text',
-      from: 'them',
-      text: 'تم تحديث حالة طلب رقم #1024',
-      time: '11:03 ص',
-    },
-  ],
-}
-
-/** The conversation behind a selected id, falling back to the first thread. */
-export const findConversation = (conversationId) =>
-  CONVERSATIONS.find((conversation) => conversation.id === conversationId) ??
-  CONVERSATIONS[0]
+// The inbox is no longer described here. It reads the live conversations and
+// messages from the chat module — the same hub and the same two endpoints the
+// customer's inbox uses — so there is nothing left for this file to invent.
 
 // The wallet and the settlement that follows it (Figma nodes 22:2926, 22:3064,
 // 22:3169, 22:3249 and 22:3345).

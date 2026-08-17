@@ -15,7 +15,7 @@ import {
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
 import { useToast } from "../../../shared/toast/toastContext.js";
-import useCustomerChat from "../hooks/useCustomerChat.js";
+import useChatThread from "../hooks/useChatThread.js";
 import { CONNECTION_STATES } from "../services/chatHub.js";
 
 // The API sends no picture with a conversation, so the portrait the design
@@ -49,15 +49,19 @@ export default function Chat() {
     selectConversation,
     sendMessage,
     notifyTyping,
-  } = useCustomerChat();
+  } = useChatThread();
 
-  const endOfMessages = useRef(null);
+  const thread = useRef(null);
 
   // The newest message is the one worth seeing. Anything that lengthens the
   // thread — sending, receiving, opening another conversation — brings the
   // bottom back into view.
+  //
+  // The pane is scrolled directly rather than through `scrollIntoView`, which
+  // walks every scrollable ancestor and would take the page with it.
   useEffect(() => {
-    endOfMessages.current?.scrollIntoView({ block: "end" });
+    const pane = thread.current;
+    if (pane) pane.scrollTop = pane.scrollHeight;
   }, [messages.length, activeId, isPartnerTyping]);
 
   // A refused send is reported once, where the eye already is.
@@ -103,11 +107,15 @@ export default function Chat() {
 
       {/* 2. محتوى المحادثات الرئيسية */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full flex flex-col">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col lg:flex-row min-h-[680px] w-full">
+        {/* The card is bounded rather than left to grow with the thread — see
+            `.chat-shell`. Everything below scrolls inside it. */}
+        <div className="chat-shell bg-white rounded-2xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col lg:flex-row w-full">
 
           {/* الشريط الجانبي للمحادثات */}
-          <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-l border-gray-100 flex flex-col bg-white shrink-0">
-            <div className="p-4 sm:p-5 flex items-center justify-between">
+          {/* Stacked below `lg`, the list takes a share of the card rather than
+              all of it, so the open thread is still on screen underneath. */}
+          <div className="w-full lg:w-80 max-h-[38%] lg:max-h-none min-h-0 border-b lg:border-b-0 lg:border-l border-gray-100 flex flex-col bg-white shrink-0">
+            <div className="shrink-0 p-4 sm:p-5 flex items-center justify-between">
               <button
                 type="button"
                 className="text-gray-500 hover:text-[#2563eb] transition-colors p-1"
@@ -121,7 +129,7 @@ export default function Chat() {
             </div>
 
             {/* حقل البحث */}
-            <div className="px-4 pb-3">
+            <div className="shrink-0 px-4 pb-3">
               <div className="relative flex items-center">
                 <input
                   type="text"
@@ -138,7 +146,7 @@ export default function Chat() {
             </div>
 
             {/* قائمة المحادثات */}
-            <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
+            <div className="chat-scroll min-h-0 flex-1 overflow-y-auto divide-y divide-gray-50">
               {loading ? (
                 <div
                   role="status"
@@ -220,10 +228,12 @@ export default function Chat() {
           </div>
 
           {/* شباك المحادثة النشطة */}
-          <div className="flex-1 flex flex-col bg-white">
+          <div className="flex-1 min-w-0 min-h-0 flex flex-col bg-white">
 
             {/* الهيدر العلوي */}
-            <div className="p-4 sm:px-6 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+            {/* Pinned by not scrolling rather than by `sticky`: it is a sibling
+                of the scrolling thread, not a child of it. */}
+            <div className="shrink-0 p-4 sm:px-6 border-b border-gray-100 flex items-center justify-between bg-white z-10">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -271,7 +281,10 @@ export default function Chat() {
             </div>
 
             {/* منطقة الرسائل */}
-            <div className="flex-1 bg-[#f8fafc]/50 p-4 sm:p-6 overflow-y-auto space-y-6 flex flex-col justify-start">
+            <div
+              ref={thread}
+              className="chat-scroll min-h-0 flex-1 bg-[#f8fafc]/50 p-4 sm:p-6 overflow-y-auto space-y-6 flex flex-col justify-start"
+            >
               <div className="flex justify-center">
                 <span className="bg-blue-50/70 text-gray-500 text-xs px-4 py-1.5 rounded-full font-medium">
                   اليوم
@@ -341,12 +354,11 @@ export default function Chat() {
                   </div>
                 </div>
 
-                <div ref={endOfMessages} />
               </div>
             </div>
 
             {/* حقل إدخال الرسائل */}
-            <div className="p-4 bg-white border-t border-gray-100">
+            <div className="shrink-0 p-4 bg-white border-t border-gray-100">
               <form
                 onSubmit={handleSendMessage}
                 className="flex items-center gap-3"

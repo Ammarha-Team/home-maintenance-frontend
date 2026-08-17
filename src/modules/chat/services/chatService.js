@@ -70,6 +70,25 @@ export const formatConversationTime = (value) => {
 }
 
 /**
+ * The heading that separates one day of a thread from the next.
+ *
+ * The technician's inbox draws these between messages. They are derived from
+ * the timestamps the messages already carry rather than stored anywhere, so a
+ * thread read at midnight relabels itself without the server being asked.
+ */
+export const formatDayLabel = (value) => {
+  const date = readInstant(value)
+  if (!date) return ''
+
+  const days = Math.round((startOfDay(new Date()) - startOfDay(date)) / DAY)
+
+  if (days <= 0) return 'اليوم'
+  if (days === 1) return 'أمس'
+
+  return date.toLocaleDateString('ar-EG', DATE_FORMAT)
+}
+
+/**
  * A conversation as the sidebar draws it.
  *
  * `otherUserName` is whoever the signed-in user is talking to, so for a customer
