@@ -1,7 +1,16 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 
-export default function ExperienceInformation() {
+// Only two of this card's fields exist on the API: `profession` and
+// `yearsOfExperience`, and both are read-only —
+// `UpdateTechnicianProfileCommand` accepts fullName, phoneNumber, location and
+// bio, nothing else. So they are shown as the server has them rather than as
+// inputs that would silently discard an edit.
+//
+// The level, skills and services below have no counterpart in the API at all.
+// They stay local, which is what they already were: this card has never had a
+// save button.
+export default function ExperienceInformation({ profile }) {
   const [skills, setSkills] = useState([
     "تمديدات ذكية",
     "لوحات توزيع",
@@ -38,18 +47,16 @@ export default function ExperienceInformation() {
           التخصص الرئيسي
         </label>
 
-        <select
+        <input
+          type="text"
+          value={profile.profession ?? "غير محدد"}
+          readOnly
           className="
-            mb-5 w-full rounded-xl border border-gray-200
-            bg-white px-4 py-3 text-right text-sm text-gray-700
-            outline-none transition
-            focus:border-blue-500
+            mb-5 w-full cursor-not-allowed rounded-xl border border-gray-200
+            bg-gray-50 px-4 py-3 text-right text-sm text-gray-500
+            outline-none
           "
-        >
-          <option>سباكة</option>
-          <option>كهرباء</option>
-          <option>تكييف</option>
-        </select>
+        />
 
         {/* Experience + Level */}
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -61,12 +68,12 @@ export default function ExperienceInformation() {
 
             <input
               type="number"
-              defaultValue="8"
+              value={profile.yearsOfExperience ?? ""}
+              readOnly
               className="
-                w-full rounded-xl border border-gray-200
-                bg-white px-4 py-3 text-right text-sm
-                outline-none transition
-                focus:border-blue-500
+                w-full cursor-not-allowed rounded-xl border border-gray-200
+                bg-gray-50 px-4 py-3 text-right text-sm text-gray-500
+                outline-none
               "
             />
           </div>
