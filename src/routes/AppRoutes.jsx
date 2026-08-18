@@ -99,7 +99,11 @@ function AppRoutes() {
         {/* Technician Profile */}
         <Route
           path="/technician/profile"
-          element={<TechnicianProfile />}
+          element={
+            <TechnicianRoute>
+              <TechnicianProfile />
+            </TechnicianRoute>
+          }
         />
 
         {/* Authentication */}
