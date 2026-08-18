@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { ACCEPTED_IMAGE_ATTR } from "../services/technicianProfileService";
 import {
   Camera,
   Star,
@@ -37,9 +38,9 @@ export default function ProfileHeader({ profile, avatar, onChangeAvatar }) {
       <div className="order-1 flex min-h-[128px] flex-1 items-center rounded-xl border border-[#E6EAF0] bg-white px-6 py-4 shadow-sm">
         {/* الصورة - أقصى اليمين */}
         <div className="relative shrink-0">
-          {profile.profilePictureUrl ? (
+          {avatar.preview || profile.profilePictureUrl ? (
             <img
-              src={profile.profilePictureUrl}
+              src={avatar.preview ?? profile.profilePictureUrl}
               alt="صورة الفني"
               className="h-[82px] w-[82px] rounded-full object-cover"
             />
@@ -77,10 +78,12 @@ export default function ProfileHeader({ profile, avatar, onChangeAvatar }) {
             <Camera size={14} strokeWidth={2.5} />
           </button>
 
+          {/* The dialog itself. Hidden, and opened by the camera button above
+              — a bare file input cannot be styled into the Figma control. */}
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept={ACCEPTED_IMAGE_ATTR}
             className="hidden"
             onChange={handleImageChange}
           />

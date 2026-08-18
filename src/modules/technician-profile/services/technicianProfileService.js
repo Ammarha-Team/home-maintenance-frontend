@@ -29,15 +29,32 @@ const PICTURE_PATH = '/api/Accounts/upload-profile-picture'
 // the server may then refuse.
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+// What the file dialog itself will offer.
+//
+// The extensions ride along with the MIME types because the two are not
+// interchangeable in a native picker: some systems match a dialog filter by
+// extension and would otherwise grey out files the app is happy to take.
+export const ACCEPTED_IMAGE_ATTR = `${ACCEPTED_TYPES.join(',')},.jpg,.jpeg,.png,.webp`
+
 /**
  * Guards an image before it is sent.
+ *
+ * The dialog's `accept` filter is a convenience, not a control — a file can
+ * still arrive past it by drag and drop, or by a picker that lets the user
+ * switch to "all files" — so the type is checked here as well.
  *
  * @param {File} file
  * @returns {string | null} an Arabic message, or null when the file is fine
  */
 export const validateImageFile = (file) => {
   if (!file) return 'اختر صورة أولًا.'
-  if (!file.type.startsWith('image/')) return 'الملف المختار ليس صورة.'
+
+  if (!ACCEPTED_TYPES.includes(file.type)) {
+    return 'صيغة غير مدعومة. اختر صورة بصيغة JPG أو PNG أو WebP.'
+  }
+
   if (file.size > MAX_IMAGE_BYTES) return 'حجم الصورة يتجاوز 5 ميجابايت.'
 
   return null

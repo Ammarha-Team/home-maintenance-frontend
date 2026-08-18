@@ -15,7 +15,11 @@ import {
 // one card. A card that saves does not have to tell the others; they read the
 // same object.
 
-const IDLE_UPLOAD = { busy: false, percent: null, error: null }
+// `preview` and `pending` carry object URLs for the files being sent, so the
+// user sees what they picked straight away instead of waiting on a round trip
+// to find out the click registered at all.
+const IDLE_UPLOAD = { busy: false, percent: null, error: null, preview: null }
+const IDLE_PORTFOLIO = { busy: false, percent: null, error: null, pending: [] }
 
 export function useTechnicianProfile() {
   const [profile, setProfile] = useState(null)
@@ -27,7 +31,7 @@ export function useTechnicianProfile() {
   const [fieldErrors, setFieldErrors] = useState({})
 
   const [avatar, setAvatar] = useState(IDLE_UPLOAD)
-  const [portfolio, setPortfolio] = useState(IDLE_UPLOAD)
+  const [portfolio, setPortfolio] = useState(IDLE_PORTFOLIO)
 
   // A reload that lands after the component is gone would set state on nothing.
   const alive = useRef(true)
@@ -103,15 +107,27 @@ export function useTechnicianProfile() {
     const invalid = validateImageFile(file)
 
     if (invalid) {
-      setAvatar({ busy: false, percent: null, error: invalid })
+      setAvatar({ ...IDLE_UPLOAD, error: invalid })
       return false
     }
 
-    setAvatar({ busy: true, percent: 0, error: null })
+    // Shown immediately, so the new picture is on screen while it uploads.
+    const preview = URL.createObjectURL(file)
+    setAvatar({ busy: true, percent: 0, error: null, preview })
 
     try {
       const url = await uploadProfilePicture(file, (percent) => {
         if (alive.current) setAvatar((current) => ({ ...current, percent }))
+      })
+
+      // The hosted copy is fetched before the preview is dropped, so the swap
+      // is invisible. Without this the picture blanks for as long as the CDN
+      // takes to answer, right after the user was told it worked.
+      await new Promise((resolve) => {
+        const image = new Image()
+        image.onload = resolve
+        image.onerror = resolve
+        image.src = url
       })
 
       if (alive.current) {
@@ -121,11 +137,15 @@ export function useTechnicianProfile() {
 
       return true
     } catch (failure) {
+      // The preview goes with it: leaving the picture on screen would say the
+      // upload worked.
       if (alive.current) {
-        setAvatar({ busy: false, percent: null, error: failure.message })
+        setAvatar({ ...IDLE_UPLOAD, error: failure.message })
       }
 
       return false
+    } finally {
+      URL.revokeObjectURL(preview)
     }
   }, [])
 
@@ -144,18 +164,36 @@ export function useTechnicianProfile() {
     const chosen = Array.from(files ?? [])
     if (chosen.length === 0) return { added: 0, failed: 0 }
 
-    setPortfolio({ busy: true, percent: 0, error: null })
+    // Thumbnails for the whole selection, on screen before the first request
+    // leaves. `key` is what ties a placeholder to the file it stands for, so
+    // each one can be removed as its upload settles.
+    const previews = chosen.map((file, index) => ({
+      key: `${Date.now()}-${index}`,
+      url: URL.createObjectURL(file),
+      name: file.name,
+    }))
+
+    const drop = (key) =>
+      setPortfolio((current) => ({
+        ...current,
+        pending: current.pending.filter((item) => item.key !== key),
+      }))
+
+    setPortfolio({ busy: true, percent: 0, error: null, pending: previews })
 
     let added = 0
     let failed = 0
     let lastError = null
 
     for (const [index, file] of chosen.entries()) {
+      const { key, url: previewUrl } = previews[index]
       const invalid = validateImageFile(file)
 
       if (invalid) {
         failed += 1
         lastError = invalid
+        drop(key)
+        URL.revokeObjectURL(previewUrl)
         continue
       }
 
@@ -183,15 +221,16 @@ export function useTechnicianProfile() {
       } catch (failure) {
         failed += 1
         lastError = failure.message
+      } finally {
+        // The placeholder gives way to the real tile on success, and simply
+        // disappears on failure — either way it must not outlive the request.
+        drop(key)
+        URL.revokeObjectURL(previewUrl)
       }
     }
 
     if (alive.current) {
-      setPortfolio({
-        busy: false,
-        percent: null,
-        error: failed ? lastError : null,
-      })
+      setPortfolio({ ...IDLE_PORTFOLIO, error: failed ? lastError : null })
     }
 
     return { added, failed }

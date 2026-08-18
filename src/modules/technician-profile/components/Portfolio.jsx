@@ -1,6 +1,7 @@
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 
 import { useToast } from "../../../shared/toast/toastContext.js";
+import { ACCEPTED_IMAGE_ATTR } from "../services/technicianProfileService";
 
 export default function Portfolio({ items, upload, onAddImages }) {
   const { showToast } = useToast();
@@ -23,6 +24,11 @@ export default function Portfolio({ items, upload, onAddImages }) {
           ? `تم رفع ${added} من ${added + failed} صور.`
           : `تم رفع ${added} ${added === 1 ? "صورة" : "صور"} بنجاح.`,
         variant: failed ? "error" : "success",
+      });
+    } else {
+      showToast({
+        message: `تعذر رفع ${failed === 1 ? "الصورة" : "الصور"}.`,
+        variant: "error",
       });
     }
   };
@@ -112,6 +118,30 @@ export default function Portfolio({ items, upload, onAddImages }) {
           </div>
         ))}
 
+        {/* الصور قيد الرفع — معاينة محلية حتى يرد الخادم */}
+        {upload.pending.map((item) => (
+          <div
+            key={item.key}
+            className="relative h-[210px] overflow-hidden rounded-xl"
+          >
+            <img
+              src={item.url}
+              alt={item.name}
+              className="h-full w-full object-cover opacity-60"
+            />
+
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/35 text-white">
+              <Loader2 size={22} className="animate-spin" />
+
+              {upload.percent !== null && (
+                <span className="text-[11px] font-semibold">
+                  {upload.percent}%
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+
         {/* Upload */}
         <label
           className={`
@@ -160,9 +190,10 @@ export default function Portfolio({ items, upload, onAddImages }) {
               : "أو انقر للاستعراض (Max 5MB)"}
           </span>
 
+          {/* Nested in the label, so the whole dropzone opens the dialog. */}
           <input
             type="file"
-            accept="image/*"
+            accept={ACCEPTED_IMAGE_ATTR}
             multiple
             disabled={upload.busy}
             onChange={handleSelect}
