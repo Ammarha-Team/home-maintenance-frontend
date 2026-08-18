@@ -1,12 +1,86 @@
+import { useEffect, useState } from "react";
 import {
   User,
   Mail,
   BriefcaseBusiness,
   Images,
   FileCheck2,
+  Loader2,
 } from "lucide-react";
 
-export default function PersonalInformation() {
+import { useToast } from "../../../shared/toast/toastContext.js";
+
+// The three fields on this card that the API will accept.
+//
+// `email` is shown but not editable — `UpdateTechnicianProfileCommand` has no
+// address field, so an input the user could type into would be a promise the
+// endpoint cannot keep.
+const FIELDS = ["fullName", "phoneNumber", "bio"];
+
+export default function PersonalInformation({
+  profile,
+  saving,
+  saveError,
+  fieldErrors,
+  onSave,
+}) {
+  const { showToast } = useToast();
+
+  const [form, setForm] = useState(() => ({
+    fullName: profile.fullName,
+    phoneNumber: profile.phoneNumber,
+    bio: profile.bio,
+  }));
+
+  // Re-seeded when the saved record changes underneath — after a reload, or
+  // once a save confirms. Keyed on the saved values only, so a keystroke never
+  // triggers it.
+  useEffect(() => {
+    setForm({
+      fullName: profile.fullName,
+      phoneNumber: profile.phoneNumber,
+      bio: profile.bio,
+    });
+  }, [profile.fullName, profile.phoneNumber, profile.bio]);
+
+  const update = (field) => (event) =>
+    setForm((current) => ({ ...current, [field]: event.target.value }));
+
+  // Only what actually changed. The endpoint leaves omitted fields alone, so a
+  // narrow body is also the safe one: `location` has no input on this card and
+  // stays exactly as the server has it.
+  const changes = FIELDS.reduce(
+    (acc, field) =>
+      form[field] === profile[field] ? acc : { ...acc, [field]: form[field] },
+    {},
+  );
+
+  const isDirty = Object.keys(changes).length > 0;
+
+  const handleSave = async () => {
+    if (!isDirty) return;
+
+    const saved = await onSave(changes);
+
+    if (saved) {
+      showToast({ message: "تم حفظ البيانات بنجاح.", variant: "success" });
+    }
+  };
+
+  const inputClass = (field) => `
+    h-[48px]
+    w-full
+    rounded-xl
+    border ${fieldErrors[field] ? "border-[#D92D20]" : "border-[#E4E7EC]"}
+    bg-[#FAFBFC]
+    px-4
+    text-right
+    text-[14px]
+    outline-none
+    focus:border-[#2878E8]
+    focus:bg-white
+  `;
+
   return (
     <section
       className="
@@ -112,21 +186,10 @@ export default function PersonalInformation() {
               <input
                 type="text"
                 placeholder="أدخل الاسم الكامل"
-                className="
-                  h-[48px]
-                  w-full
-                  rounded-xl
-                  border border-[#E4E7EC]
-                  bg-[#FAFBFC]
-                  px-4
-                  pr-4
-                  pl-11
-                  text-right
-                  text-[14px]
-                  outline-none
-                  focus:border-[#2878E8]
-                  focus:bg-white
-                "
+                value={form.fullName}
+                onChange={update("fullName")}
+                disabled={saving}
+                className={`${inputClass("fullName")} pl-11 pr-4`}
               />
 
               <User
@@ -134,6 +197,12 @@ export default function PersonalInformation() {
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9AA0A8]"
               />
             </div>
+
+            {fieldErrors.fullName && (
+              <p className="mt-1.5 text-right text-[12px] text-[#D92D20]">
+                {fieldErrors.fullName}
+              </p>
+            )}
           </div>
 
 
@@ -149,20 +218,10 @@ export default function PersonalInformation() {
                 type="tel"
                 placeholder="أدخل رقم الهاتف"
                 dir="ltr"
-                className="
-                  h-[48px]
-                  w-full
-                  rounded-xl
-                  border border-[#E4E7EC]
-                  bg-[#FAFBFC]
-                  px-4
-                  pl-[90px]
-                  text-right
-                  text-[14px]
-                  outline-none
-                  focus:border-[#2878E8]
-                  focus:bg-white
-                "
+                value={form.phoneNumber}
+                onChange={update("phoneNumber")}
+                disabled={saving}
+                className={`${inputClass("phoneNumber")} pl-[90px]`}
               />
 
 
@@ -188,13 +247,19 @@ export default function PersonalInformation() {
               </div>
 
             </div>
+
+            {fieldErrors.phoneNumber && (
+              <p className="mt-1.5 text-right text-[12px] text-[#D92D20]">
+                {fieldErrors.phoneNumber}
+              </p>
+            )}
           </div>
 
         </div>
 
 
 
-        {/* البريد */}
+        {/* البريد — للعرض فقط، لا يقبله الـ API للتعديل */}
         <div className="mt-6">
 
           <label className="mb-2.5 block text-right text-[14px] font-semibold text-[#444]">
@@ -206,19 +271,21 @@ export default function PersonalInformation() {
             <input
               type="email"
               placeholder="أدخل البريد الإلكتروني"
+              value={profile.email}
+              readOnly
               className="
                 h-[48px]
                 w-full
+                cursor-not-allowed
                 rounded-xl
                 border border-[#E4E7EC]
-                bg-[#FAFBFC]
+                bg-[#F2F4F7]
                 px-4
                 pl-11
                 text-right
                 text-[14px]
+                text-[#667085]
                 outline-none
-                focus:border-[#2878E8]
-                focus:bg-white
               "
             />
 
@@ -244,12 +311,15 @@ export default function PersonalInformation() {
           <textarea
             rows={4}
             placeholder="اكتب نبذة تعريفية عن خبرتك وتخصصك..."
-            className="
+            value={form.bio}
+            onChange={update("bio")}
+            disabled={saving}
+            className={`
               min-h-[115px]
               w-full
               resize-none
               rounded-xl
-              border border-[#E4E7EC]
+              border ${fieldErrors.bio ? "border-[#D92D20]" : "border-[#E4E7EC]"}
               bg-[#FAFBFC]
               px-4
               py-3
@@ -258,18 +328,35 @@ export default function PersonalInformation() {
               outline-none
               focus:border-[#2878E8]
               focus:bg-white
-            "
+            `}
           />
 
+          {fieldErrors.bio && (
+            <p className="mt-1.5 text-right text-[12px] text-[#D92D20]">
+              {fieldErrors.bio}
+            </p>
+          )}
+
         </div>
+
+
+        {saveError && (
+          <p className="mt-4 text-right text-[13px] font-semibold text-[#B42318]">
+            {saveError}
+          </p>
+        )}
 
 
 <div className="mt-4 flex justify-start">
   <button
     type="button"
-    onClick={() => console.log("clicked")}
+    onClick={handleSave}
+    disabled={saving || !isDirty}
     className="
+      flex
       cursor-pointer
+      items-center
+      gap-2
       rounded-xl
       bg-[#2878E8]
       px-8
@@ -278,9 +365,12 @@ export default function PersonalInformation() {
       font-semibold
       text-white
       hover:bg-[#1769D5]
+      disabled:cursor-not-allowed
+      disabled:opacity-60
     "
   >
-    حفظ البيانات
+    {saving && <Loader2 size={16} className="animate-spin" />}
+    {saving ? "جارٍ الحفظ..." : "حفظ البيانات"}
   </button>
 </div>
 
