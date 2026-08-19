@@ -116,12 +116,13 @@ export default function RequestServiceForm({ onClose }) {
 
       showToast({ message: "تم إرسال طلبك بنجاح. في انتظار عروض الفنيين." });
 
-      // The request is created and the customer is done here, so the modal —
-      // if this is one — closes before the move.
-      onClose?.();
-
       // A public request's next step is the offers that come back to it, and
       // the create call answers with the id that screen needs.
+      //
+      // `onClose` is deliberately not called first. On the page it means "go
+      // back", and a back navigation issued in the same tick wins the race —
+      // the customer landed on the home screen instead of on their new
+      // request. Leaving here unmounts the modal on its own.
       navigate(`/my-orders/${id}/offers`);
     } catch (failure) {
       setError(failure.message);
