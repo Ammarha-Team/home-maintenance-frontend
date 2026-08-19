@@ -2,41 +2,65 @@ import api from '../../../shared/services/api'
 
 // The normal (non-emergency) service request, end to end.
 //
-// Five endpoints, split by role — verified against the live API with the test
+// Six endpoints, split by role — verified against the live API with the test
 // accounts:
 //
-//   GET  /api/service-requests            client only    (technician -> 403)
-//   POST /api/service-requests            client only
-//   GET  /api/service-requests/{id}       client only
+//   GET  /api/ServiceCategory                  any signed-in user
+//   GET  /api/service-requests                 client only    (technician -> 403)
+//   POST /api/service-requests                 client only
+//   GET  /api/service-requests/{id}            client only
 //   GET  /api/service-requests/available       technician only (client -> 403)
 //   GET  /api/service-requests/available/{id}  technician only
 //
 // Nothing here sends a user id. Every endpoint reads the caller from the bearer
 // token the shared client attaches, which is why none of them take one.
 //
-// Swagger documents all five as `200: OK` with no response schema. The request
-// side is fully specified there and is followed exactly; the read side is not,
-// and the API currently holds no service requests at all, so the field names
-// read back in `toServiceRequest` are the ones Swagger names on the create
-// command rather than shapes observed in a response. They are marked below and
-// need backend confirmation.
+// Swagger publishes no response schema for any of them, so the field names in
+// the mappers below were read off real payloads rather than inferred.
 
 const REQUESTS_PATH = '/api/service-requests'
 const AVAILABLE_PATH = '/api/service-requests/available'
+const CATEGORIES_PATH = '/api/ServiceCategory'
 
-// ServiceRequestStatus is `enum: [1,2,3,4,5]` in Swagger with no names attached,
-// so the numbers are passed through as the API's own vocabulary rather than
-// being relabelled here.
-export const SERVICE_REQUEST_STATUS_VALUES = [1, 2, 3, 4, 5]
-
-// RequestType is `enum: [1,2]`, also unnamed. The request form offers exactly
-// two hiring methods, which is the only two-valued choice it collects, so the
-// selection is carried here. Which number means which method is not documented
-// and is listed in the backend report.
-export const REQUEST_TYPE = {
-  chooseTechnician: 1,
-  receiveOffers: 2,
+// ServiceRequestStatus, as the backend defines it. Requests are filtered by the
+// number and answered with the name, so both directions are written down.
+export const SERVICE_REQUEST_STATUS = {
+  pendingOffers: 1,
+  assigned: 2,
+  inProgress: 3,
+  completed: 4,
+  cancelled: 5,
 }
+
+export const SERVICE_REQUEST_STATUS_LABEL_AR = {
+  PendingOffers: 'بانتظار العروض',
+  Assigned: 'تم إسناد الطلب',
+  InProgress: 'قيد التنفيذ',
+  Completed: 'مكتملة',
+  Cancelled: 'ملغية',
+}
+
+// RequestType. `direct` exists in the enum but is not in service yet — the
+// backend asked for public requests only for now, so the form offers the one
+// and this constant records why the other is untouched.
+export const REQUEST_TYPE = {
+  public: 1,
+  direct: 2,
+}
+
+// The API names its categories in English and the customer reads Arabic. The
+// five names below are the complete seeded set, checked against GET
+// /api/ServiceCategory; anything the backend adds later falls back to its own
+// name rather than disappearing from the list.
+export const CATEGORY_LABEL_AR = {
+  Plumbing: 'سباكة',
+  Electrical: 'كهرباء',
+  'Air Conditioning': 'تكييف',
+  Carpentry: 'نجارة',
+  Painting: 'دهانات',
+}
+
+export const categoryLabel = (name) => CATEGORY_LABEL_AR[name] ?? name ?? ''
 
 // The dialog's own filter. Swagger types `Images` as an array of binary with no
 // stated restriction, so this only matches what the upload hint on the form
@@ -46,6 +70,8 @@ const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 export const ACCEPTED_IMAGE_ATTR = `${ACCEPTED_TYPES.join(',')},.jpg,.jpeg,.png,.webp`
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+export const MAX_IMAGE_COUNT = 5
 
 /**
  * Guards one image before it joins the form.
@@ -85,24 +111,40 @@ const toApiDate = (date) => {
 // A field the user left blank is left out of the body entirely rather than sent
 // as an empty string: `AddressId` and `PreferredTime` are optional in the
 // schema, and an empty value for a uuid or a time is not the same as no value.
+// An omitted `PreferredTime` comes back as 00:00:00, which is what the form
+// wants — it asks for a day, not an hour.
 const appendIfPresent = (body, key, value) => {
   if (value === null || value === undefined || value === '') return
   body.append(key, value)
 }
 
+/** GET /api/ServiceCategory — the categories a request can be filed under. */
+export const fetchServiceCategories = () =>
+  api.get(CATEGORIES_PATH).then((payload) =>
+    (Array.isArray(payload) ? payload : []).map((dto) => ({
+      id: dto?.id ?? '',
+      name: dto?.name ?? '',
+      label: categoryLabel(dto?.name),
+    })),
+  )
+
 /**
  * POST /api/service-requests — multipart, one request with its images.
  *
- * Answers with the created request's id as a bare GUID string (confirmed
- * against the live API, which returns the empty GUID in the same position when
- * it rejects the body).
+ * Answers with the created request's id as a bare GUID string, confirmed
+ * against the live API.
+ *
+ * `SaveAddress` is sent as true for every request, and that is not a
+ * preference. With it false the server stores no address row, and both detail
+ * endpoints then fail with a 500 — "Nullable object must have a value." — when
+ * they read the request back. Saving the address is the only way a created
+ * request can be opened afterwards.
  *
  * @param {{serviceCategoryId: string, problemDescription: string,
  *          preferredDate: Date|null, preferredTime?: string,
  *          requestType: number, addressId?: string, addressTitle?: string,
  *          addressLine?: string, city?: string, country?: string,
- *          latitude?: number, longitude?: number, saveAddress?: boolean,
- *          images?: File[]}} request
+ *          latitude?: number, longitude?: number, images?: File[]}} request
  * @param {(percent: number | null) => void} [onProgress]
  * @returns {Promise<string>} the new request's id
  */
@@ -124,7 +166,7 @@ export const createServiceRequest = (request, onProgress) => {
   appendIfPresent(body, 'Country', request.country)
   appendIfPresent(body, 'Latitude', request.latitude)
   appendIfPresent(body, 'Longitude', request.longitude)
-  body.append('SaveAddress', request.saveAddress ? 'true' : 'false')
+  body.append('SaveAddress', 'true')
 
   // `Images` is an array in the schema: the same key repeated, once per file.
   for (const image of request.images ?? []) {
@@ -147,42 +189,68 @@ export const createServiceRequest = (request, onProgress) => {
   })
 }
 
-// Read-side field names.
-//
-// Swagger publishes no response schema for any of these endpoints, and the API
-// holds no service requests to read one off, so every name below is the one
-// Swagger uses for the same value on the create command — `problemDescription`
-// for `ProblemDescription`, and so on — carried over in the camelCase the rest
-// of this API answers in. They are unverified against a real payload; the raw
-// object is kept on `raw` so a caller can reach anything this misses, and the
-// mismatch risk is in the backend report.
-const toServiceRequest = (dto) => ({
-  id: dto?.id ?? null,
-  status: typeof dto?.status === 'number' ? dto.status : null,
-  serviceCategoryId: dto?.serviceCategoryId ?? null,
-  serviceCategoryName: dto?.serviceCategoryName ?? '',
+// The customer's own list. `status` arrives as the enum's name — "PendingOffers"
+// — while the filter that selects it takes the number, so both travel together
+// and no screen has to translate one into the other.
+const toListItem = (dto) => ({
+  id: dto?.requestId ?? '',
+  categoryName: dto?.categoryName ?? '',
+  categoryLabel: categoryLabel(dto?.categoryName),
   problemDescription: dto?.problemDescription ?? '',
+  status: dto?.status ?? '',
+  statusLabel: SERVICE_REQUEST_STATUS_LABEL_AR[dto?.status] ?? dto?.status ?? '',
   preferredDate: dto?.preferredDate ?? null,
   preferredTime: dto?.preferredTime ?? null,
   requestType: typeof dto?.requestType === 'number' ? dto.requestType : null,
-  addressLine: dto?.addressLine ?? '',
-  city: dto?.city ?? '',
-  country: dto?.country ?? '',
+  thumbnailImage: dto?.thumbnailImage ?? null,
+  createdAt: dto?.createdAt ?? null,
+})
+
+// The customer's detail view. `images` is a plain array of URLs, and `offers`
+// is carried through untouched — the offers screen owns that shape.
+const toDetail = (dto) => ({
+  ...toListItem(dto),
+  address: dto?.address ?? '',
   latitude: typeof dto?.latitude === 'number' ? dto.latitude : null,
   longitude: typeof dto?.longitude === 'number' ? dto.longitude : null,
   images: Array.isArray(dto?.images) ? dto.images : [],
-  createdAt: dto?.createdAt ?? null,
-  raw: dto,
+  offers: Array.isArray(dto?.offers) ? dto.offers : [],
 })
 
-const toList = (payload) =>
-  Array.isArray(payload) ? payload.map(toServiceRequest) : []
+// The technician's board. No `status` here — every request on it is open — and
+// `city` in its place.
+const toAvailableItem = (dto) => ({
+  id: dto?.requestId ?? '',
+  categoryName: dto?.categoryName ?? '',
+  categoryLabel: categoryLabel(dto?.categoryName),
+  problemDescription: dto?.problemDescription ?? '',
+  preferredDate: dto?.preferredDate ?? null,
+  preferredTime: dto?.preferredTime ?? null,
+  city: dto?.city ?? '',
+  thumbnailImage: dto?.thumbnailImage ?? null,
+  createdAt: dto?.createdAt ?? null,
+})
+
+const toAvailableDetail = (dto) => ({
+  ...toAvailableItem(dto),
+  address: dto?.address ?? '',
+  latitude: typeof dto?.latitude === 'number' ? dto.latitude : null,
+  longitude: typeof dto?.longitude === 'number' ? dto.longitude : null,
+  images: Array.isArray(dto?.images) ? dto.images : [],
+  clientName: dto?.clientName ?? '',
+  clientProfilePicture: dto?.clientProfilePicture ?? null,
+  offersCount: typeof dto?.offersCount === 'number' ? dto.offersCount : 0,
+})
+
+const mapList = (payload, map) =>
+  Array.isArray(payload) ? payload.map(map) : []
 
 /**
  * GET /api/service-requests — the signed-in customer's own requests.
  *
- * Both filters are optional and are left off when not given, so the server
- * applies its own default rather than being handed an empty filter.
+ * `search` is offered by the API but not used by any caller: it matches the
+ * English category name only, so an Arabic term — which is all this UI can
+ * produce — never matches. Screens filter the returned list instead.
  *
  * @param {{status?: number, search?: string}} [filters]
  */
@@ -191,12 +259,12 @@ export const fetchMyServiceRequests = ({ status, search } = {}) => {
   if (status) params.status = status
   if (search) params.search = search
 
-  return api.get(REQUESTS_PATH, { params }).then(toList)
+  return api.get(REQUESTS_PATH, { params }).then((p) => mapList(p, toListItem))
 }
 
 /** GET /api/service-requests/{id} — one of the customer's own requests. */
 export const fetchServiceRequestById = (id) =>
-  api.get(`${REQUESTS_PATH}/${id}`).then(toServiceRequest)
+  api.get(`${REQUESTS_PATH}/${id}`).then(toDetail)
 
 /**
  * GET /api/service-requests/available — open requests a technician may bid on.
@@ -210,9 +278,11 @@ export const fetchAvailableServiceRequests = ({ categoryId, search } = {}) => {
   if (categoryId) params.categoryId = categoryId
   if (search) params.search = search
 
-  return api.get(AVAILABLE_PATH, { params }).then(toList)
+  return api
+    .get(AVAILABLE_PATH, { params })
+    .then((p) => mapList(p, toAvailableItem))
 }
 
 /** GET /api/service-requests/available/{id} — one open request, for a technician. */
 export const fetchAvailableServiceRequestById = (id) =>
-  api.get(`${AVAILABLE_PATH}/${id}`).then(toServiceRequest)
+  api.get(`${AVAILABLE_PATH}/${id}`).then(toAvailableDetail)

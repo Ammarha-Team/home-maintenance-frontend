@@ -64,10 +64,17 @@ function OrderCard({ order, onDetails, onOffer }) {
             after its label and the gallery icon before its own, and one
             consistent side reads better than reproducing that. */}
         <div className="flex flex-wrap items-center gap-x-[24px] gap-y-[8px] pt-[20px] text-[14px] leading-[1.5] font-bold text-text-300">
-          <span className="flex items-center gap-[4px]">
-            {`${order.district} (${order.distance})`}
-            <MapPin size={15} aria-hidden="true" className="shrink-0" />
-          </span>
+          {/* The distance is the technician's own and the request does not
+              carry one, so it is drawn beside the district only when there is
+              one — rather than as an empty pair of brackets. */}
+          {order.district ? (
+            <span className="flex items-center gap-[4px]">
+              {order.distance
+                ? `${order.district} (${order.distance})`
+                : order.district}
+              <MapPin size={15} aria-hidden="true" className="shrink-0" />
+            </span>
+          ) : null}
 
           {order.schedule ? (
             <span className="flex items-center gap-[4px]">

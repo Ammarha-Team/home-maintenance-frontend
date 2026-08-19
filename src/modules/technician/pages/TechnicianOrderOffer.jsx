@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Lightbulb, Send } from 'lucide-react'
+import { Lightbulb, Loader2, Send } from 'lucide-react'
 import Button from '../../../shared/components/Button.jsx'
 import Textarea from '../../../shared/components/Textarea.jsx'
 import TechnicianLayout from '../../../shared/layouts/TechnicianLayout.jsx'
@@ -12,8 +12,8 @@ import {
 import {
   CURRENCY,
   PLATFORM_COMMISSION_RATE,
-  findOrder,
 } from '../services/technicianService.js'
+import { useAvailableServiceRequest } from '../hooks/useAvailableServiceRequests.js'
 
 // Money is written to two places throughout the frame.
 const money = (amount) => `${amount.toFixed(2)} ${CURRENCY}`
@@ -34,7 +34,20 @@ const money = (amount) => `${amount.toFixed(2)} ${CURRENCY}`
 function TechnicianOrderOffer() {
   const { orderId } = useParams()
   const navigate = useNavigate()
-  const order = findOrder(orderId)
+  const { request, loading } = useAvailableServiceRequest(orderId)
+
+  // The bid form needs four things off the request, and the API names three of
+  // them differently. The reference is the head of the id: the record carries
+  // no short number of its own, and a full GUID is not something a technician
+  // reads back to anyone.
+  const order = request
+    ? {
+        id: request.id,
+        reference: `#${String(request.id).slice(0, 8)}`,
+        title: `خدمة ${request.categoryLabel}`,
+        locationSummary: request.address || request.city || '',
+      }
+    : null
 
   const [price, setPrice] = useState('100')
   const [date, setDate] = useState('')
@@ -48,12 +61,23 @@ function TechnicianOrderOffer() {
     { label: 'تقديم العرض' },
   ]
 
+  if (loading) {
+    return (
+      <TechnicianLayout>
+        <div className="mx-auto flex w-full max-w-[720px] items-center justify-center gap-[12px] px-[24px] py-[64px] text-[18px] text-text-300">
+          <Loader2 size={20} aria-hidden="true" className="animate-spin" />
+          جارٍ تحميل الطلب...
+        </div>
+      </TechnicianLayout>
+    )
+  }
+
   if (!order) {
     return (
       <TechnicianLayout>
         <div className="mx-auto flex w-full max-w-[720px] flex-col items-center gap-[16px] px-[24px] py-[64px] text-center">
           <h1 className="text-[24px] leading-[1.5] font-bold text-text-500">
-            هذا الطلب غير موجود
+            هذا الطلب غير متاح
           </h1>
           <p className="text-[16px] leading-[1.6] text-text-300">
             ربما تم سحبه أو قبوله من فني آخر.
