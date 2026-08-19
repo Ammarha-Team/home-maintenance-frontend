@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, Search } from 'lucide-react'
+import { CalendarDays, Loader2, Search } from 'lucide-react'
 import TechnicianLayout from '../../../shared/layouts/TechnicianLayout.jsx'
 import OrderCard from '../components/OrderCard.jsx'
 import OrderFilters from '../components/OrderFilters.jsx'
@@ -8,13 +8,73 @@ import {
   TECHNICIAN_ROUTES,
   technicianOrderPath,
 } from '../constants/technicianRoutes.js'
-import { ORDERS } from '../services/technicianService.js'
+import { useAvailableServiceRequests } from '../hooks/useAvailableServiceRequests.js'
 
-// The slider is in kilometres while the records carry their distance as the
-// display string the frame writes — "1.2 كم". Reading a number out of it here
-// keeps the filter honest without turning every distance in the app into a
-// float it has no other use for.
-const distanceOf = (order) => Number.parseFloat(order.distance) || 0
+// The filter rail and the API spell the same categories slightly differently —
+// "سباكه" against "سباكة" — so both sides are folded to one form before they
+// are compared. Nothing else in the app depends on the spelling.
+const foldArabic = (text) =>
+  String(text ?? '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+
+const MINUTE = 60_000
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+
+// How long ago the customer filed it, in the same shape the frame writes.
+const relativeAge = (createdAt) => {
+  if (!createdAt) return ''
+
+  const elapsed = Date.now() - new Date(createdAt).getTime()
+  if (Number.isNaN(elapsed) || elapsed < 0) return 'الآن'
+
+  if (elapsed < HOUR) {
+    return `منذ ${Math.max(Math.floor(elapsed / MINUTE), 1)} دقيقة`
+  }
+  if (elapsed < DAY) return `منذ ${Math.floor(elapsed / HOUR)} ساعة`
+
+  return `منذ ${Math.floor(elapsed / DAY)} يوم`
+}
+
+// "2026-09-05" read as the day it names. `Date` would take it as UTC midnight
+// and give back the day before east of Greenwich.
+const formatDay = (value) => {
+  if (!value) return ''
+
+  const [year, month, day] = String(value).slice(0, 10).split('-').map(Number)
+  if (!year || !month || !day) return ''
+
+  return new Date(year, month - 1, day).toLocaleDateString('ar-EG', {
+    day: 'numeric',
+    month: 'long',
+  })
+}
+
+// The board's card was drawn against the mock records, and the API answers with
+// a smaller set of facts. Everything it does send is mapped onto the same
+// names; what it does not — a distance from the technician — is left null, and
+// the card omits what it is not given.
+//
+// `urgency` is 'normal' for every record here and that is not a placeholder:
+// this endpoint returns normal service requests, and emergencies travel through
+// their own flow entirely.
+const toBoardOrder = (request) => ({
+  id: request.id,
+  category: request.categoryLabel,
+  urgency: 'normal',
+  age: relativeAge(request.createdAt),
+  title: `خدمة ${request.categoryLabel}`,
+  summary: request.problemDescription,
+  district: request.city,
+  distance: null,
+  schedule: request.preferredDate
+    ? `الموعد المفضل ${formatDay(request.preferredDate)}`
+    : null,
+  attachmentLabel: request.thumbnailImage ? 'صورة مرفقة' : 'لا توجد صور',
+  photo: request.thumbnailImage,
+})
 
 /**
  * Technician Orders — the job board (Figma node 21:2236).
@@ -23,6 +83,7 @@ const distanceOf = (order) => Number.parseFloat(order.distance) || 0
  * Below `lg` the rail moves above the list: a filter that has scrolled off the
  * top of a phone is a filter nobody uses.
  *
+ * The requests are the live ones from GET /api/service-requests/available.
  * Filtering happens here rather than in the rail, because the board is what has
  * to show the result — and the count under the heading has to agree with what
  * is actually on screen.
@@ -33,6 +94,8 @@ function TechnicianOrders() {
   const [urgency, setUrgency] = useState('all')
   const [distance, setDistance] = useState(50)
   const [query, setQuery] = useState('')
+
+  const { requests, loading, error, reload } = useAvailableServiceRequests()
 
   const toggleCategory = (category) => {
     setCategories((current) =>
@@ -47,22 +110,35 @@ function TechnicianOrders() {
     setUrgency('all')
     setDistance(50)
     setQuery('')
+    reload()
   }
 
   // An empty category list means "nothing chosen", which reads as all of them —
-  // the frame ships the board unfiltered.
+  // the board starts unfiltered.
+  //
+  // The distance slider has nothing to filter on: the API sends no distance
+  // from the technician, so no request is excluded by it. The control stays
+  // because the record may grow one, and removing it would change a screen the
+  // design owns.
   const visible = useMemo(() => {
-    const term = query.trim()
+    const term = foldArabic(query.trim())
+    const chosen = categories.map(foldArabic)
 
-    return ORDERS.filter((order) => {
-      if (categories.length && !categories.includes(order.category)) return false
+    return requests.map(toBoardOrder).filter((order) => {
+      if (chosen.length && !chosen.includes(foldArabic(order.category))) {
+        return false
+      }
+
       if (urgency !== 'all' && order.urgency !== urgency) return false
-      if (distanceOf(order) > distance) return false
-      if (term && !`${order.title} ${order.district}`.includes(term)) return false
+
+      const haystack = foldArabic(
+        `${order.title} ${order.summary} ${order.district ?? ''}`,
+      )
+      if (term && !haystack.includes(term)) return false
 
       return true
     })
-  }, [categories, urgency, distance, query])
+  }, [requests, categories, urgency, query])
 
   const openDetails = (order) =>
     navigate(technicianOrderPath(TECHNICIAN_ROUTES.orderDetails, order.id))
@@ -127,7 +203,24 @@ function TechnicianOrders() {
               </button>
             </div>
 
-            {visible.length ? (
+            {loading ? (
+              <p className="flex items-center justify-center gap-[8px] rounded-[12px] bg-white p-[32px] text-center text-[18px] leading-[1.6] text-text-300 shadow-card">
+                <Loader2 size={20} aria-hidden="true" className="animate-spin" />
+                جارٍ تحميل الطلبات المتاحة...
+              </p>
+            ) : error ? (
+              <div className="flex flex-col items-center gap-[16px] rounded-[12px] bg-white p-[32px] text-center shadow-card">
+                <p className="text-[18px] leading-[1.6] text-text-400">{error}</p>
+
+                <button
+                  type="button"
+                  onClick={reload}
+                  className="cursor-pointer rounded-[12px] bg-primary-500 px-[24px] py-[10px] text-[16px] font-bold text-white transition-colors hover:bg-primary-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
+                >
+                  إعادة المحاولة
+                </button>
+              </div>
+            ) : visible.length ? (
               <div className="flex flex-col gap-[16px]">
                 {visible.map((order) => (
                   <OrderCard
@@ -140,8 +233,9 @@ function TechnicianOrders() {
               </div>
             ) : (
               <p className="rounded-[12px] bg-white p-[32px] text-center text-[18px] leading-[1.6] text-text-300 shadow-card">
-                لا توجد طلبات تطابق هذه التصفية. وسّع نطاق المسافة أو أزل بعض
-                التصنيفات.
+                {requests.length
+                  ? 'لا توجد طلبات تطابق هذه التصفية. وسّع نطاق البحث أو أزل بعض التصنيفات.'
+                  : 'لا توجد طلبات متاحة الآن.'}
               </p>
             )}
           </div>

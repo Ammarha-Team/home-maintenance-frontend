@@ -65,3 +65,56 @@ export async function reverseGeocode({ lat, lng }, { signal } = {}) {
 
   return result.display_name ?? null
 }
+
+/**
+ * Position to the separate address parts a service request has to carry.
+ *
+ * The request API needs a line, a city and a country as three fields, and the
+ * map collects a pin. `reverseGeocode` above answers with one display string,
+ * which cannot be split apart reliably — Nominatim orders it by locale and by
+ * what it knows about the place — so this asks for the structured breakdown
+ * instead and reads the fields straight out.
+ *
+ * A place can be missing any of them: a pin in open desert has no city, and
+ * `addressdetails` names the settlement differently by size. Every part is
+ * therefore optional, and the caller decides what to do with a gap.
+ *
+ * @returns {Promise<{line: string, city: string, country: string}|null>} null
+ *   when the point has no known address at all
+ */
+export async function reverseGeocodeParts({ lat, lng }, { signal } = {}) {
+  const result = await request(
+    'reverse',
+    { lat, lon: lng, addressdetails: 1 },
+    signal,
+  )
+  if (!result || result.error) return null
+
+  const parts = result.address ?? {}
+
+  // The street on its own, not the whole display name. The server stores the
+  // line and then writes the address back as "line, city, country", so a line
+  // that already ends in the city and the country reads with both of them
+  // twice. Nothing narrower than a neighbourhood is guaranteed, hence the
+  // fallback.
+  const street = [
+    parts.house_number,
+    parts.road,
+    parts.neighbourhood ?? parts.suburb,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  return {
+    line: street || result.display_name || '',
+    // Largest to smallest: whichever of these the place has is its city.
+    city:
+      parts.city ??
+      parts.town ??
+      parts.village ??
+      parts.municipality ??
+      parts.state ??
+      '',
+    country: parts.country ?? '',
+  }
+}
