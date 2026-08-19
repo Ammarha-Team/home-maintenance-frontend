@@ -82,10 +82,16 @@ function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/home" element={<Home />} />
 
-        {/* Request Service */}
+        {/* Request Service. Guarded because creating a request is a client-only
+            endpoint that reads the customer from the bearer token — a visitor
+            without one has nothing to submit. */}
         <Route
           path="/request-service"
-          element={<RequestService />}
+          element={
+            <ProtectedRoute>
+              <RequestService />
+            </ProtectedRoute>
+          }
         />
 
         {/* Services */}
@@ -228,20 +234,34 @@ function AppRoutes() {
           element={<SavedAddresses />}
         />
 
-        {/* Customer Orders */}
+        {/* Customer Orders. The three screens below read the customer's own
+            service requests, which the API scopes to the bearer token, so they
+            are guarded for the same reason /request-service is. */}
         <Route
           path={ORDERS_ROUTES.myOrders}
-          element={<MyOrders />}
+          element={
+            <ProtectedRoute>
+              <MyOrders />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path={ORDERS_ROUTES.orderDetails}
-          element={<OrderOffers />}
+          element={
+            <ProtectedRoute>
+              <OrderOffers />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path={ORDERS_ROUTES.orderOffers}
-          element={<OrderOffers />}
+          element={
+            <ProtectedRoute>
+              <OrderOffers />
+            </ProtectedRoute>
+          }
         />
 
         <Route

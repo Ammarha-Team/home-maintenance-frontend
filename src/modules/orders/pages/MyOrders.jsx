@@ -1,77 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, Calendar as CalendarIcon, X } from "lucide-react";
+import { Search, Calendar as CalendarIcon, X, Loader2 } from "lucide-react";
 import Breadcrumb from "../../../shared/components/Breadcrumb";
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
 import OrderCard from "../components/OrderCard";
+import { useMyServiceRequests } from "../hooks/useMyServiceRequests";
+import { SERVICE_REQUEST_STATUS } from "../../requests/services/serviceRequestService";
 
-const MOCK_ORDERS = [
-  {
-    id: 1,
-    title: "خدمه كهربائيه",
-    date: "8/8/2026",
-    status: "pending",
-    subtitle: "تلف لوحه المفاتيح",
-    description:
-      "تلف شائع في اكياس الكهرباء والاسلاك الكهربائية، يحتاج إلى فحص وتغيير القطع التالفة فوراً لضمان السلامة.",
-    image: "/electrical_socket.jpg",
-    actionType: "view_offers",
-  },
-  {
-    id: 2,
-    title: "خدمه كهربائيه",
-    date: "8/8/2026",
-    status: "in_progress",
-    subtitle: "تلف لوحه المفاتيح",
-    description:
-      "تلف شائع في اكياس الكهرباء والاسلاك الكهربائية، يحتاج إلى فحص وتغيير القطع التالفة فوراً لضمان السلامة.",
-    image: "/electrical_socket.jpg",
-    actionType: "track",
-  },
-  {
-    id: 3,
-    title: "خدمه كهربائيه",
-    date: "8/8/2026",
-    status: "completed",
-    subtitle: "تلف لوحه المفاتيح",
-    description:
-      "تلف شائع في اكياس الكهرباء والاسلاك الكهربائية، يحتاج إلى فحص وتغيير القطع التالفة فوراً لضمان السلامة.",
-    image: "/electrical_socket.jpg",
-    actionType: "review",
-  },
-  {
-    id: 4,
-    title: "خدمه كهربائيه",
-    date: "8/8/2026",
-    status: "canceled",
-    subtitle: "تلف لوحه المفاتيح",
-    description:
-      "تلف شائع في اكياس الكهرباء والاسلاك الكهربائية، يحتاج إلى فحص وتغيير القطع التالفة فوراً لضمان السلامة.",
-    image: "/electrical_socket.jpg",
-    actionType: "reorder",
-  },
-  {
-    id: 5,
-    title: "خدمه كهربائيه",
-    date: "8/8/2026",
-    status: "in_progress",
-    subtitle: "تلف لوحه المفاتيح",
-    description:
-      "تلف شائع في اكياس الكهرباء والاسلاك الكهربائية، يحتاج إلى فحص وتغيير القطع التالفة فوراً لضمان السلامة.",
-    image: "/electrical_socket.jpg",
-    actionType: "track",
-  },
-  {
-    id: 6,
-    title: "خدمه كهربائيه",
-    date: "8/8/2026",
-    status: "pending",
-    subtitle: "تلف لوحه المفاتيح",
-    description:
-      "تلف شائع في اكياس الكهرباء والاسلاك الكهربائية، يحتاج إلى فحص وتغيير القطع التالفة فوراً لضمان السلامة.",
-    image: "/electrical_socket.jpg",
-    actionType: "view_offers",
-  },
+// The tabs, and the status each one asks the API for. "الكل" sends none, which
+// is how the endpoint returns everything.
+//
+// The enum has five values and the board has four tabs: Assigned and InProgress
+// are both stages of a job already under way, and neither is "معلقة" nor
+// "مكتملة". They appear under "الكل" rather than being forced into a tab that
+// would misdescribe them.
+const STATUS_TABS = [
+  { id: "all", label: "الكل", status: undefined },
+  { id: "completed", label: "مكتمله", status: SERVICE_REQUEST_STATUS.completed },
+  { id: "pending", label: "معلقه", status: SERVICE_REQUEST_STATUS.pendingOffers },
+  { id: "canceled", label: "ملغيه", status: SERVICE_REQUEST_STATUS.cancelled },
 ];
 
 export default function MyOrders() {
@@ -81,6 +28,17 @@ export default function MyOrders() {
   const [selectedDate, setSelectedDate] = useState(null);
 
   const calendarRef = useRef(null);
+
+  const activeStatus = STATUS_TABS.find((tab) => tab.id === activeFilter)?.status;
+
+  // Status filtering is the server's — it is a documented query parameter, so
+  // asking for one status returns one status rather than a full list trimmed
+  // here. Search and date are not: the API's `search` matches the English
+  // category name only, which an Arabic term never hits, so both are applied to
+  // the records that come back.
+  const { requests, loading, error, reload } = useMyServiceRequests({
+    status: activeStatus,
+  });
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -93,21 +51,17 @@ export default function MyOrders() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
-  const filteredOrders = MOCK_ORDERS.filter((order) => {
-    const matchesFilter =
-      activeFilter === "all" ||
-      (activeFilter === "completed" && (order.status === "completed" || order.status === "in_progress")) ||
-      (activeFilter === "pending" && order.status === "pending") ||
-      (activeFilter === "canceled" && order.status === "canceled");
+  const term = searchQuery.trim();
 
+  const filteredOrders = requests.filter((order) => {
     const matchesSearch =
-      order.title.includes(searchQuery) ||
-      order.subtitle.includes(searchQuery) ||
-      order.description.includes(searchQuery);
+      !term ||
+      order.categoryLabel.includes(term) ||
+      order.problemDescription.includes(term);
 
-    const matchesDate = !selectedDate || order.date === selectedDate;
+    const matchesDate = !selectedDate || order.preferredDate === selectedDate;
 
-    return matchesFilter && matchesSearch && matchesDate;
+    return matchesSearch && matchesDate;
   });
 
   return (
@@ -127,12 +81,7 @@ export default function MyOrders() {
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-            {[
-              { id: "all", label: "الكل" },
-              { id: "completed", label: "مكتمله" },
-              { id: "pending", label: "معلقه" },
-              { id: "canceled", label: "ملغيه" },
-            ].map((tab) => (
+            {STATUS_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveFilter(tab.id)}
@@ -150,7 +99,7 @@ export default function MyOrders() {
 
         {/* Search & Date Filter Bar */}
         <div className="max-w-xl mx-auto flex items-center gap-3 mb-8 w-full relative">
-          
+
           {/* Date Picker Trigger */}
           <div className="relative" ref={calendarRef}>
             <button
@@ -166,7 +115,9 @@ export default function MyOrders() {
               <CalendarIcon size={18} />
             </button>
 
-            {/* Calendar Popover */}
+            {/* Calendar Popover. The days carry the API's own date form —
+                "2026-10-06" — so a picked day can be compared to a request's
+                preferred date without either side being reformatted. */}
             {showDatePicker && (
               <div className="absolute right-0 sm:right-0 top-12 z-50 bg-white border border-gray-100 rounded-2xl shadow-xl p-4 sm:p-5 w-[290px] sm:w-[310px] animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center justify-between border-b border-gray-50 pb-3 mb-4">
@@ -191,38 +142,30 @@ export default function MyOrders() {
                   <span className="text-gray-200 py-1.5">28</span>
                   <span className="text-gray-200 py-1.5">29</span>
                   <span className="text-gray-200 py-1.5">30</span>
-                  <button onClick={() => setSelectedDate("1/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">1</button>
-                  <button onClick={() => setSelectedDate("2/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">2</button>
-                  <button onClick={() => setSelectedDate("3/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">3</button>
-                  <button onClick={() => setSelectedDate("4/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">4</button>
 
-                  <button onClick={() => setSelectedDate("5/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">5</button>
-                  <button
-                    onClick={() => {
-                      setSelectedDate("8/8/2026");
-                      setShowDatePicker(false);
-                    }}
-                    className="py-1.5 rounded-xl bg-blue-600 text-white font-bold shadow-md shadow-blue-500/30"
-                  >
-                    6
-                  </button>
-                  <button onClick={() => setSelectedDate("7/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">7</button>
-                  <button onClick={() => setSelectedDate("8/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">8</button>
-                  <button onClick={() => setSelectedDate("9/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">9</button>
-                  <button onClick={() => setSelectedDate("10/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">10</button>
-                  <button onClick={() => setSelectedDate("11/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">11</button>
+                  {Array.from({ length: 21 }, (_, index) => index + 1).map(
+                    (day) => {
+                      const value = `2026-10-${String(day).padStart(2, "0")}`;
+                      const active = selectedDate === value;
 
-                  <button onClick={() => setSelectedDate("12/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">12</button>
-                  <button onClick={() => setSelectedDate("13/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">13</button>
-                  <button onClick={() => setSelectedDate("14/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">14</button>
-                  <button onClick={() => setSelectedDate("15/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">15</button>
-                  <button onClick={() => setSelectedDate("16/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">16</button>
-                  <button onClick={() => setSelectedDate("17/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">17</button>
-                  <button onClick={() => setSelectedDate("18/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">18</button>
-
-                  <button onClick={() => setSelectedDate("19/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">19</button>
-                  <button onClick={() => setSelectedDate("20/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">20</button>
-                  <button onClick={() => setSelectedDate("21/10/2026")} className="py-1.5 rounded-lg hover:bg-gray-100">21</button>
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => {
+                            setSelectedDate(value);
+                            setShowDatePicker(false);
+                          }}
+                          className={`py-1.5 ${
+                            active
+                              ? "rounded-xl bg-blue-600 text-white font-bold shadow-md shadow-blue-500/30"
+                              : "rounded-lg hover:bg-gray-100"
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    },
+                  )}
                 </div>
 
                 {selectedDate && (
@@ -242,7 +185,7 @@ export default function MyOrders() {
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="خدمه كهربائيه"
+              placeholder="ابحث في طلباتك"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-white border border-gray-200 rounded-xl py-2 px-4 pr-10 text-sm text-right focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-2xs h-[42px] placeholder:text-gray-400"
@@ -255,7 +198,26 @@ export default function MyOrders() {
         </div>
 
         {/* Orders Grid */}
-        {filteredOrders.length > 0 ? (
+        {loading ? (
+          <div className="bg-white rounded-2xl p-8 sm:p-12 my-8 flex items-center justify-center gap-2 border border-gray-100 shadow-2xs text-gray-500">
+            <Loader2 size={18} className="animate-spin" />
+            <span className="font-medium text-sm sm:text-base">
+              جارٍ تحميل طلباتك...
+            </span>
+          </div>
+        ) : error ? (
+          <div className="bg-white rounded-2xl p-8 sm:p-12 text-center border border-gray-100 shadow-2xs my-8">
+            <p className="text-gray-700 font-medium text-sm sm:text-base">{error}</p>
+
+            <button
+              type="button"
+              onClick={reload}
+              className="mt-4 px-6 py-2 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-semibold transition-colors cursor-pointer"
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        ) : filteredOrders.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             {filteredOrders.map((order) => (
               <OrderCard key={order.id} order={order} />
@@ -263,7 +225,11 @@ export default function MyOrders() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl p-8 sm:p-12 text-center border border-gray-100 shadow-2xs my-8">
-            <p className="text-gray-500 font-medium text-sm sm:text-base">لا توجد طلبات تطابق هذا البحث.</p>
+            <p className="text-gray-500 font-medium text-sm sm:text-base">
+              {requests.length
+                ? "لا توجد طلبات تطابق هذا البحث."
+                : "لا توجد طلبات بعد."}
+            </p>
           </div>
         )}
       </main>
