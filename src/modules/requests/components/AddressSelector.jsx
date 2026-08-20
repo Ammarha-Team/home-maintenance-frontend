@@ -121,10 +121,17 @@ export default function AddressSelector({
         </p>
       )}
 
-      {/* The map is drawn only when a new point is actually being chosen.
-          Leaving it up under a saved address would invite the customer to move
-          a pin the request is not going to send. */}
-      {usingSaved && hasChoice ? null : (
+      {/* The map stands down once a saved address is actually chosen — leaving
+          it up under one would invite the customer to move a pin the request is
+          not going to send.
+
+          It is the *choice* that hides it, not merely having addresses to
+          choose from. Keying this on the list meant the map was drawn while the
+          address book was still loading and then torn out from under the
+          customer the moment it arrived, before they had picked anything: a
+          map that flickered in and vanished, and — when the response beat
+          Leaflet's 250ms zoom-animation timer — took the screen down with it. */}
+      {usingSaved && savedId ? null : (
         <div className="space-y-4">
           <MapPicker value={location} onChange={onLocationChange} />
 
