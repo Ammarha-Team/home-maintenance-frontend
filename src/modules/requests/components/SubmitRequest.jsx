@@ -19,9 +19,16 @@ export default function SubmitRequest({
   progress = null,
   error = null,
 }) {
-  return (
-    <div className="flex flex-col items-center gap-3 pt-10">
+  const label = submitting
+    ? progress === null
+      ? "جارٍ إرسال الطلب..."
+      : `جارٍ إرسال الطلب... ${progress}%`
+    : "إرسال الطلب";
 
+  return (
+    /* A rule and even spacing rather than the old bare `pt-10`, which left the
+       button floating a long way below the last field. */
+    <div className="flex flex-col items-center gap-4 border-t border-gray-200 pt-6">
       {error && (
         <p
           role="alert"
@@ -35,34 +42,14 @@ export default function SubmitRequest({
         type="button"
         onClick={onSubmit}
         disabled={submitting}
-        className="
-          flex
-          w-full
-          max-w-md
-          items-center
-          justify-center
-          gap-2
-          bg-blue-600
-          hover:bg-blue-700
-          disabled:cursor-not-allowed
-          disabled:bg-blue-400
-          text-white
-          font-semibold
-          py-4
-          rounded-xl
-          transition
-          shadow-sm
-        "
+        className="flex w-full max-w-md cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:bg-blue-400"
       >
-        {submitting && <Loader2 size={18} className="animate-spin" />}
+        {submitting && (
+          <Loader2 size={18} aria-hidden="true" className="animate-spin" />
+        )}
 
-        {submitting
-          ? progress === null
-            ? "جارٍ إرسال الطلب..."
-            : `جارٍ إرسال الطلب... ${progress}%`
-          : "إرسال الطلب"}
+        {label}
       </button>
-
     </div>
   );
 }

@@ -9,7 +9,9 @@ import ScheduleSection from "./ScheduleSection";
 import HiringMethod from "./HiringMethod.jsx";
 import SubmitRequest from "./SubmitRequest";
 
+import { NEW_ADDRESS } from "./AddressSelector";
 import { useServiceCategories } from "../hooks/useServiceCategories";
+import { useMyAddresses } from "../hooks/useMyAddresses";
 import {
   REQUEST_TYPE,
   createServiceRequest,
@@ -17,9 +19,9 @@ import {
 import { reverseGeocodeParts } from "../../../shared/services/geocoding.js";
 import { useToast } from "../../../shared/toast/toastContext.js";
 
-// The API stores the picked point as an address and wants a name for it. The
-// form has no field for one — the design asks for a pin, not an address book
-// entry — so every request saved from here carries the same neutral title.
+// What a new address is called when the customer does not name it themselves —
+// either because they left the save toggle off, or because they turned it on
+// and then cleared the field.
 const ADDRESS_TITLE = "موقع الخدمة";
 
 // Enough to tell a technician what they are bidding on. Below this the request
@@ -46,11 +48,29 @@ export default function RequestServiceForm({ onClose }) {
     error: categoriesError,
   } = useServiceCategories();
 
+  const {
+    addresses,
+    loading: addressesLoading,
+    error: addressesError,
+    reload: reloadAddresses,
+  } = useMyAddresses();
+
   const [serviceCategoryId, setServiceCategoryId] = useState("");
   const [problemDescription, setProblemDescription] = useState("");
   const [images, setImages] = useState([]);
   const [schedule, setSchedule] = useState({ date: null, location: null });
   const [requestType, setRequestType] = useState(REQUEST_TYPE.public);
+
+  // Starts on the saved side with nothing picked, so a customer who has an
+  // address book has to say which one rather than having the first entry
+  // chosen for them. With an empty book the picker falls through to the map on
+  // its own, and this state never comes into play.
+  const [address, setAddress] = useState({
+    mode: "saved",
+    savedId: "",
+    save: false,
+    title: "",
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [progress, setProgress] = useState(null);
@@ -59,6 +79,13 @@ export default function RequestServiceForm({ onClose }) {
   const updateSchedule = (patch) =>
     setSchedule((current) => ({ ...current, ...patch }));
 
+  const updateAddress = (patch) =>
+    setAddress((current) => ({ ...current, ...patch }));
+
+  // An address book that failed to load, or has not loaded yet, is an address
+  // book with nothing to pick from — the map is the way through in both cases.
+  const usingSaved = address.mode !== NEW_ADDRESS && addresses.length > 0;
+
   // Everything the server would reject, said in Arabic before the round trip.
   const firstProblem = () => {
     if (!serviceCategoryId) return "اختر نوع الخدمة أولًا.";
@@ -66,7 +93,10 @@ export default function RequestServiceForm({ onClose }) {
       return "اكتب وصفًا أوضح للمشكلة حتى يفهم الفني الحالة.";
     }
     if (!schedule.date) return "اختر التاريخ المناسب لزيارة الفني.";
-    if (!schedule.location) return "حدد موقع الخدمة على الخريطة.";
+    if (usingSaved && !address.savedId) return "اختر عنوان الخدمة أولًا.";
+    if (!usingSaved && !schedule.location) {
+      return "حدد موقع الخدمة على الخريطة.";
+    }
 
     return null;
   };
@@ -83,17 +113,46 @@ export default function RequestServiceForm({ onClose }) {
     setError(null);
 
     try {
-      // The map hands over a point and the API wants a line, a city and a
-      // country, so the pin is turned back into an address here. A point with
-      // no city — open water, empty desert — cannot be sent, and saying so is
-      // better than inventing one.
-      const parts = await reverseGeocodeParts(schedule.location);
+      // A saved address travels as its id alone. Nothing else is sent and
+      // nothing new is written, which is what stops the address book filling
+      // up with a fresh row for every request to the same place.
+      let addressFields = {
+        addressId: address.savedId,
+        saveAddress: false,
+      };
 
-      if (!parts?.city) {
-        setError(
-          "تعذر تحديد تفاصيل العنوان لهذا الموقع. اختر نقطة أقرب إلى عنوان معروف.",
-        );
-        return;
+      if (!usingSaved) {
+        // The map hands over a point and the API wants a line, a city and a
+        // country, so the pin is turned back into an address here. A point with
+        // no city — open water, empty desert — cannot be sent, and saying so is
+        // better than inventing one.
+        const parts = await reverseGeocodeParts(schedule.location);
+
+        if (!parts?.city) {
+          setError(
+            "تعذر تحديد تفاصيل العنوان لهذا الموقع. اختر نقطة أقرب إلى عنوان معروف.",
+          );
+          return;
+        }
+
+        addressFields = {
+          addressTitle: address.save
+            ? address.title.trim() || ADDRESS_TITLE
+            : ADDRESS_TITLE,
+          addressLine:
+            parts.line || `${schedule.location.lat}, ${schedule.location.lng}`,
+          city: parts.city,
+          country: parts.country,
+          latitude: schedule.location.lat,
+          longitude: schedule.location.lng,
+          // True even when the customer left the toggle off, and the picker
+          // says so under the checkbox rather than hiding it. A new address
+          // sent with SaveAddress=false is accepted and then cannot be read
+          // back — the detail endpoints answer 500 — so the request would be
+          // created and immediately unopenable. Once the server handles an
+          // unsaved address this becomes `address.save`.
+          saveAddress: true,
+        };
       }
 
       const id = await createServiceRequest(
@@ -102,13 +161,7 @@ export default function RequestServiceForm({ onClose }) {
           problemDescription: problemDescription.trim(),
           preferredDate: schedule.date,
           requestType,
-          addressTitle: ADDRESS_TITLE,
-          addressLine:
-            parts.line || `${schedule.location.lat}, ${schedule.location.lng}`,
-          city: parts.city,
-          country: parts.country,
-          latitude: schedule.location.lat,
-          longitude: schedule.location.lng,
+          ...addressFields,
           images,
         },
         setProgress,
@@ -134,9 +187,13 @@ export default function RequestServiceForm({ onClose }) {
 
   return (
     <>
-      {/* Header */}
-      <div className="flex items-center border-b border-gray-200 px-6 py-4">
-        <h2 className="text-2xl font-bold text-gray-800">طلب خدمة</h2>
+      {/* Header — sticky, because in the modal the form scrolls inside a
+          capped height and the title (and its close button) used to scroll
+          out of reach. */}
+      <div className="sticky top-0 z-10 flex items-center border-b border-gray-200 bg-white px-5 py-4 sm:px-6">
+        <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
+          طلب خدمة
+        </h2>
 
         {/* `mr-auto` rather than `ml-auto`: the page is right to left, so the
             automatic margin has to grow on the right to push the button left. */}
@@ -153,7 +210,7 @@ export default function RequestServiceForm({ onClose }) {
       </div>
 
       {/* Body */}
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-5 sm:p-6">
         <ServiceSelector
           value={serviceCategoryId}
           onChange={setServiceCategoryId}
@@ -169,7 +226,16 @@ export default function RequestServiceForm({ onClose }) {
 
         <UploadImages value={images} onChange={setImages} />
 
-        <ScheduleSection value={schedule} onChange={updateSchedule} />
+        <ScheduleSection
+          value={schedule}
+          onChange={updateSchedule}
+          address={address}
+          onAddressChange={updateAddress}
+          addresses={addresses}
+          addressesLoading={addressesLoading}
+          addressesError={addressesError}
+          onAddressesRetry={reloadAddresses}
+        />
 
         <HiringMethod value={requestType} onChange={setRequestType} />
 

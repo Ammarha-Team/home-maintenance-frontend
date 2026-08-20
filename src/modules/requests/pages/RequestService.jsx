@@ -12,7 +12,7 @@ export default function RequestService() {
     window.history.length > 1 ? navigate(-1) : navigate("/home");
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8" dir="rtl">
+    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:py-8" dir="rtl">
       <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl">
         <RequestServiceForm onClose={close} />
       </div>
