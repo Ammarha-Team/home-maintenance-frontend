@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import {
   MapContainer,
   Marker,
@@ -36,14 +36,85 @@ function ClickToPick({ onPick }) {
   return null
 }
 
+/**
+ * Stops a zoom animation from outliving the map that started it.
+ *
+ * Every animated zoom ends with `setTimeout(_onZoomTransitionEnd, 250)`, queued
+ * unconditionally so the animation still finishes on browsers that swallow
+ * `transitionend`. Nothing cancels that timer, and `map.remove()` deletes
+ * `_mapPane` while leaving `_animatingZoom` set — so a map torn down mid-zoom
+ * leaves a callback that walks into `getPosition(undefined)` a quarter of a
+ * second later and throws "Cannot read properties of undefined (reading
+ * '_leaflet_pos')".
+ *
+ * Clearing the flag is what disarms it: `_onZoomTransitionEnd` opens with
+ * `if (!this._animatingZoom) return`, so the queued call returns at Leaflet's
+ * own guard instead of reaching for a pane that no longer exists. The order
+ * against react-leaflet's own teardown does not matter — either way this runs
+ * during unmount, long before the timer is due.
+ *
+ * This covers every animated zoom, not just the one at mount: a customer who
+ * scroll-zooms and then leaves the page within 250ms would hit the same crash.
+ */
+function CancelPendingZoom() {
+  const map = useMap()
+
+  useEffect(
+    () => () => {
+      map._animatingZoom = false
+    },
+    [map],
+  )
+
+  return null
+}
+
+/**
+ * Keeps Leaflet's idea of the container size in step with the real one.
+ *
+ * A map laid out at zero height — inside a panel that is still opening, or a
+ * card that has not been given its height yet — measures nothing at init and
+ * draws blank until it is told to measure again.
+ */
+function KeepMapSized() {
+  const map = useMap()
+
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+
+      // Measuring a collapsed container would only cache the same nothing.
+      if (width > 0 && height > 0) map.invalidateSize({ animate: false })
+    })
+
+    observer.observe(map.getContainer())
+
+    return () => observer.disconnect()
+  }, [map])
+
+  return null
+}
+
 // Recentres when the position changes from outside the map — geolocation, a
 // typed address, a value restored from state. In an effect rather than during
 // render so the map is told to move only after React commits the new position.
 function FollowPosition({ position, zoom }) {
   const map = useMap()
   const [lat, lng] = position
+  const settled = useRef(false)
 
   useEffect(() => {
+    // The map is already mounted at this position and zoom, so the first run
+    // would re-issue the view it is holding. That is not merely wasted work:
+    // when the mounted zoom and the target zoom differ it plays a zoom
+    // animation on every single mount, which is both a visible lurch as the
+    // screen opens and the window in which a map removed early enough leaves a
+    // pending animation behind.
+    if (!settled.current) {
+      settled.current = true
+      return
+    }
+
     map.setView([lat, lng], zoom)
   }, [map, lat, lng, zoom])
 
@@ -72,10 +143,15 @@ function ServiceMap({
 }) {
   const position = value ? [value.lat, value.lng] : DEFAULT_CENTER
 
+  // A map that already has a position opens at the zoom that position deserves.
+  // The wider `initialZoom` is for the fallback view, where the point of the
+  // map is to show enough of the city to find yourself in it.
+  const mountZoom = value ? zoom : initialZoom
+
   return (
     <MapContainer
       center={position}
-      zoom={initialZoom}
+      zoom={mountZoom}
       className={className}
       aria-label={ariaLabel}
     >
@@ -86,6 +162,10 @@ function ServiceMap({
       <ClickToPick onPick={onChange} />
 
       <FollowPosition position={position} zoom={zoom} />
+
+      <KeepMapSized />
+
+      <CancelPendingZoom />
     </MapContainer>
   )
 }
