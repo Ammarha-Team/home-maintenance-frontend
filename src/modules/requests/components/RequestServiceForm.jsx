@@ -61,12 +61,16 @@ export default function RequestServiceForm({ onClose }) {
   const [schedule, setSchedule] = useState({ date: null, location: null });
   const [requestType, setRequestType] = useState(REQUEST_TYPE.public);
 
-  // Starts on the saved side with nothing picked, so a customer who has an
-  // address book has to say which one rather than having the first entry
-  // chosen for them. With an empty book the picker falls through to the map on
-  // its own, and this state never comes into play.
+  // Opens on the map rather than on the address book.
+  //
+  // Starting on the saved side meant a customer with saved addresses landed on
+  // a dropdown reading "choose a saved address" with nothing chosen and no map
+  // under it — the one thing the screen is for was behind a menu. Nothing is
+  // picked for them either way; this only decides which of the two ways in is
+  // showing, and choosing a saved address still switches to it and puts the map
+  // away.
   const [address, setAddress] = useState({
-    mode: "saved",
+    mode: NEW_ADDRESS,
     savedId: "",
     save: false,
     title: "",
