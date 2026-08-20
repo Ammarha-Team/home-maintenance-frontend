@@ -134,17 +134,24 @@ export const fetchServiceCategories = () =>
  * Answers with the created request's id as a bare GUID string, confirmed
  * against the live API.
  *
- * `SaveAddress` is sent as true for every request, and that is not a
- * preference. With it false the server stores no address row, and both detail
- * endpoints then fail with a 500 — "Nullable object must have a value." — when
- * they read the request back. Saving the address is the only way a created
- * request can be opened afterwards.
+ * `saveAddress` decides what becomes of the address, and the two routes are not
+ * symmetrical — both verified against the live API:
+ *
+ *   - `addressId` set, `saveAddress` false: accepted, and the request reads
+ *     back cleanly afterwards. No new row is written, which is how a repeat
+ *     customer stops stacking a near-identical address on every request.
+ *   - a new address described in full, `saveAddress` false: the POST succeeds,
+ *     but both detail endpoints then fail with a 500 — "Nullable object must
+ *     have a value." — because no address row exists to join against. A new
+ *     address therefore has to be saved for the request to be openable at all,
+ *     which is why the form sends true whenever it sends a fresh pin.
  *
  * @param {{serviceCategoryId: string, problemDescription: string,
  *          preferredDate: Date|null, preferredTime?: string,
  *          requestType: number, addressId?: string, addressTitle?: string,
  *          addressLine?: string, city?: string, country?: string,
- *          latitude?: number, longitude?: number, images?: File[]}} request
+ *          latitude?: number, longitude?: number, saveAddress?: boolean,
+ *          images?: File[]}} request
  * @param {(percent: number | null) => void} [onProgress]
  * @returns {Promise<string>} the new request's id
  */
@@ -166,7 +173,7 @@ export const createServiceRequest = (request, onProgress) => {
   appendIfPresent(body, 'Country', request.country)
   appendIfPresent(body, 'Latitude', request.latitude)
   appendIfPresent(body, 'Longitude', request.longitude)
-  body.append('SaveAddress', 'true')
+  body.append('SaveAddress', request.saveAddress === false ? 'false' : 'true')
 
   // `Images` is an array in the schema: the same key repeated, once per file.
   for (const image of request.images ?? []) {

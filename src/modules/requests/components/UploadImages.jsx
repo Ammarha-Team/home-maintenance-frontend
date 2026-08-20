@@ -44,17 +44,17 @@ export default function UploadImages({ value = [], onChange }) {
 
       <label
         htmlFor="images"
-        className="flex h-56 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 transition hover:border-blue-500"
+        className="flex h-44 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 transition hover:border-blue-500 sm:h-48"
       >
-        <UploadCloud size={42} className="mb-3 text-blue-600" />
+        <UploadCloud
+          size={36}
+          aria-hidden="true"
+          className="mb-2 text-blue-600"
+        />
 
-        <p className="font-medium text-gray-700">
-          اضغط لرفع الصور
-        </p>
+        <p className="font-medium text-gray-700">اضغط لرفع الصور</p>
 
-        <p className="mt-1 text-sm text-gray-400">
-          PNG • JPG • JPEG
-        </p>
+        <p className="mt-1 text-sm text-gray-400">PNG • JPG • JPEG</p>
 
         <input
           id="images"
