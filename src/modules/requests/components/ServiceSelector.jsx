@@ -33,7 +33,7 @@ export default function ServiceSelector({
         value={value}
         disabled={loading || !!error}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
+        className="w-full cursor-pointer rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-right text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
       >
         {/* The placeholder doubles as the loading and failure state: a select
             with nothing in it reads as broken, and this says which it is. */}

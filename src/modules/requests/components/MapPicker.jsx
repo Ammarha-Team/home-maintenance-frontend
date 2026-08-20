@@ -57,16 +57,22 @@ export default function MapPicker({ value, onChange }) {
         </button>
       </div>
 
-      <div className="p-4">
+      <div className="border-t border-gray-200 p-4">
         <div className="flex items-center gap-2">
-          <MapPin className="text-blue-600" />
+          {/* Sized like every other inline icon in the flow; left unsized it
+              defaulted to 24 and stood larger than its own label. */}
+          <MapPin
+            size={18}
+            aria-hidden="true"
+            className="shrink-0 text-blue-600"
+          />
 
-          <p className="font-semibold text-gray-800">
+          <p className="text-sm font-semibold text-gray-800">
             اختر موقع الخدمة من الخريطة
           </p>
         </div>
 
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-1.5 text-sm text-gray-500">
           {value
             ? `${value.lat.toFixed(5)} , ${value.lng.toFixed(5)}`
             : "اضغط على الخريطة لتحديد موقعك"}
