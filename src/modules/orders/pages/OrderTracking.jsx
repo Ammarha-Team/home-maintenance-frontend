@@ -144,7 +144,7 @@ export default function OrderTracking() {
 
   // TEMPORARY — DEMO ONLY. How far the local journey has walked, and the single
   // step it is allowed to offer next.
-  const { stage, next, review } = useDemoStage(orderId);
+  const { stage, next } = useDemoStage(orderId);
 
   const offers = request?.offers ?? [];
 
@@ -507,20 +507,10 @@ export default function OrderTracking() {
                     ) : null}
                   </dl>
 
-                  {/* التقييم نفسه يحدث على صفحة التقييم القائمة، لا هنا. ما يظهر
-                      في هذه الشاشة هو نتيجته بعد إرساله. */}
-                  {stage === DEMO_STAGES.completed ? (
-                    <div className="mt-6 border-t border-gray-100 pt-6 text-center">
-                      <p className="text-sm font-bold text-[#059669]">
-                        اكتملت الخدمة
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-gray-400">
-                        يمكنك تقييم الفني من زر «تقييم الفني».
-                      </p>
-                    </div>
-                  ) : null}
-
-                  {stage === DEMO_STAGES.rated && review ? (
+                  {/* الرحلة انتهت. لا نجوم ولا تعليق هنا: التقييم بكامله — من
+                      اختيار النجوم إلى كتابة الملاحظة — يعيش على صفحة التقييم
+                      وحدها، وهذه الشاشة تعرض مسار الطلب وحالته فقط. */}
+                  {stage === DEMO_STAGES.rated ? (
                     <div className="mt-6 border-t border-gray-100 pt-6 text-center">
                       <span
                         aria-hidden="true"
@@ -530,28 +520,8 @@ export default function OrderTracking() {
                       </span>
 
                       <h3 className="mt-3 text-lg font-bold text-gray-900">
-                        تم إنهاء الطلب وتقييم الفني
+                        تم إنهاء الطلب
                       </h3>
-
-                      <div className="mt-2 flex items-center justify-center gap-1">
-                        {Array.from({ length: 5 }, (_, index) => (
-                          <Star
-                            key={index}
-                            size={16}
-                            className={
-                              index < review.rating
-                                ? "fill-amber-400 text-amber-400"
-                                : "text-gray-300"
-                            }
-                          />
-                        ))}
-                      </div>
-
-                      {review.comment ? (
-                        <p className="mx-auto mt-3 max-w-md rounded-xl bg-gray-50 p-3 text-xs leading-relaxed text-gray-600">
-                          {review.comment}
-                        </p>
-                      ) : null}
 
                       <Link
                         to="/my-orders"
