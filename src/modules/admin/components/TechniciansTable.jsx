@@ -1,8 +1,22 @@
-import { Ban, CircleCheck, Eye, LoaderCircle, Star } from 'lucide-react'
+import { Ban, CircleCheck, Eye, LoaderCircle, ShieldCheck, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import TablePagination from './TablePagination.jsx'
 import { technicianStatusLabel } from '../services/adminService.js'
+
+// TEMPORARY — DEMO ONLY. The review column and its button read a state the API
+// does not publish; see
+// `modules/technician-review/services/technicianReviewStore.js`.
+import {
+  APPROVED,
+  UNDER_REVIEW,
+  suspensionReasonLabel,
+} from '../../technician-review/services/technicianReviewStore.js'
+
+const REVIEW_PILL = {
+  [UNDER_REVIEW]: { label: 'قيد المراجعة', className: 'bg-primary-50 text-primary-900' },
+  [APPROVED]: { label: 'تمت المراجعة', className: 'bg-success-100 text-success-800' },
+}
 
 const HEAD_CLASS = 'px-[16px] py-[14px] text-start text-[14px] font-bold text-text-400'
 const CELL_CLASS = 'px-[16px] py-[14px] text-[14px] text-text-400'
@@ -36,6 +50,7 @@ function TechniciansTable({
   to,
   onPageChange,
   onToggleStatus,
+  onApproveReview,
   busyId = null,
 }) {
   const navigate = useNavigate()
@@ -44,7 +59,7 @@ function TechniciansTable({
       {/* A ten-column table cannot narrow indefinitely; below the breakpoint it
           scrolls sideways inside the card rather than crushing the columns. */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1100px] border-collapse">
+        <table className="w-full min-w-[1260px] border-collapse">
           <thead className="bg-primary-50">
             <tr>
               <th scope="col" className={HEAD_CLASS}>الصورة</th>
@@ -56,6 +71,8 @@ function TechniciansTable({
               <th scope="col" className={HEAD_CLASS}>التقييم</th>
               <th scope="col" className={HEAD_CLASS}>الطلبات</th>
               <th scope="col" className={HEAD_CLASS}>الحالة</th>
+              {/* TEMPORARY — DEMO ONLY. */}
+              <th scope="col" className={HEAD_CLASS}>المراجعة</th>
               <th scope="col" className={HEAD_CLASS}>إجراءات</th>
             </tr>
           </thead>
@@ -63,6 +80,12 @@ function TechniciansTable({
           <tbody>
             {rows.map((technician) => {
               const suspended = technician.status === 'suspended'
+
+              // TEMPORARY — DEMO ONLY. A technician this browser has no review
+              // entry for is left blank rather than called reviewed: the store
+              // only knows about accounts it watched register, and printing a
+              // state for the rest would be a guess.
+              const reviewPill = REVIEW_PILL[technician.review] ?? null
 
               return (
                 <tr
@@ -121,10 +144,51 @@ function TechniciansTable({
                     >
                       {technicianStatusLabel(technician.status)}
                     </span>
+
+                    {/* The suspension is the API's; the reason beside it was
+                        recorded in this browser when an admin acted, because
+                        the API has no field for one. Absent for a suspension
+                        carried out anywhere else, and simply not drawn then. */}
+                    {suspended && technician.suspensionReason ? (
+                      <p className="mt-[6px] text-[12px] text-text-300">
+                        {suspensionReasonLabel(technician.suspensionReason) ??
+                          technician.suspensionReason}
+                      </p>
+                    ) : null}
+                  </td>
+
+                  {/* TEMPORARY — DEMO ONLY. */}
+                  <td className={CELL_CLASS}>
+                    {reviewPill ? (
+                      <span
+                        className={`inline-block rounded-[8px] px-[12px] py-[6px] text-[13px] font-bold ${reviewPill.className}`}
+                      >
+                        {reviewPill.label}
+                      </span>
+                    ) : (
+                      <span className="text-text-200">—</span>
+                    )}
                   </td>
 
                   <td className={CELL_CLASS}>
                     <span className="flex items-center gap-[8px]">
+                      {/* TEMPORARY — DEMO ONLY. Offered only while the account
+                          is actually waiting, so the roster does not carry a
+                          button that would do nothing. */}
+                      {technician.review === UNDER_REVIEW ? (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onApproveReview?.(technician)
+                          }}
+                          className="flex h-[32px] items-center gap-[6px] rounded-[8px] bg-primary-500 px-[10px] text-[12px] font-bold text-white transition-colors hover:bg-primary-700"
+                        >
+                          <ShieldCheck size={14} aria-hidden="true" />
+                          إتمام المراجعة
+                        </button>
+                      ) : null}
+
                    <button
   type="button"
   aria-label={`عرض ملف ${technician.name}`}
@@ -171,7 +235,7 @@ function TechniciansTable({
             {rows.length === 0 ? (
               <tr className="border-t border-line">
                 <td
-                  colSpan={10}
+                  colSpan={11}
                   className="px-[16px] py-[40px] text-center text-[15px] text-text-300"
                 >
                   لا يوجد فنيون مطابقون للفلاتر المختارة.

@@ -25,6 +25,15 @@ function ConfirmEmail() {
   const userId = params.get('userId')
   const token = params.get('token')
 
+  // TEMPORARY — DEMO ONLY. Confirming the address and passing the review are
+  // two different gates, and a technician who has just cleared the first should
+  // not be told they are through. The link carries a userId rather than an
+  // address, so this asks whether *any* account in this browser is still
+  // waiting — enough to add a line, and it claims nothing about which account.
+  const anyUnderReview = Object.values(useReviewState().technicians).some(
+    (entry) => entry.status === UNDER_REVIEW,
+  )
+
   // StrictMode mounts effects twice in development and the token is single
   // use — a second call would report a failure for a confirmation that had
   // already succeeded.
@@ -98,6 +107,14 @@ function ConfirmEmail() {
             <p className="text-[16px] leading-[1.6] text-text-300">
               يمكنك الآن تسجيل الدخول باستخدام بريدك وكلمة المرور.
             </p>
+
+            {/* TEMPORARY — DEMO ONLY. */}
+            {anyUnderReview ? (
+              <p className="rounded-[12px] bg-primary-50 px-[16px] py-[12px] text-[15px] leading-[1.6] text-primary-900">
+                إذا كنت فنيًا، يبقى حسابك قيد المراجعة بعد التفعيل حتى يكتمل
+                تواصل فريقنا معك.
+              </p>
+            ) : null}
           </>
         ) : null}
 

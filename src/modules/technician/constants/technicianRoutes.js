@@ -3,6 +3,15 @@
 // /technician and is named Technician* on both the route and the component.
 export const TECHNICIAN_ROUTES = {
   dashboard: '/technician',
+
+  // TEMPORARY — DEMO ONLY. The holding screen a newly registered technician
+  // waits on until an admin completes the review. It lives under /technician
+  // because it belongs to the technician, but it is deliberately the one path
+  // here that `TechnicianRoute` does not gate — that guard is what redirects
+  // into it. Kept out of TECHNICIAN_NAV_ITEMS below so it never becomes a tab.
+  // See `modules/technician-review/services/technicianReviewStore.js`.
+  underReview: '/technician/under-review',
+
   orders: '/technician/orders',
   orderDetails: '/technician/orders/:orderId',
   // Named `orderCompletion` while the screen was still unbuilt. The frame it

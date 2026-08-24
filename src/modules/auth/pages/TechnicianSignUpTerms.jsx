@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import iconUpdated from '../../../assets/icons/terms-updated.svg'
 import PublicLayout from '../../../shared/layouts/PublicLayout.jsx'
-import AccountCreatedPanel from '../components/AccountCreatedPanel.jsx'
 import SignUpStepper from '../components/SignUpStepper.jsx'
 import TermsCards from '../components/TermsCards.jsx'
 import TermsConsent from '../components/TermsConsent.jsx'
@@ -13,6 +12,14 @@ import {
 } from '../constants/terms.js'
 import { registerTechnician } from '../services/authService.js'
 import { landingRouteFor, saveSession } from '../services/authSession.js'
+
+// TEMPORARY — DEMO ONLY. The technician review flow is held in the browser
+// because the API has no approval state; see
+// `modules/technician-review/services/technicianReviewStore.js`. Remove these
+// three imports and restore `AccountCreatedPanel` once the backend owns it.
+import ConfirmEmailActions from '../../technician-review/components/ConfirmEmailActions.jsx'
+import UnderReviewPanel from '../../technician-review/components/UnderReviewPanel.jsx'
+import { markUnderReview } from '../../technician-review/services/technicianReviewStore.js'
 
 // Figma: "Create an account (for the technician)" step 3 of 3 (node 6:1663).
 // Unlike the other sign up steps this frame has no illustration panel — the
@@ -34,6 +41,12 @@ function TechnicianSignUpTerms() {
 
     try {
       const result = await registerTechnician(details)
+
+      // TEMPORARY — DEMO ONLY. Filed before the branch below rather than after
+      // it: if registration ever starts returning a session, that branch
+      // navigates straight into the portal, and the guard there can only hold
+      // the technician back if the entry already exists.
+      markUnderReview(details?.email)
 
       // If registration ever returns a session, the role inside it decides
       // where the account lands — through the same helper login uses, so no
@@ -68,7 +81,12 @@ function TechnicianSignUpTerms() {
           </div>
 
           {created ? (
-            <AccountCreatedPanel email={details?.email} />
+            /* TEMPORARY — DEMO ONLY. The customer flow still ends on
+               AccountCreatedPanel; a technician gets the review card, which
+               carries the same confirm-your-email instruction inside it. */
+            <UnderReviewPanel email={details?.email}>
+              <ConfirmEmailActions email={details?.email} />
+            </UnderReviewPanel>
           ) : (
             <>
           <header className="flex w-full flex-col items-start gap-[16px]">
