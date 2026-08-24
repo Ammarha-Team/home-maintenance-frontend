@@ -1,26 +1,49 @@
-import React, { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
-import {
-  Check,
-  Navigation,
-  MessageCircle,
-  Phone,
-  X,
-  Star,
-} from "lucide-react";
+import React, { useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
+import { Check, Clock, Loader2, MapPin, MessageCircle, Star } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
-import { useToast } from "../../../shared/toast/toastContext.js";
+import { useServiceRequest } from "../hooks/useServiceRequest";
+import { OFFER_CURRENCY } from "../../requests/services/serviceRequestService";
 
-// كم تستغرق الزيارة قبل أن يبلغ الفني بانتهائها. هذه محاكاة للحالة التي
-// سيرسلها الخادم لاحقاً، وضعت في مكان واحد ليسهل استبدالها به.
-const SERVICE_COMPLETION_DELAY = 6000;
+// TEMPORARY — DEMO ONLY. See `services/demoOfferAcceptance.js`.
+import { useDemoAcceptance, useDemoStage } from "../hooks/useDemoAcceptance.js";
+import {
+  DEMO_STAGES,
+  DEMO_STAGE_ORDER,
+  advanceStage,
+} from "../services/demoOfferAcceptance.js";
 
-// تخصيص ماركر الخريطة ليبدو أنيقاً وبدون مشاكل المسارات الافتراضية في Leaflet
+/**
+ * Where a request stands, for the customer who filed it.
+ *
+ * Everything on this screen that can come from the server does: the request's
+ * own id, category, description, status, address, coordinates and preferred
+ * date, and — when the customer has chosen an offer — that technician's real
+ * name, picture, rating, profession, price and duration, read out of the offers
+ * the request already carries.
+ *
+ * What the screen cannot draw is a live journey. The API has no endpoint that
+ * moves a request along, and `ServiceRequestStatus` has no "on the way" or
+ * "arrived" to move it to — the five values are PendingOffers, Assigned,
+ * InProgress, Completed and Cancelled.
+ *
+ * So that the flow can still be walked, the three middle stages advance on a
+ * local five-second timer once the customer has chosen an offer. That timer is
+ * marked TEMPORARY — DEMO ONLY throughout: it writes to `localStorage` and
+ * nowhere else, and the request's real status keeps its own badge at the top of
+ * the card, so a demo sitting at "اكتملت الخدمة" still visibly reads whatever
+ * the server actually says. Replace it with real status transitions when the
+ * backend has them.
+ */
+
+// Leaflet's default marker resolves its own image paths relative to the
+// stylesheet, which a bundler moves — so the icon is pointed at the CDN copy
+// explicitly, as the other maps in this project do.
 const customIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -31,52 +54,213 @@ const customIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
+// The API writes timestamps without a zone — "2026-08-24T16:19:16.08" — which
+// `Date` reads as local time. That is what is wanted here: the server and the
+// customer are in the same city, and appending a Z would shift every reading.
+const formatTime = (value) => {
+  if (!value) return "";
+
+  const at = new Date(value);
+  if (Number.isNaN(at.getTime())) return "";
+
+  return at.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+};
+
+// A preferred day arrives as "2026-08-30". `Date` would read that as UTC
+// midnight and hand back the day before for anyone east of Greenwich, so the
+// parts are split out and rebuilt locally.
+const formatDay = (value) => {
+  if (!value) return "";
+
+  const [year, month, day] = String(value).slice(0, 10).split("-").map(Number);
+  if (!year || !month || !day) return "";
+
+  return new Date(year, month - 1, day).toLocaleDateString("ar-EG", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+/** "120" -> "ساعتان". Whole hours drop the minutes half. */
+const formatDuration = (minutes) => {
+  if (!minutes || minutes <= 0) return "";
+
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+
+  if (!hours) return `${rest} دقيقة`;
+  if (!rest) return hours === 1 ? "ساعة" : `${hours} ساعات`;
+
+  return `${hours === 1 ? "ساعة" : `${hours} ساعات`} و${rest} دقيقة`;
+};
+
+const initialOf = (name) => String(name || "؟").trim().charAt(0) || "؟";
+
+// The journey as the customer reads it.
+//
+// The first two rows are answered by the server — a request has a creation
+// time, and it either has offers or it does not. The last four are the demo's:
+// no endpoint moves a request along, and `ServiceRequestStatus` has no value
+// for "on the way" or "arrived", so their progress comes from the local store.
+// `demoStage` marks which rows those are.
+const TIMELINE = [
+  { key: "created", title: "تم إنشاء الطلب" },
+  { key: "offers", title: "وصلت العروض" },
+  { key: "on_the_way", title: "الفني في الطريق", demoStage: DEMO_STAGES.onTheWay },
+  { key: "arrived", title: "وصل الفني", demoStage: DEMO_STAGES.arrived },
+  { key: "completed", title: "اكتملت الخدمة", demoStage: DEMO_STAGES.completed },
+  { key: "rated", title: "تم تقييم الفني", demoStage: DEMO_STAGES.rated },
+];
+
+// TEMPORARY — DEMO ONLY. The steps the screen walks by itself once an offer has
+// been chosen, and the pause between them.
+//
+// Nothing here reaches the server. There is no endpoint that moves a request
+// between states, so this timer only writes to the local store — the request
+// stays exactly as the API last reported it, and its real status keeps its own
+// badge at the top of the card. Replacing this should be deleting the effect
+// below and reading the request's true status instead.
+//
+// `rated` is deliberately absent: the walk stops at "completed" and waits for
+// the customer to open the rating page themselves.
+const AUTO_ADVANCE = [
+  DEMO_STAGES.onTheWay,
+  DEMO_STAGES.arrived,
+  DEMO_STAGES.completed,
+];
+
+const DEMO_STEP_DELAY_MS = 5000;
+
 export default function OrderTracking() {
-  const { id = "4920" } = useParams();
-  const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { id: orderId } = useParams();
 
-  const [showCancelModal, setShowCancelModal] = useState(false);
+  const { request, loading, error } = useServiceRequest(orderId);
 
-  // مسار الطلب على هذه الشاشة: جارٍ التنفيذ ← اكتملت الخدمة ← أو ملغي
-  const [status, setStatus] = useState("in_progress");
+  // TEMPORARY — DEMO ONLY. Which of the real offers the customer pressed accept
+  // on. The server knows nothing about this; it only picks which offer's real
+  // technician the card below describes.
+  const acceptance = useDemoAcceptance(orderId);
 
-  const isCompleted = status === "completed";
-  const isCancelled = status === "cancelled";
+  // TEMPORARY — DEMO ONLY. How far the local journey has walked, and the single
+  // step it is allowed to offer next.
+  const { stage, next } = useDemoStage(orderId);
 
-  // وصول الفني وانتهاء عمله يصل من الخادم لاحقاً؛ حتى ذلك الحين تتقدم الشاشة
-  // بنفسها حتى لا تقف رحلة العميل عند التتبع.
+  const offers = request?.offers ?? [];
+
+  const chosenOffer =
+    (acceptance && offers.find((offer) => offer.id === acceptance.offerId)) ||
+    null;
+
+  const reference = orderId ? `#${String(orderId).slice(0, 8)}` : "";
+
+  const hasPin =
+    typeof request?.latitude === "number" &&
+    typeof request?.longitude === "number";
+
+  // TEMPORARY — DEMO ONLY. Walks the journey on its own so the flow can be shown
+  // without the customer pressing anything.
+  //
+  // The first step runs immediately, so opening tracking after choosing an offer
+  // shows "الفني في الطريق" straight away; each step after it waits five
+  // seconds. The walk ends at "completed" — `next` is then `rated`, which is not
+  // in `AUTO_ADVANCE`, so no timer is set and the screen stays put until the
+  // customer opens the rating page.
+  //
+  // `advanceStage` only ever accepts the immediate next step, so a timer that
+  // fires late (a backgrounded tab, or React re-running effects in development)
+  // cannot skip a stage or walk the journey backwards.
+  const autoStage = AUTO_ADVANCE.includes(next) ? next : null;
+  const shouldAutoAdvance = Boolean(chosenOffer && autoStage);
+
   useEffect(() => {
-    if (status !== "in_progress") return undefined;
+    if (!shouldAutoAdvance) return undefined;
 
-    const timer = setTimeout(() => {
-      setStatus("completed");
-      showToast({ message: "اكتملت الخدمة، بانتظار تأكيدك وتقييمك للفني" });
-    }, SERVICE_COMPLETION_DELAY);
+    const delay = stage === DEMO_STAGES.accepted ? 0 : DEMO_STEP_DELAY_MS;
+    const timer = setTimeout(() => advanceStage(orderId, autoStage), delay);
 
     return () => clearTimeout(timer);
-  }, [status, showToast]);
+  }, [orderId, stage, autoStage, shouldAutoAdvance]);
 
-  // إحداثيات مركز الرياض (حي النخيل - KAFD كما بالصورة)
-  const position = [24.7556, 46.6389];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col font-cairo" dir="rtl">
+        <UserNavbar />
+        <main className="flex-1 flex items-center justify-center gap-2 text-gray-500">
+          <Loader2 size={20} className="animate-spin" />
+          <span className="text-sm font-medium">جارٍ تحميل الطلب...</span>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
-  const handleConfirmCancel = () => {
-    setStatus("cancelled");
-    setShowCancelModal(false);
-    showToast({ message: `تم إلغاء الطلب #${id}`, variant: "error" });
-  };
+  if (error || !request) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col font-cairo" dir="rtl">
+        <UserNavbar />
+        <main className="flex-1 flex flex-col items-center justify-center gap-4 px-4 text-center">
+          <h1 className="text-xl font-bold text-gray-900">تعذر فتح هذا الطلب</h1>
+          <p className="max-w-md text-sm leading-relaxed text-gray-500">
+            {error || "لم يتم العثور على هذا الطلب."}
+          </p>
+          <Link
+            to="/my-orders"
+            className="rounded-xl bg-[#2563eb] px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#1d4ed8]"
+          >
+            العودة إلى طلباتي
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
-  // تأكيد الاستلام ينقل العميل إلى تقييم الفني: آخر خطوة في الرحلة
-  const handleConfirmCompletion = () => navigate(`/my-orders/${id}/review`);
+  // Each row's state, in one place so the marker, the colour and the label can
+  // never describe the step differently.
+  //
+  // The first two rows are answered by the server. The rest are the demo's, and
+  // they only light up once an offer has been chosen — before that the journey
+  // has not started, whatever the local store happens to hold.
+  const currentIndex = DEMO_STAGE_ORDER.indexOf(stage);
+
+  const timeline = TIMELINE.map((row) => {
+    if (row.key === "created") {
+      return {
+        ...row,
+        state: "done",
+        detail: formatTime(request.createdAt) || "—",
+      };
+    }
+
+    if (row.key === "offers") {
+      return {
+        ...row,
+        state: offers.length ? "done" : "waiting",
+        detail: offers.length
+          ? `${offers.length} عرض من الفنيين`
+          : "بانتظار عروض الفنيين",
+      };
+    }
+
+    if (!chosenOffer) {
+      return { ...row, state: "waiting", detail: "بانتظار اختيار الفني" };
+    }
+
+    const rowIndex = DEMO_STAGE_ORDER.indexOf(row.demoStage);
+
+    if (rowIndex < currentIndex) return { ...row, state: "done", detail: "" };
+    if (rowIndex === currentIndex)
+      return { ...row, state: "current", detail: "الآن" };
+
+    return { ...row, state: "waiting", detail: "" };
+  });
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-cairo" dir="rtl">
-      {/* 1. النافبار */}
       <UserNavbar />
 
-      {/* 2. محتوى الصفحة الرئيسي */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
-        {/* البريدكرامب (Breadcrumb Navigation) */}
         <nav
           aria-label="Breadcrumb"
           className="text-xs sm:text-sm text-gray-400 mb-6 flex items-center gap-2 font-medium"
@@ -92,265 +276,280 @@ export default function OrderTracking() {
           <span className="text-[#2563eb] font-semibold">تتبع الطلب</span>
         </nav>
 
-        {/* عنوان الصفحة */}
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 text-right">
           تتبع الطلب
         </h1>
 
-        {/* الشبكة الرئيسية (Grid) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          
-          {/* العمود الأيمن (4 أعمدة): كارت تايم لاين حالة الطلب + زر إلغاء الطلب */}
-          <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-24 order-1 lg:order-1">
-            {/* كارت تايم لاين حالة الطلب */}
+          {/* حالة الطلب */}
+          <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-24">
             <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-xs text-right">
               <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-50">
-                <span
-                  className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
-                    isCancelled
-                      ? "bg-rose-50 text-rose-600"
-                      : isCompleted
-                        ? "bg-[#e6f7ed] text-[#059669]"
-                        : "bg-blue-50 text-[#2563eb]"
-                  }`}
-                >
-                  {isCancelled ? "ملغي" : isCompleted ? "مكتمل" : "مباشر"}
+                {/* الحالة كما يعرّفها الخادم، لا كما تخمّنها الشاشة */}
+                <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563eb]">
+                  {request.statusLabel}
                 </span>
                 <h2 className="font-bold text-gray-900 text-lg">
-                  حالة الطلب #{id}
+                  حالة الطلب {reference}
                 </h2>
               </div>
 
-              {/* RTL Vertical Stepper Timeline */}
               <div className="relative pr-6 space-y-7">
-                {/* الخط الرأسي الخلفي */}
-                <div className="absolute right-3 top-2.5 bottom-2.5 w-0.5 bg-gray-200"></div>
+                <div className="absolute right-3 top-2.5 bottom-2.5 w-0.5 bg-gray-200" />
 
-                {/* الخطوة 1: تم استلام الطلب */}
-                <div className="relative flex items-start gap-4">
-                  <div className="absolute -right-6 top-0.5 w-6 h-6 rounded-full bg-[#2563eb] text-white flex items-center justify-center ring-4 ring-white shadow-2xs z-10">
-                    <Check size={14} className="stroke-[3]" />
-                  </div>
-                  <div className="mr-2">
-                    <h3 className="font-bold text-[#2563eb] text-sm sm:text-base">
-                      تم استلام الطلب
-                    </h3>
-                    <p className="text-gray-400 text-xs mt-0.5 font-medium">
-                      10:30 صباحاً
-                    </p>
-                  </div>
-                </div>
-
-                {/* الخطوة 2: الفني في الطريق */}
-                <div className="relative flex items-start gap-4">
-                  <div className="absolute -right-6 top-0.5 w-6 h-6 rounded-full bg-[#2563eb] text-white flex items-center justify-center ring-4 ring-white shadow-2xs z-10">
-                    <Navigation size={13} className="fill-white text-white" />
-                  </div>
-                  <div className="mr-2">
-                    <h3 className="font-bold text-[#2563eb] text-sm sm:text-base">
-                      الفني في الطريق
-                    </h3>
-                    <p className="text-gray-500 text-xs mt-0.5 font-medium">
-                      الوصول المتوقع: 5 دقائق
-                    </p>
-                  </div>
-                </div>
-
-                {/* الخطوة 3: اكتملت الخدمة */}
-                <div
-                  className={`relative flex items-start gap-4 ${
-                    isCompleted ? "" : "opacity-60"
-                  }`}
-                >
+                {timeline.map((row) => (
                   <div
-                    className={`absolute -right-6 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white z-10 ${
-                      isCompleted
-                        ? "bg-[#10b981] text-white shadow-2xs"
-                        : "bg-gray-100 border border-gray-300 text-gray-400"
+                    key={row.key}
+                    className={`relative flex items-start gap-4 ${
+                      row.state === "waiting" ? "opacity-60" : ""
                     }`}
                   >
-                    <Check size={13} className="stroke-[2]" />
-                  </div>
-                  <div className="mr-2">
-                    <h3
-                      className={`text-sm sm:text-base ${
-                        isCompleted
-                          ? "font-bold text-[#059669]"
-                          : "font-medium text-gray-500"
+                    <div
+                      className={`absolute -right-6 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white z-10 ${
+                        row.state === "done"
+                          ? "bg-[#2563eb] text-white shadow-2xs"
+                          : row.state === "current"
+                            ? "bg-[#10b981] text-white shadow-2xs"
+                            : "bg-gray-100 border border-gray-300 text-gray-400"
                       }`}
                     >
-                      اكتملت الخدمة
-                    </h3>
-                    <p className="text-gray-400 text-xs mt-0.5 font-medium">
-                      {isCompleted
-                        ? "أكد استلام الخدمة لتقييم الفني"
-                        : "بانتظار التأكيد النهائي"}
-                    </p>
+                      {row.state === "waiting" ? (
+                        <Clock size={12} />
+                      ) : (
+                        <Check size={13} className="stroke-[2.5]" />
+                      )}
+                    </div>
+
+                    <div className="mr-2">
+                      <h3
+                        className={`text-sm sm:text-base ${
+                          row.state === "done"
+                            ? "font-bold text-[#2563eb]"
+                            : row.state === "current"
+                              ? "font-bold text-[#059669]"
+                              : "font-medium text-gray-500"
+                        }`}
+                      >
+                        {row.title}
+                      </h3>
+
+                      {row.detail ? (
+                        <p className="text-gray-400 text-xs mt-0.5 font-medium">
+                          {row.detail}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
+                ))}
+              </div>
+
+              {/* الخدمة اكتملت: التقييم خطوة يقررها العميل، فلا انتقال تلقائي
+                  إلى صفحة التقييم */}
+              {chosenOffer && stage === DEMO_STAGES.completed ? (
+                <Link
+                  to={`/my-orders/${orderId}/review`}
+                  className="mt-6 block w-full rounded-xl bg-[#2563eb] py-3 text-center text-sm font-bold text-white transition-colors hover:bg-[#1d4ed8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d4ed8]"
+                >
+                  تقييم الفني
+                </Link>
+              ) : null}
+            </div>
+
+            <Link
+              to={`/my-orders/${orderId}/offers`}
+              className="block w-full py-3 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl font-semibold text-sm transition-colors text-center"
+            >
+              عرض كل العروض
+            </Link>
+          </div>
+
+          {/* الخريطة والفني */}
+          <div className="lg:col-span-8 space-y-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col">
+              {/* الخريطة على إحداثيات الطلب الحقيقية */}
+              {hasPin ? (
+                <div className="relative w-full h-[380px] sm:h-[450px] bg-gray-100 z-0">
+                  <MapContainer
+                    center={[request.latitude, request.longitude]}
+                    zoom={15}
+                    scrollWheelZoom={false}
+                    className="w-full h-full z-0"
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker
+                      position={[request.latitude, request.longitude]}
+                      icon={customIcon}
+                    >
+                      <Popup>{request.address || "موقع الخدمة"}</Popup>
+                    </Marker>
+                  </MapContainer>
                 </div>
+              ) : (
+                <div className="flex h-[220px] w-full items-center justify-center bg-gray-50 text-sm font-medium text-gray-400">
+                  لا تتوفر إحداثيات لهذا الطلب
+                </div>
+              )}
+
+              <div className="p-4 sm:p-6 border-t border-gray-100 space-y-4 bg-white text-right">
+                <div>
+                  <h2 className="font-bold text-gray-900 text-lg">
+                    {`خدمة ${request.categoryLabel}`}
+                  </h2>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-500">
+                    {request.problemDescription}
+                  </p>
+                </div>
+
+                <dl className="grid grid-cols-1 gap-2 border-t border-gray-100 pt-4 text-xs sm:text-sm sm:grid-cols-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-gray-400">الموعد المفضل</dt>
+                    <dd className="font-semibold text-gray-700">
+                      {formatDay(request.preferredDate) || "—"}
+                    </dd>
+                  </div>
+
+                  {request.address && (
+                    <div className="flex items-start justify-between gap-3">
+                      <dt className="shrink-0 text-gray-400">الموقع</dt>
+                      <dd className="flex items-start gap-1.5 font-semibold text-gray-700">
+                        <span>{request.address}</span>
+                        <MapPin size={14} className="mt-0.5 shrink-0 text-[#2563eb]" />
+                      </dd>
+                    </div>
+                  )}
+                </dl>
               </div>
             </div>
 
-            {/* الإجراءات المتاحة تتبع حالة الطلب: يُلغى ما دام جارياً، ويُؤكد
-                ويُقيَّم بعد انتهائه، ولا شيء منهما بعد إلغائه */}
-            {isCancelled && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-4 text-center font-bold text-sm">
-                تم إلغاء هذا الطلب بنجاح.
-              </div>
-            )}
+            {/* الفني — بيانات حقيقية من العرض الذي اختاره العميل */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs p-4 sm:p-6">
+              {chosenOffer ? (
+                <>
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 w-full sm:w-auto order-2 sm:order-1">
+                      <Link
+                        to="/chat"
+                        className="flex-1 sm:flex-none bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold px-8 py-2.5 rounded-xl text-sm transition-colors shadow-2xs cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle size={17} />
+                        <span>مراسله</span>
+                      </Link>
+                    </div>
 
-            {isCompleted && (
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={handleConfirmCompletion}
-                  className="w-full py-3 bg-[#10b981] hover:bg-[#059669] text-white rounded-xl font-bold text-sm transition-colors cursor-pointer shadow-2xs flex items-center justify-center gap-2"
-                >
-                  <Check size={18} className="stroke-[2.5]" />
-                  <span>تأكيد استلام الخدمة وتقييم الفني</span>
-                </button>
+                    <div className="flex items-center gap-3.5 w-full sm:w-auto justify-end order-1 sm:order-2">
+                      <div className="text-right">
+                        <h3 className="font-bold text-gray-900 text-base sm:text-lg">
+                          {chosenOffer.technicianName}
+                        </h3>
 
-                <Link
-                  to="/my-orders"
-                  className="block w-full py-3 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl font-semibold text-sm transition-colors text-center"
-                >
-                  العودة إلى طلباتي
-                </Link>
-              </div>
-            )}
+                        {chosenOffer.professionLabel && (
+                          <p className="text-gray-400 text-xs mt-0.5 font-medium">
+                            {chosenOffer.professionLabel}
+                          </p>
+                        )}
 
-            {!isCompleted && !isCancelled && (
-              <button
-                type="button"
-                onClick={() => setShowCancelModal(true)}
-                className="w-full py-3 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl font-bold text-sm transition-colors cursor-pointer shadow-2xs flex items-center justify-center gap-2"
-              >
-                <X size={18} className="stroke-[2.5]" />
-                <span>إلغاء الطلب</span>
-              </button>
-            )}
-          </div>
+                        {/* التقييم صفر لكل الفنيين اليوم لأن لا توجد نقطة نهاية
+                            ترفعه، فيُقال ذلك بدل عرض صفر كأنه درجة */}
+                        {typeof chosenOffer.rating === "number" &&
+                        chosenOffer.rating > 0 ? (
+                          <div className="flex items-center gap-1 mt-0.5 justify-end">
+                            <span className="font-bold text-gray-900 text-xs">
+                              {chosenOffer.rating.toFixed(1)}
+                            </span>
+                            <Star size={12} className="fill-amber-400 text-amber-400" />
+                          </div>
+                        ) : (
+                          <p className="text-gray-400 text-[11px] mt-0.5">
+                            لا توجد تقييمات بعد
+                          </p>
+                        )}
+                      </div>
 
-          {/* العمود الأيسر (8 أعمدة): الخريطة المباشرة الحقيقية + كارت التواصل مع الفني */}
-          <div className="lg:col-span-8 space-y-6 ">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col">
-              
-              {/* container الخريطة التفاعلية */}
-              <div className="relative w-full h-[380px] sm:h-[450px] bg-gray-100 z-0">
-                <MapContainer
-                  center={position}
-                  zoom={13}
-                  scrollWheelZoom={false}
-                  className="w-full h-full z-0"
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <Marker position={position} icon={customIcon}>
-                    <Popup>
-                      موقع الخدمة الحالي - الرياض
-                    </Popup>
-                  </Marker>
-                </MapContainer>
-              </div>
-
-              {/* شريط التواصل مع الفني المكتمل أسفل الخريطة */}
-              <div className="p-4 sm:p-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white">
-                {/* أزرار الإجراءات (مراسلة / اتصال) */}
-                <div className="flex items-center gap-3 w-full sm:w-auto order-2 sm:order-1">
-                  <a
-                    href="tel:+966500000000"
-                    className="flex-1 sm:flex-none border border-[#2563eb] text-[#2563eb] hover:bg-blue-50 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <Phone size={17} />
-                    <span>اتصال</span>
-                  </a>
-
-                  {/* مراسلة الفني تفتح شاشة المحادثات على مسارها الفعلي */}
-                  <Link
-                    to="/chat"
-                    className="flex-1 sm:flex-none bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold px-8 py-2.5 rounded-xl text-sm transition-colors shadow-2xs cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <MessageCircle size={17} />
-                    <span>مراسله</span>
-                  </Link>
-                </div>
-
-                {/* كارت الفني والصورة والتقييم */}
-                <div className="flex items-center gap-3.5 w-full sm:w-auto justify-end order-1 sm:order-2">
-                  <div className="text-right">
-                    <h3 className="font-bold text-gray-900 text-base sm:text-lg">
-                      أحمد العتيبي
-                    </h3>
-                    <div className="flex items-center gap-1 mt-0.5 justify-end">
-                      <span className="text-[#2563eb] text-xs font-bold">
-                        (124 تقييم)
-                      </span>
-                      <span className="font-bold text-gray-900 text-xs mr-1">4.8</span>
-                      <div className="flex items-center text-amber-400 gap-0.5">
-                        <Star size={12} className="fill-amber-400 text-amber-400" />
-                        <Star size={12} className="fill-amber-400 text-amber-400" />
-                        <Star size={12} className="fill-amber-400 text-amber-400" />
-                        <Star size={12} className="fill-amber-400 text-amber-400" />
-                        <Star size={12} className="fill-amber-400 text-amber-400" />
+                      <div className="relative shrink-0">
+                        {chosenOffer.technicianProfilePicture ? (
+                          <img
+                            src={chosenOffer.technicianProfilePicture}
+                            alt=""
+                            className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-2xs"
+                          />
+                        ) : (
+                          <div
+                            aria-hidden="true"
+                            className="w-14 h-14 rounded-full border-2 border-white bg-[#e8f0fe] text-[#2563eb] flex items-center justify-center text-xl font-bold shadow-2xs"
+                          >
+                            {initialOf(chosenOffer.technicianName)}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="relative shrink-0">
-                    <img
-                      src="/technician_avatar.jpg"
-                      alt="أحمد العتيبي"
-                      className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-2xs"
-                    />
-                    <span className="absolute bottom-0 right-0 bg-[#10b981] w-4 h-4 rounded-full border-2 border-white flex items-center justify-center">
-                      <Check size={9} className="text-white stroke-[3]" />
-                    </span>
-                  </div>
-                </div>
+                  <dl className="mt-4 flex flex-wrap items-center justify-end gap-x-6 gap-y-2 border-t border-gray-100 pt-4 text-sm">
+                    {chosenOffer.durationInMinutes ? (
+                      <div className="flex items-center gap-2">
+                        <dt className="text-gray-400">مدة التنفيذ</dt>
+                        <dd className="font-semibold text-gray-700">
+                          {formatDuration(chosenOffer.durationInMinutes)}
+                        </dd>
+                      </div>
+                    ) : null}
 
-              </div>
+                    {typeof chosenOffer.price === "number" ? (
+                      <div className="flex items-center gap-2">
+                        <dt className="text-gray-400">السعر المتفق عليه</dt>
+                        <dd className="font-bold text-[#2563eb]">
+                          {`${chosenOffer.price.toLocaleString("ar-EG")} ${OFFER_CURRENCY}`}
+                        </dd>
+                      </div>
+                    ) : null}
+                  </dl>
+
+                  {/* الرحلة انتهت. لا نجوم ولا تعليق هنا: التقييم بكامله — من
+                      اختيار النجوم إلى كتابة الملاحظة — يعيش على صفحة التقييم
+                      وحدها، وهذه الشاشة تعرض مسار الطلب وحالته فقط. */}
+                  {stage === DEMO_STAGES.rated ? (
+                    <div className="mt-6 border-t border-gray-100 pt-6 text-center">
+                      <span
+                        aria-hidden="true"
+                        className="mx-auto flex size-12 items-center justify-center rounded-full bg-[#e6f7ed] text-[#059669]"
+                      >
+                        <Check size={26} className="stroke-[2.5]" />
+                      </span>
+
+                      <h3 className="mt-3 text-lg font-bold text-gray-900">
+                        تم إنهاء الطلب
+                      </h3>
+
+                      <Link
+                        to="/my-orders"
+                        className="mt-5 inline-block rounded-xl bg-[#2563eb] px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#1d4ed8]"
+                      >
+                        العودة إلى طلباتي
+                      </Link>
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <div className="text-center">
+                  <p className="text-sm font-medium text-gray-500">
+                    لم يتم اختيار فني لهذا الطلب بعد.
+                  </p>
+                  <Link
+                    to={`/my-orders/${orderId}/offers`}
+                    className="mt-3 inline-block rounded-xl bg-[#2563eb] px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#1d4ed8]"
+                  >
+                    استعراض العروض
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
-
         </div>
       </main>
 
-      {/* مودال تأكيد إلغاء الطلب */}
-      {showCancelModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-xl border border-gray-100 space-y-4" dir="rtl">
-            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 mx-auto flex items-center justify-center">
-              <X size={24} className="stroke-[2.5]" />
-            </div>
-
-            <h3 className="font-bold text-gray-900 text-lg">تأكيد إلغاء الطلب</h3>
-            <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">
-              هل أنت تأكد من رغبتك في إلغاء الطلب #{id}؟ لن تتمكن من التراجع عن هذا الإجراء.
-            </p>
-
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={handleConfirmCancel}
-                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors cursor-pointer"
-              >
-                نعم، إلغاء الطلب
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCancelModal(false)}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition-colors cursor-pointer"
-              >
-                رجوع
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 3. الفوتر */}
       <Footer />
     </div>
   );

@@ -78,6 +78,19 @@ export default function OrderCard({ order }) {
       );
     }
 
+    // TEMPORARY — DEMO ONLY. طلب قُيّم بالفعل في العرض التوضيحي انتهى، فيقود إلى
+    // ملخص رحلته لا إلى نموذج تقييم يملؤه العميل مرة ثانية.
+    if (order.demoRated) {
+      return (
+        <Link
+          to={`/my-orders/${order.id}/track`}
+          className="block w-full py-2.5 bg-white border border-[#2563eb] text-[#2563eb] hover:bg-blue-50 font-semibold rounded-xl text-sm transition-colors shadow-2xs cursor-pointer text-center"
+        >
+          عرض تفاصيل الطلب
+        </Link>
+      );
+    }
+
     // الطلب المكتمل ينتهي بالتقييم، وهو المدخل إلى شاشة تقييم الفني
     if (status === "Completed") {
       return (

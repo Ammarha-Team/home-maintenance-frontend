@@ -2,15 +2,16 @@ import api from '../../../shared/services/api'
 
 // The normal (non-emergency) service request, end to end.
 //
-// Six endpoints, split by role — verified against the live API with the test
+// Seven endpoints, split by role — verified against the live API with the test
 // accounts:
 //
-//   GET  /api/ServiceCategory                  any signed-in user
-//   GET  /api/service-requests                 client only    (technician -> 403)
-//   POST /api/service-requests                 client only
-//   GET  /api/service-requests/{id}            client only
-//   GET  /api/service-requests/available       technician only (client -> 403)
-//   GET  /api/service-requests/available/{id}  technician only
+//   GET  /api/ServiceCategory                     any signed-in user
+//   GET  /api/service-requests                    client only    (technician -> 403)
+//   POST /api/service-requests                    client only
+//   GET  /api/service-requests/{id}               client only
+//   GET  /api/service-requests/available          technician only (client -> 403)
+//   GET  /api/service-requests/available/{id}     technician only
+//   POST /api/service-requests/{requestId}/offers technician only (client -> 403)
 //
 // Nothing here sends a user id. Every endpoint reads the caller from the bearer
 // token the shared client attaches, which is why none of them take one.
@@ -21,6 +22,10 @@ import api from '../../../shared/services/api'
 const REQUESTS_PATH = '/api/service-requests'
 const AVAILABLE_PATH = '/api/service-requests/available'
 const CATEGORIES_PATH = '/api/ServiceCategory'
+
+/** POST target for one technician's bid on one request. */
+const offersPath = (requestId) =>
+  `${REQUESTS_PATH}/${encodeURIComponent(requestId)}/offers`
 
 // ServiceRequestStatus, as the backend defines it. Requests are filtered by the
 // number and answered with the name, so both directions are written down.
@@ -61,6 +66,27 @@ export const CATEGORY_LABEL_AR = {
 }
 
 export const categoryLabel = (name) => CATEGORY_LABEL_AR[name] ?? name ?? ''
+
+// An offer names its technician's profession, and the API names it in English.
+// These three are the complete set, checked against GET /api/Profession/GetAll;
+// anything added later falls back to its own name rather than rendering blank.
+//
+// Worth noting they do not line up with the five service categories above —
+// there is no Painter and no AC profession, and nothing in the API relates one
+// list to the other. Nothing here tries to: this map only translates a label an
+// offer already carries.
+export const PROFESSION_LABEL_AR = {
+  Plumber: 'فني سباكة',
+  Electrician: 'فني كهرباء',
+  Carpenter: 'فني نجارة',
+}
+
+export const professionLabel = (name) => PROFESSION_LABEL_AR[name] ?? name ?? ''
+
+// The API states no currency anywhere — an offer's `price` is a bare number. It
+// is written here once so the technician who types a figure and the customer who
+// reads it back are never shown two different currencies for the same number.
+export const OFFER_CURRENCY = 'ج.م'
 
 // The dialog's own filter. Swagger types `Images` as an array of binary with no
 // stated restriction, so this only matches what the upload hint on the form
@@ -213,15 +239,47 @@ const toListItem = (dto) => ({
   createdAt: dto?.createdAt ?? null,
 })
 
-// The customer's detail view. `images` is a plain array of URLs, and `offers`
-// is carried through untouched — the offers screen owns that shape.
+// One technician's bid, as it comes back on the customer's detail view.
+//
+// Swagger publishes no response schema, so these eleven fields were read off a
+// real offer submitted with the technician test account rather than inferred:
+//
+//   { offerId, technicianId, technicianName, technicianProfilePicture, rating,
+//     yearsOfExperience, professionName, notes, price, durationInMinutes,
+//     createdAt }
+//
+// That is the whole of it. There is no distance, no arrival time, no review
+// count and no count of previous jobs won — the offers screen used to show all
+// four, and none of them exists to show.
+//
+// `technicianProfilePicture` is genuinely null for a technician who never
+// uploaded one, so it keeps its null and the card draws a fallback rather than
+// requesting an empty URL.
+const toOffer = (dto) => ({
+  id: dto?.offerId ?? '',
+  technicianId: dto?.technicianId ?? '',
+  technicianName: dto?.technicianName ?? '',
+  technicianProfilePicture: dto?.technicianProfilePicture ?? null,
+  rating: typeof dto?.rating === 'number' ? dto.rating : null,
+  yearsOfExperience:
+    typeof dto?.yearsOfExperience === 'number' ? dto.yearsOfExperience : null,
+  professionName: dto?.professionName ?? '',
+  professionLabel: professionLabel(dto?.professionName),
+  notes: dto?.notes ?? '',
+  price: typeof dto?.price === 'number' ? dto.price : null,
+  durationInMinutes:
+    typeof dto?.durationInMinutes === 'number' ? dto.durationInMinutes : null,
+  createdAt: dto?.createdAt ?? null,
+})
+
+// The customer's detail view. `images` is a plain array of URLs.
 const toDetail = (dto) => ({
   ...toListItem(dto),
   address: dto?.address ?? '',
   latitude: typeof dto?.latitude === 'number' ? dto.latitude : null,
   longitude: typeof dto?.longitude === 'number' ? dto.longitude : null,
   images: Array.isArray(dto?.images) ? dto.images : [],
-  offers: Array.isArray(dto?.offers) ? dto.offers : [],
+  offers: Array.isArray(dto?.offers) ? dto.offers.map(toOffer) : [],
 })
 
 // The technician's board. No `status` here — every request on it is open — and
@@ -293,3 +351,35 @@ export const fetchAvailableServiceRequests = ({ categoryId, search } = {}) => {
 /** GET /api/service-requests/available/{id} — one open request, for a technician. */
 export const fetchAvailableServiceRequestById = (id) =>
   api.get(`${AVAILABLE_PATH}/${id}`).then(toAvailableDetail)
+
+/**
+ * POST /api/service-requests/{requestId}/offers — the technician's bid.
+ *
+ * `SubmitOfferRequest` is the one endpoint in this flow Swagger describes, and
+ * it takes exactly three fields. Two things it says are not what the server
+ * does, both confirmed against the live API:
+ *
+ *   - `notes` is typed `nullable: true`, but sending null is refused with
+ *     "The Notes field is required." before the handler is reached. The form
+ *     therefore requires it rather than letting the server say so.
+ *   - `price` and `durationInMinutes` are plain numbers in the schema; the
+ *     handler rejects anything at or below zero with a `Price` /
+ *     `DurationInMinutes` error code.
+ *
+ * There is nowhere to send a start date or time — the contract has no field for
+ * one — and no way to attach an image or a breakdown of the figure.
+ *
+ * Answers with the new offer's id as a bare GUID string. A second bid on the
+ * same request comes back 400 with code `Offer` and the message "You have
+ * already submitted an offer for this service request."
+ *
+ * @param {string} requestId
+ * @param {{price: number, durationInMinutes: number, notes: string}} offer
+ * @returns {Promise<string>} the new offer's id
+ */
+export const submitOffer = (requestId, { price, durationInMinutes, notes }) =>
+  api.post(offersPath(requestId), {
+    price,
+    durationInMinutes,
+    notes,
+  })
