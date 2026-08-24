@@ -4,6 +4,11 @@ import PublicLayout from '../../../shared/layouts/PublicLayout.jsx'
 import { AUTH_ROUTES } from '../constants/authRoutes.js'
 import { confirmEmail } from '../services/authService.js'
 
+// TEMPORARY — DEMO ONLY. Used for one extra line on success; see
+// `modules/technician-review/services/technicianReviewStore.js`.
+import { useReviewState } from '../../technician-review/hooks/useTechnicianReview.js'
+import { UNDER_REVIEW } from '../../technician-review/services/technicianReviewStore.js'
+
 /**
  * Where the confirmation mail should land.
  *
