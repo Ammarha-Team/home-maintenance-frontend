@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Loader2, MapPin } from "lucide-react";
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
 import TechnicianOfferCard from "../components/TechnicianOfferCard";
 import { useServiceRequest } from "../hooks/useServiceRequest";
+
+// TEMPORARY — DEMO ONLY. See `services/demoOfferAcceptance.js`.
+import { recordAcceptance } from "../services/demoOfferAcceptance.js";
 
 // The API sends a preferred day as "2026-09-05". `Date` would read that as UTC
 // midnight and hand back the day before for anyone east of Greenwich, so the
@@ -37,6 +40,7 @@ const FILTERS = [
 
 export default function OrderOffers() {
   const { id: orderId } = useParams();
+  const navigate = useNavigate();
 
   const {
     request,
@@ -50,6 +54,16 @@ export default function OrderOffers() {
 
   // نسخة قبل الفرز: sort يعدّل المصفوفة في مكانها، والمصدر هنا هو ما ردّ به
   // الخادم.
+  // TEMPORARY — DEMO ONLY. Records which real offer was chosen and moves to
+  // tracking. Deliberately sends nothing: there is no accept endpoint, and the
+  // request stays "بانتظار العروض" on the server after this runs. The id is
+  // kept so the tracking screen can show that offer's real technician instead
+  // of a hardcoded one.
+  const acceptOffer = (offer) => {
+    recordAcceptance(orderId, offer.id);
+    navigate(`/my-orders/${orderId}/track`);
+  };
+
   const sortedOffers = [...offers].sort((a, b) => {
     if (activeFilter === "lowest_price") return (a.price ?? 0) - (b.price ?? 0);
     if (activeFilter === "highest_rated") return (b.rating ?? 0) - (a.rating ?? 0);
@@ -210,7 +224,11 @@ export default function OrderOffers() {
             ) : sortedOffers.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {sortedOffers.map((offer) => (
-                  <TechnicianOfferCard key={offer.id} offer={offer} />
+                  <TechnicianOfferCard
+                    key={offer.id}
+                    offer={offer}
+                    onAccept={acceptOffer}
+                  />
                 ))}
               </div>
             ) : (

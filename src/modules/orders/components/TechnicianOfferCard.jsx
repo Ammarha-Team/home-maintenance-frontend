@@ -35,7 +35,7 @@ const formatDuration = (minutes) => {
 /** The first letter of the name, for a technician with no picture. */
 const initialOf = (name) => String(name || "؟").trim().charAt(0) || "؟";
 
-export default function TechnicianOfferCard({ offer }) {
+export default function TechnicianOfferCard({ offer, onAccept }) {
   const {
     technicianName,
     technicianProfilePicture,
@@ -153,12 +153,24 @@ export default function TechnicianOfferCard({ offer }) {
         </div>
       </div>
 
-      {/* لا يوجد إجراء هنا بعد.
-          قبول العرض يحتاج نقطة نهاية لا توجد في الـ API حتى الآن، وزر يبدو
-          فعّالاً بينما لا يُسند الطلب فعليًا أسوأ من غيابه. */}
-      <p className="pt-1 text-center text-xs font-medium text-gray-400">
-        قبول العروض غير متاح حاليًا
-      </p>
+      {/* TEMPORARY — DEMO ONLY.
+          هذا الزر لا يرسل أي طلب إلى الخادم: لا توجد نقطة نهاية لقبول العرض
+          حتى الآن، ويبقى الطلب على حاله "بانتظار العروض" بعد الضغط. كل ما
+          يفعله هو الانتقال إلى شاشة التتبع لإكمال العرض التوضيحي.
+          يُحذف مع `services/demoOfferAcceptance.js` عند توفر النقطة الحقيقية. */}
+      <div className="flex flex-col gap-1.5 pt-1">
+        <button
+          type="button"
+          onClick={() => onAccept?.(offer)}
+          className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-bold py-2.5 px-3 rounded-xl text-xs sm:text-sm transition-colors shadow-2xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#059669]"
+        >
+          قبول العرض
+        </button>
+
+        <p className="text-center text-[11px] font-medium text-gray-400">
+          عرض توضيحي — لا يتم إسناد الطلب فعليًا بعد
+        </p>
+      </div>
     </div>
   );
 }
