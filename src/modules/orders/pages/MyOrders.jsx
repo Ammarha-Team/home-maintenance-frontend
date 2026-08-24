@@ -5,21 +5,41 @@ import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
 import OrderCard from "../components/OrderCard";
 import { useMyServiceRequests } from "../hooks/useMyServiceRequests";
-import { SERVICE_REQUEST_STATUS } from "../../requests/services/serviceRequestService";
 
-// The tabs, and the status each one asks the API for. "الكل" sends none, which
-// is how the endpoint returns everything.
+// TEMPORARY — DEMO ONLY. See `services/demoOfferAcceptance.js`.
+import { useDemoAcceptanceState } from "../hooks/useDemoAcceptance.js";
+import { DEMO_STAGES, stageOf } from "../services/demoOfferAcceptance.js";
+
+// The four buckets of the board.
 //
 // The enum has five values and the board has four tabs: Assigned and InProgress
 // are both stages of a job already under way, and neither is "معلقة" nor
 // "مكتملة". They appear under "الكل" rather than being forced into a tab that
 // would misdescribe them.
+//
+// Status used to be a query parameter, so the server did the filtering. It is
+// done here instead, because a request the customer has finished in the demo is
+// still `PendingOffers` on the server: asking the API for the completed ones
+// would never return it, and asking for the pending ones would hand it back as
+// unfinished work. The endpoint returns the customer's whole list unpaginated,
+// so splitting it here costs nothing. Delete the demo store and the `status`
+// parameter comes back.
 const STATUS_TABS = [
-  { id: "all", label: "الكل", status: undefined },
-  { id: "completed", label: "مكتمله", status: SERVICE_REQUEST_STATUS.completed },
-  { id: "pending", label: "معلقه", status: SERVICE_REQUEST_STATUS.pendingOffers },
-  { id: "canceled", label: "ملغيه", status: SERVICE_REQUEST_STATUS.cancelled },
+  { id: "all", label: "الكل" },
+  { id: "completed", label: "مكتمله" },
+  { id: "pending", label: "معلقه" },
+  { id: "canceled", label: "ملغيه" },
 ];
+
+// Which tab a request belongs under. Anything else — Assigned, InProgress —
+// belongs to no bucket and shows only under "الكل".
+const bucketOf = (status) => {
+  if (status === "Completed") return "completed";
+  if (status === "PendingOffers") return "pending";
+  if (status === "Cancelled") return "canceled";
+
+  return null;
+};
 
 export default function MyOrders() {
   const [activeFilter, setActiveFilter] = useState("all");
@@ -29,16 +49,18 @@ export default function MyOrders() {
 
   const calendarRef = useRef(null);
 
-  const activeStatus = STATUS_TABS.find((tab) => tab.id === activeFilter)?.status;
+  // The whole list, filtered below. The API's `search` matches the English
+  // category name only, which an Arabic term never hits, so search and date are
+  // applied to the records that come back rather than asked for.
+  const { requests, loading, error, reload } = useMyServiceRequests();
 
-  // Status filtering is the server's — it is a documented query parameter, so
-  // asking for one status returns one status rather than a full list trimmed
-  // here. Search and date are not: the API's `search` matches the English
-  // category name only, which an Arabic term never hits, so both are applied to
-  // the records that come back.
-  const { requests, loading, error, reload } = useMyServiceRequests({
-    status: activeStatus,
-  });
+  // TEMPORARY — DEMO ONLY. A request the customer has walked to the end of the
+  // demo — accepted an offer, watched the journey, left a rating — is finished
+  // as far as this browser is concerned, even though the server still calls it
+  // `PendingOffers` because nothing can move it. It is shown as مكتملة and kept
+  // out of "معلقه" so a completed job stops reading as outstanding work.
+  const demoState = useDemoAcceptanceState();
+  const isDemoFinished = (id) => stageOf(demoState, id) === DEMO_STAGES.rated;
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -53,16 +75,25 @@ export default function MyOrders() {
 
   const term = searchQuery.trim();
 
-  const filteredOrders = requests.filter((order) => {
-    const matchesSearch =
-      !term ||
-      order.categoryLabel.includes(term) ||
-      order.problemDescription.includes(term);
+  const filteredOrders = requests
+    .map((order) =>
+      isDemoFinished(order.id)
+        ? { ...order, status: "Completed", statusLabel: "مكتملة", demoRated: true }
+        : order,
+    )
+    .filter((order) => {
+      const matchesTab =
+        activeFilter === "all" || bucketOf(order.status) === activeFilter;
 
-    const matchesDate = !selectedDate || order.preferredDate === selectedDate;
+      const matchesSearch =
+        !term ||
+        order.categoryLabel.includes(term) ||
+        order.problemDescription.includes(term);
 
-    return matchesSearch && matchesDate;
-  });
+      const matchesDate = !selectedDate || order.preferredDate === selectedDate;
+
+      return matchesTab && matchesSearch && matchesDate;
+    });
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-cairo" dir="rtl">

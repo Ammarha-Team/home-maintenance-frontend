@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Lightbulb, Loader2, Send } from 'lucide-react'
+import { Link, useParams } from 'react-router-dom'
+import { CheckCircle2, Lightbulb, Loader2, Send } from 'lucide-react'
 import Button from '../../../shared/components/Button.jsx'
 import Textarea from '../../../shared/components/Textarea.jsx'
 import TechnicianLayout from '../../../shared/layouts/TechnicianLayout.jsx'
@@ -13,6 +13,7 @@ import {
   CURRENCY,
   PLATFORM_COMMISSION_RATE,
 } from '../services/technicianService.js'
+import { submitOffer } from '../../requests/services/serviceRequestService.js'
 import { useAvailableServiceRequest } from '../hooks/useAvailableServiceRequests.js'
 
 // Money is written to two places throughout the frame.
@@ -30,10 +31,20 @@ const money = (amount) => `${amount.toFixed(2)} ${CURRENCY}`
  * what the customer pays and needs to see, before sending, what actually
  * reaches them. It recalculates on every keystroke rather than on blur, because
  * a figure that lags behind the field it describes is worse than no figure.
+ *
+ * The form collects exactly what `POST /api/service-requests/{id}/offers`
+ * accepts — a price, a duration and a note — and nothing else. It used to ask
+ * for a start date and an arrival time as well; the contract has no field for
+ * either, so those two inputs collected an answer that was then dropped on the
+ * floor. They are replaced by the duration the endpoint does take.
+ *
+ * Nothing here navigates on success. The screen the technician would land on
+ * describes an accepted offer, and acceptance is the customer's to give through
+ * an endpoint that does not exist yet — so a sent offer says it was sent, and
+ * lets the technician choose where to go next.
  */
 function TechnicianOrderOffer() {
   const { orderId } = useParams()
-  const navigate = useNavigate()
   const { request, loading } = useAvailableServiceRequest(orderId)
 
   // The bid form needs four things off the request, and the API names three of
@@ -50,10 +61,14 @@ function TechnicianOrderOffer() {
     : null
 
   const [price, setPrice] = useState('100')
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('09:00')
+  const [duration, setDuration] = useState('60')
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
+  const [sending, setSending] = useState(false)
+
+  // The id the API answers with. Its presence is what marks the offer as sent,
+  // so there is no separate "was it submitted" flag to fall out of step with it.
+  const [offerId, setOfferId] = useState(null)
 
   const trail = [
     { label: 'الرئيسيه', to: TECHNICIAN_ROUTES.dashboard },
@@ -100,21 +115,95 @@ function TechnicianOrderOffer() {
   const commission = total * PLATFORM_COMMISSION_RATE
   const earnings = total - commission
 
-  const handleSubmit = (event) => {
+  const minutes = Number.parseInt(duration, 10) || 0
+  const trimmedNotes = notes.trim()
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
+    // The server checks all three of these as well. Catching them here spares a
+    // round trip and puts the message next to the field that caused it, rather
+    // than translating an English error code after the fact.
     if (total <= 0) {
       setError('أدخل سعرًا أكبر من صفر.')
       return
     }
 
-    if (!date) {
-      setError('اختر تاريخ البدء.')
+    if (minutes <= 0) {
+      setError('أدخل مدة تنفيذ أكبر من صفر بالدقائق.')
+      return
+    }
+
+    // Not a house rule: the endpoint refuses an empty or missing note.
+    if (!trimmedNotes) {
+      setError('اكتب ملاحظة للعميل — الحقل مطلوب لإرسال العرض.')
       return
     }
 
     setError('')
-    navigate(technicianOrderPath(TECHNICIAN_ROUTES.offerAccepted, order.id))
+    setSending(true)
+
+    try {
+      const id = await submitOffer(order.id, {
+        price: total,
+        durationInMinutes: minutes,
+        notes: trimmedNotes,
+      })
+
+      setOfferId(id)
+    } catch (failure) {
+      // The shared client has already turned both of the API's failure shapes
+      // into one Error with a readable Arabic-or-English message. The one worth
+      // naming is a second bid on the same request, which the server answers
+      // with code `Offer` in English.
+      setError(
+        failure.code === 'Offer'
+          ? 'لقد قدمت عرضًا على هذا الطلب من قبل.'
+          : failure.message,
+      )
+    } finally {
+      setSending(false)
+    }
+  }
+
+  // Sent. The form is gone rather than disabled: leaving a filled-in price on
+  // screen beside a success message invites a second submit, which the server
+  // refuses anyway.
+  if (offerId) {
+    return (
+      <TechnicianLayout>
+        <div className="mx-auto flex w-full max-w-[560px] flex-col items-center gap-[20px] px-[24px] py-[64px] text-center">
+          <span
+            aria-hidden="true"
+            className="flex size-[72px] items-center justify-center rounded-full bg-success-100 text-success-800"
+          >
+            <CheckCircle2 size={36} />
+          </span>
+
+          <h1 className="text-[24px] leading-[1.5] font-bold text-text-500">
+            تم إرسال عرضك
+          </h1>
+
+          <p className="text-[16px] leading-[1.6] text-text-300">
+            {`وصل عرضك بمبلغ ${money(total)} إلى العميل. سنخطرك إذا اختارك لتنفيذ الطلب.`}
+          </p>
+
+          {/* The reference the API gave the offer, shortened the same way the
+              request's own reference is — a full GUID is not something a
+              technician reads back to anyone. */}
+          <p className="text-[14px] text-text-200">
+            {`رقم العرض: #${String(offerId).slice(0, 8)}`}
+          </p>
+
+          <Link
+            to={TECHNICIAN_ROUTES.orders}
+            className="flex h-[52px] w-full max-w-[320px] items-center justify-center rounded-[12px] bg-primary-500 text-[16px] font-bold text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
+          >
+            العودة إلى الطلبات
+          </Link>
+        </div>
+      </TechnicianLayout>
+    )
   }
 
   return (
@@ -213,43 +302,47 @@ function TechnicianOrderOffer() {
 
             <section className="flex flex-col gap-[24px]">
               <h2 className="text-right text-[20px] leading-[1.5] font-bold text-text-400 md:text-[24px]">
-                موعد البدء
+                مدة التنفيذ
               </h2>
 
-              <div className="flex flex-col gap-[24px] rounded-[12px] border border-line bg-white p-[25px] shadow-card md:flex-row-reverse">
+              <div className="flex flex-col gap-[24px] rounded-[12px] border border-line bg-white p-[25px] shadow-card">
                 <div className="flex flex-1 flex-col gap-[12px]">
                   <label
-                    htmlFor="offer-date"
+                    htmlFor="offer-duration"
                     className="w-full text-right text-[16px] leading-[1.5] font-bold text-text-300"
                   >
-                    تاريخ البدء
+                    الوقت المتوقع لإنهاء العمل
                   </label>
-                  {/* Native date and time controls: they bring their own
-                      picker, keyboard handling and locale formatting, all of
-                      which a hand-drawn field would reimplement badly. */}
-                  <input
-                    id="offer-date"
-                    type="date"
-                    value={date}
-                    onChange={(event) => setDate(event.target.value)}
-                    className="h-[56px] w-full rounded-[8px] border border-line bg-card px-[25px] text-right text-[16px] text-text-400 outline-none focus-visible:border-primary-500 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary-500"
-                  />
-                </div>
 
-                <div className="flex flex-1 flex-col gap-[12px]">
-                  <label
-                    htmlFor="offer-time"
-                    className="w-full text-right text-[16px] leading-[1.5] font-bold text-text-300"
+                  <div className="flex h-[56px] items-center gap-[8px] rounded-[8px] border border-line bg-card px-[25px] focus-within:border-primary-500">
+                    {/* The step counts from `min`, so the two have to agree:
+                        with min=1 a quarter-hour step puts 60 off the ladder
+                        and the browser refuses to submit the form. */}
+                    <input
+                      id="offer-duration"
+                      type="number"
+                      min="15"
+                      step="15"
+                      inputMode="numeric"
+                      value={duration}
+                      onChange={(event) => setDuration(event.target.value)}
+                      aria-describedby="offer-duration-hint"
+                      className="min-w-0 flex-1 bg-transparent text-right text-[20px] text-text-400 outline-none"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="shrink-0 text-[13px] text-text-300"
+                    >
+                      دقيقة
+                    </span>
+                  </div>
+
+                  <p
+                    id="offer-duration-hint"
+                    className="w-full text-right text-[14px] leading-[1.5] font-bold text-text-200"
                   >
-                    وقت الوصول المتوقع
-                  </label>
-                  <input
-                    id="offer-time"
-                    type="time"
-                    value={time}
-                    onChange={(event) => setTime(event.target.value)}
-                    className="h-[56px] w-full rounded-[8px] border border-line bg-card px-[25px] text-right text-[16px] text-text-400 outline-none focus-visible:border-primary-500 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary-500"
-                  />
+                    كم من الوقت تتوقع أن يستغرق تنفيذ العمل بعد وصولك.
+                  </p>
                 </div>
               </div>
             </section>
@@ -257,11 +350,17 @@ function TechnicianOrderOffer() {
             <section className="flex flex-col gap-[24px]">
               <h2 className="text-right text-[20px] leading-[1.5] font-bold text-text-400">
                 ملاحظات للعميل
+                <span className="text-error-500" aria-hidden="true">
+                  {' *'}
+                </span>
               </h2>
 
+              {/* Required by the endpoint, not by preference — a null or empty
+                  note is rejected before the offer is created. */}
               <Textarea
                 id="offer-notes"
                 rows={5}
+                required
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 placeholder="أخبر العميل عن خبرتك في إصلاحات مماثلة، وما هي الأدوات التي ستستخدمها..."
@@ -278,8 +377,14 @@ function TechnicianOrderOffer() {
                 </p>
               ) : null}
 
-              <Button type="submit" icon={Send} fullWidth className="h-[64px]">
-                تقديم العرض
+              <Button
+                type="submit"
+                icon={Send}
+                fullWidth
+                disabled={sending}
+                className="h-[64px]"
+              >
+                {sending ? 'جارٍ إرسال العرض...' : 'تقديم العرض'}
               </Button>
 
               <p className="text-right text-[16px] leading-[1.6] text-text-400 md:text-[20px]">
