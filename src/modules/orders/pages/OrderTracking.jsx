@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Check, Clock, Loader2, MapPin, MessageCircle, Star } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -11,13 +11,11 @@ import { useServiceRequest } from "../hooks/useServiceRequest";
 import { OFFER_CURRENCY } from "../../requests/services/serviceRequestService";
 
 // TEMPORARY — DEMO ONLY. See `services/demoOfferAcceptance.js`.
-import ReviewForm from "../../reviews/components/ReviewForm";
 import { useDemoAcceptance, useDemoStage } from "../hooks/useDemoAcceptance.js";
 import {
   DEMO_STAGES,
   DEMO_STAGE_ORDER,
   advanceStage,
-  recordDemoReview,
 } from "../services/demoOfferAcceptance.js";
 
 /**
@@ -29,14 +27,18 @@ import {
  * name, picture, rating, profession, price and duration, read out of the offers
  * the request already carries.
  *
- * What the screen deliberately does NOT draw is a live journey. The API has no
- * endpoint that moves a request along, and `ServiceRequestStatus` has no "on
- * the way" or "arrived" to move it to — the five values are PendingOffers,
- * Assigned, InProgress, Completed and Cancelled. This screen previously showed
- * "الفني في الطريق — الوصول المتوقع: 5 دقائق" for every request regardless of
- * its actual state, and advanced itself to "completed" on a six second timer.
- * Both are gone: the stages the server cannot report are listed as pending
- * rather than asserted.
+ * What the screen cannot draw is a live journey. The API has no endpoint that
+ * moves a request along, and `ServiceRequestStatus` has no "on the way" or
+ * "arrived" to move it to — the five values are PendingOffers, Assigned,
+ * InProgress, Completed and Cancelled.
+ *
+ * So that the flow can still be walked, the three middle stages advance on a
+ * local five-second timer once the customer has chosen an offer. That timer is
+ * marked TEMPORARY — DEMO ONLY throughout: it writes to `localStorage` and
+ * nowhere else, and the request's real status keeps its own badge at the top of
+ * the card, so a demo sitting at "اكتملت الخدمة" still visibly reads whatever
+ * the server actually says. Replace it with real status transitions when the
+ * backend has them.
  */
 
 // Leaflet's default marker resolves its own image paths relative to the
@@ -111,12 +113,24 @@ const TIMELINE = [
   { key: "rated", title: "تم تقييم الفني", demoStage: DEMO_STAGES.rated },
 ];
 
-// TEMPORARY — DEMO ONLY. What the button offering each step should say.
-const NEXT_STEP_LABEL = {
-  [DEMO_STAGES.onTheWay]: "الفني في الطريق",
-  [DEMO_STAGES.arrived]: "وصل الفني",
-  [DEMO_STAGES.completed]: "إنهاء الخدمة",
-};
+// TEMPORARY — DEMO ONLY. The steps the screen walks by itself once an offer has
+// been chosen, and the pause between them.
+//
+// Nothing here reaches the server. There is no endpoint that moves a request
+// between states, so this timer only writes to the local store — the request
+// stays exactly as the API last reported it, and its real status keeps its own
+// badge at the top of the card. Replacing this should be deleting the effect
+// below and reading the request's true status instead.
+//
+// `rated` is deliberately absent: the walk stops at "completed" and waits for
+// the customer to open the rating page themselves.
+const AUTO_ADVANCE = [
+  DEMO_STAGES.onTheWay,
+  DEMO_STAGES.arrived,
+  DEMO_STAGES.completed,
+];
+
+const DEMO_STEP_DELAY_MS = 5000;
 
 export default function OrderTracking() {
   const { id: orderId } = useParams();
@@ -143,6 +157,30 @@ export default function OrderTracking() {
   const hasPin =
     typeof request?.latitude === "number" &&
     typeof request?.longitude === "number";
+
+  // TEMPORARY — DEMO ONLY. Walks the journey on its own so the flow can be shown
+  // without the customer pressing anything.
+  //
+  // The first step runs immediately, so opening tracking after choosing an offer
+  // shows "الفني في الطريق" straight away; each step after it waits five
+  // seconds. The walk ends at "completed" — `next` is then `rated`, which is not
+  // in `AUTO_ADVANCE`, so no timer is set and the screen stays put until the
+  // customer opens the rating page.
+  //
+  // `advanceStage` only ever accepts the immediate next step, so a timer that
+  // fires late (a backgrounded tab, or React re-running effects in development)
+  // cannot skip a stage or walk the journey backwards.
+  const autoStage = AUTO_ADVANCE.includes(next) ? next : null;
+  const shouldAutoAdvance = Boolean(chosenOffer && autoStage);
+
+  useEffect(() => {
+    if (!shouldAutoAdvance) return undefined;
+
+    const delay = stage === DEMO_STAGES.accepted ? 0 : DEMO_STEP_DELAY_MS;
+    const timer = setTimeout(() => advanceStage(orderId, autoStage), delay);
+
+    return () => clearTimeout(timer);
+  }, [orderId, stage, autoStage, shouldAutoAdvance]);
 
   if (loading) {
     return (
@@ -305,18 +343,15 @@ export default function OrderTracking() {
                 ))}
               </div>
 
-              {/* TEMPORARY — DEMO ONLY. The one step the journey may take next.
-                  Nothing here reaches the server: there is no endpoint that
-                  moves a request between states, so pressing these advances the
-                  local store only. Delete with `demoOfferAcceptance.js`. */}
-              {chosenOffer && next && NEXT_STEP_LABEL[next] ? (
-                <button
-                  type="button"
-                  onClick={() => advanceStage(orderId, next)}
-                  className="mt-6 w-full rounded-xl bg-[#2563eb] py-3 text-sm font-bold text-white transition-colors hover:bg-[#1d4ed8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d4ed8]"
+              {/* الخدمة اكتملت: التقييم خطوة يقررها العميل، فلا انتقال تلقائي
+                  إلى صفحة التقييم */}
+              {chosenOffer && stage === DEMO_STAGES.completed ? (
+                <Link
+                  to={`/my-orders/${orderId}/review`}
+                  className="mt-6 block w-full rounded-xl bg-[#2563eb] py-3 text-center text-sm font-bold text-white transition-colors hover:bg-[#1d4ed8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d4ed8]"
                 >
-                  {NEXT_STEP_LABEL[next]}
-                </button>
+                  تقييم الفني
+                </Link>
               ) : null}
             </div>
 
@@ -472,23 +507,16 @@ export default function OrderTracking() {
                     ) : null}
                   </dl>
 
-                  {/* TEMPORARY — DEMO ONLY. The rating step.
-                      There is no review endpoint anywhere in the API, so this
-                      submission is kept beside the request in the same local
-                      store and reaches nobody. It deliberately does not touch
-                      the technician's own `rating`, which the server owns and
-                      reports as 0 for every technician. */}
+                  {/* التقييم نفسه يحدث على صفحة التقييم القائمة، لا هنا. ما يظهر
+                      في هذه الشاشة هو نتيجته بعد إرساله. */}
                   {stage === DEMO_STAGES.completed ? (
-                    <div className="mt-6 flex flex-col items-center border-t border-gray-100 pt-6">
+                    <div className="mt-6 border-t border-gray-100 pt-6 text-center">
                       <p className="text-sm font-bold text-[#059669]">
-                        اكتملت الخدمة — قيّم الفني لإنهاء الطلب
+                        اكتملت الخدمة
                       </p>
-
-                      <ReviewForm
-                        onSubmitted={(submitted) =>
-                          recordDemoReview(orderId, submitted)
-                        }
-                      />
+                      <p className="mt-1 text-xs font-medium text-gray-400">
+                        يمكنك تقييم الفني من زر «تقييم الفني».
+                      </p>
                     </div>
                   ) : null}
 
