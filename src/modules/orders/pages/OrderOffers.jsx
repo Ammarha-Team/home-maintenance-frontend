@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { ChevronLeft, Loader2, MapPin } from "lucide-react";
 import UserNavbar from "../../../shared/components/HomeNavbar";
 import Footer from "../../../shared/components/Footer";
 import TechnicianOfferCard from "../components/TechnicianOfferCard";
-import { useToast } from "../../../shared/toast/toastContext.js";
 import { useServiceRequest } from "../hooks/useServiceRequest";
 
 // The API sends a preferred day as "2026-09-05". `Date` would read that as UTC
@@ -23,130 +22,39 @@ const formatDay = (value) => {
   });
 };
 
-// قائمة فنيين وهمية مطابقة للتصميم للـ 12 عرضاً
-const INITIAL_OFFERS = [
-  {
-    id: 1,
-    name: "أحمد العتيبي",
-    experience: "10 سنوات خبرة",
-    role: "فني كهرباء معتمد",
-    successfulOffers: "+16 عرض متقدم ناجح",
-    reviewsCount: "+10 تعليقات",
-    rating: "4.9",
-    avatar: "/technician_avatar.jpg",
-    notes:
-      "سأقوم بفحص كامل للوحة المفاتيح واستبدال القطع التالفة بقطع أصلية مع ضمان لمدة 30 يوم.",
-    price: 150,
-    arrivalTime: "يصل خلال 30 دقيقة",
-    distanceKm: 2,
-  },
-  {
-    id: 2,
-    name: "أحمد العتيبي",
-    experience: "10 سنوات خبرة",
-    role: "فني كهرباء معتمد",
-    successfulOffers: "+16 عرض متقدم ناجح",
-    reviewsCount: "+10 تعليقات",
-    rating: "4.9",
-    avatar: "/technician_avatar.jpg",
-    notes:
-      "سأقوم بفحص كامل للوحة المفاتيح واستبدال القطع التالفة بقطع أصلية مع ضمان لمدة 30 يوم.",
-    price: 150,
-    arrivalTime: "يصل خلال 30 دقيقة",
-    distanceKm: 1.5,
-  },
-  {
-    id: 3,
-    name: "أحمد العتيبي",
-    experience: "10 سنوات خبرة",
-    role: "فني كهرباء معتمد",
-    successfulOffers: "+16 عرض متقدم ناجح",
-    reviewsCount: "+10 تعليقات",
-    rating: "4.9",
-    avatar: "/technician_avatar.jpg",
-    notes:
-      "سأقوم بفحص كامل للوحة المفاتيح واستبدال القطع التالفة بقطع أصلية مع ضمان لمدة 30 يوم.",
-    price: 140,
-    arrivalTime: "يصل خلال 20 دقيقة",
-    distanceKm: 1,
-  },
-  {
-    id: 4,
-    name: "أحمد العتيبي",
-    experience: "10 سنوات خبرة",
-    role: "فني كهرباء معتمد",
-    successfulOffers: "+16 عرض متقدم ناجح",
-    reviewsCount: "+10 تعليقات",
-    rating: "4.9",
-    avatar: "/technician_avatar.jpg",
-    notes:
-      "سأقوم بفحص كامل للوحة المفاتيح واستبدال القطع التالفة بقطع أصلية مع ضمان لمدة 30 يوم.",
-    price: 150,
-    arrivalTime: "يصل خلال 30 دقيقة",
-    distanceKm: 3,
-  },
+// العروض هنا حقيقية: تأتي ضمن تفاصيل الطلب من
+// GET /api/service-requests/{id} في الحقل offers، فلا توجد نقطة نهاية منفصلة
+// لها ولا بيانات عرض مؤقتة.
+//
+// الفرز يقتصر على ما تحمله الاستجابة فعلاً — السعر والتقييم. كان هناك تبويب
+// ثالث للأقرب مسافةً، ولا يوجد في الاستجابة أي إحداثي أو مسافة للفني، فحُذف
+// بدل ترتيب القائمة على حقل لا وجود له.
+const FILTERS = [
+  { id: "all", label: "الكل" },
+  { id: "lowest_price", label: "الأقل سعرا" },
+  { id: "highest_rated", label: "الأعلى تقييما" },
 ];
 
 export default function OrderOffers() {
-  // يُمرَّر إلى كارت العرض حتى تفتح صفحة الفني ضمن الطلب نفسه
   const { id: orderId } = useParams();
-  const [offers, setOffers] = useState(INITIAL_OFFERS);
 
-  // تفاصيل الطلب تأتي من الخادم؛ العروض المعروضة بجوارها ما زالت بيانات عرض
-  // مؤقتة لأن لها نقطة نهاية أخرى خارج نطاق هذا الربط.
   const {
     request,
     loading: requestLoading,
     error: requestError,
   } = useServiceRequest(orderId);
+
   const [activeFilter, setActiveFilter] = useState("all");
 
-  const navigate = useNavigate();
-  const { showToast } = useToast();
+  const offers = request?.offers ?? [];
 
-  // لو غادر العميل الصفحة قبل انتهاء المهلة، يُلغى الانتقال المؤجل
-  const redirectTimer = useRef(null);
-
-  useEffect(
-    () => () => {
-      if (redirectTimer.current) clearTimeout(redirectTimer.current);
-    },
-    [],
-  );
-
-  const handleDismissOffer = (offerId) => {
-    setOffers((prev) => prev.filter((o) => o.id !== offerId));
-  };
-
-  // قبول العرض يؤكد بإشعار عابر ثم ينتقل إلى تتبع الطلب: الطلب صار مسنداً إلى
-  // فني، ومكانه بعد ذلك شاشة التتبع لا قائمة العروض.
-  const handleAcceptOffer = (offer) => {
-    showToast({
-      message: `تم قبول عرض الفني ${offer.name} بسعر ${offer.price} ر.س بنجاح!`,
-    });
-
-    redirectTimer.current = setTimeout(
-      () => navigate(`/my-orders/${orderId}/track`),
-      1200,
-    );
-  };
-
-  // فرز العروض بناءً على التاب النشط
-  const getSortedOffers = () => {
-    const list = [...offers];
-    if (activeFilter === "lowest_price") {
-      return list.sort((a, b) => a.price - b.price);
-    }
-    if (activeFilter === "highest_rated") {
-      return list.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
-    }
-    if (activeFilter === "nearest") {
-      return list.sort((a, b) => a.distanceKm - b.distanceKm);
-    }
-    return list;
-  };
-
-  const sortedOffers = getSortedOffers();
+  // نسخة قبل الفرز: sort يعدّل المصفوفة في مكانها، والمصدر هنا هو ما ردّ به
+  // الخادم.
+  const sortedOffers = [...offers].sort((a, b) => {
+    if (activeFilter === "lowest_price") return (a.price ?? 0) - (b.price ?? 0);
+    if (activeFilter === "highest_rated") return (b.rating ?? 0) - (a.rating ?? 0);
+    return 0;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-cairo" dir="rtl">
@@ -278,12 +186,7 @@ export default function OrderOffers() {
 
             {/* الفلاتر (Pills) */}
             <div className="flex gap-2.5 mb-6 overflow-x-auto pb-2 scrollbar-none">
-              {[
-                { id: "all", label: "الكل" },
-                { id: "lowest_price", label: "الأقل سعرا" },
-                { id: "nearest", label: "الأقرب" },
-                { id: "highest_rated", label: "الأعلى تقييما" },
-              ].map((tab) => (
+              {FILTERS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveFilter(tab.id)}
@@ -299,21 +202,26 @@ export default function OrderOffers() {
             </div>
 
             {/* كروت الفنيين */}
-            {sortedOffers.length > 0 ? (
+            {requestLoading ? (
+              <div className="bg-white rounded-2xl p-10 flex items-center justify-center gap-2 border border-gray-100 shadow-2xs text-gray-500">
+                <Loader2 size={18} className="animate-spin" />
+                <span className="text-sm font-medium">جارٍ تحميل العروض...</span>
+              </div>
+            ) : sortedOffers.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {sortedOffers.map((offer) => (
-                  <TechnicianOfferCard
-                    key={offer.id}
-                    offer={offer}
-                    orderId={orderId}
-                    onDismiss={handleDismissOffer}
-                    onAccept={handleAcceptOffer}
-                  />
+                  <TechnicianOfferCard key={offer.id} offer={offer} />
                 ))}
               </div>
             ) : (
               <div className="bg-white rounded-2xl p-10 text-center border border-gray-100 shadow-2xs">
-                <p className="text-gray-500 font-medium">لا توجد عروض حالية متاحة لهذا الفلتر.</p>
+                <p className="text-gray-500 font-medium">
+                  لم يقدم أي فني عرضًا على هذا الطلب حتى الآن.
+                </p>
+                <p className="mt-2 text-xs text-gray-400">
+                  ستظهر العروض هنا فور وصولها. أعد تحميل الصفحة للاطلاع على
+                  الجديد.
+                </p>
               </div>
             )}
           </div>
