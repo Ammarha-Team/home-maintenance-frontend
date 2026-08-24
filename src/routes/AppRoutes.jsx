@@ -67,6 +67,9 @@ import TechnicianPaymentConfirm from "../modules/technician/pages/TechnicianPaym
 import TechnicianPaymentComplete from "../modules/technician/pages/TechnicianPaymentComplete.jsx";
 
 import TechnicianRoute from "./TechnicianRoute.jsx";
+
+// TEMPORARY — DEMO ONLY. Remove with the rest of the frontend-only review flow.
+import TechnicianUnderReview from "../modules/technician-review/pages/TechnicianUnderReview.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
 import AdminRoutes from "./AdminRoutes.jsx";
@@ -301,6 +304,22 @@ function AppRoutes() {
         <Route
           path="/messages"
           element={<Navigate to="/chat" replace />}
+        />
+
+        {/* TEMPORARY — DEMO ONLY. The holding screen for a technician whose
+            review has not been completed. Wrapped in ProtectedRoute rather than
+            TechnicianRoute on purpose: TechnicianRoute is what redirects here,
+            so gating this path with it would bounce the technician between the
+            two forever. The page itself sends anyone who does not belong here
+            on to the dashboard.
+            See modules/technician-review/services/technicianReviewStore.js */}
+        <Route
+          path={TECHNICIAN_ROUTES.underReview}
+          element={
+            <ProtectedRoute>
+              <TechnicianUnderReview />
+            </ProtectedRoute>
+          }
         />
 
         {/* Technician Portal */}

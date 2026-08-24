@@ -8,6 +8,17 @@ import { activateUser, fetchAllTechnicians, suspendUser } from '../services/admi
 import { TECHNICIANS_PAGE_SIZE, filterTechnicians } from '../services/adminService.js'
 import { useToast } from '../../../shared/toast/toastContext.js'
 
+// TEMPORARY — DEMO ONLY. Technician review has no backend behind it; the state
+// is held in this browser. See
+// `modules/technician-review/services/technicianReviewStore.js`.
+import { useReviewState } from '../../technician-review/hooks/useTechnicianReview.js'
+import {
+  clearSuspensionReason,
+  markApproved,
+  reviewFor,
+  suspensionFor,
+} from '../../technician-review/services/technicianReviewStore.js'
+
 const NO_FILTERS = { city: '', specialty: '', status: '' }
 
 /**
@@ -31,7 +42,21 @@ function Technicians() {
 
   const { data, error, loading, reload } = useAdminResource(fetchAllTechnicians)
 
-  const technicians = useMemo(() => data ?? [], [data])
+  // TEMPORARY — DEMO ONLY.
+  const reviewState = useReviewState()
+
+  // The roster is the API's answer and is left exactly as it arrived; the review
+  // state is laid over the top as one extra field. Keeping them apart is what
+  // makes this removable — delete the two lines and the rows are the DTO again.
+  const technicians = useMemo(
+    () =>
+      (data ?? []).map((technician) => ({
+        ...technician,
+        review: reviewFor(reviewState, technician.email)?.status ?? null,
+        suspensionReason: suspensionFor(reviewState, technician.email)?.reason ?? null,
+      })),
+    [data, reviewState],
+  )
 
   const matches = useMemo(
     () => filterTechnicians(technicians, filters),
@@ -78,6 +103,13 @@ function Technicians() {
       try {
         await (suspending ? suspendUser : activateUser)(technician.userId)
 
+        // Reinstating here drops any reason recorded on the detail screen, so a
+        // note cannot outlive the suspension it explained. Suspending from this
+        // table records none: the reason is chosen on the detail screen, and
+        // guessing one on behalf of the admin would be worse than leaving it
+        // blank.
+        if (!suspending) clearSuspensionReason(technician.email)
+
         showToast({
           message: suspending
             ? `تم إيقاف حساب ${technician.name}`
@@ -95,6 +127,32 @@ function Technicians() {
       }
     },
     [reload, showToast],
+  )
+
+  /**
+   * TEMPORARY — DEMO ONLY. Completes the review for one technician.
+   *
+   * Nothing is sent anywhere: there is no approval endpoint, so this writes to
+   * the browser's own store and the roster is not reloaded afterwards — there
+   * would be nothing new to read. The table redraws because the store is
+   * subscribed to, and a technician signed in elsewhere in this browser is
+   * carried into their portal by the same notification.
+   */
+  const approveReview = useCallback(
+    (technician) => {
+      if (!technician.email) {
+        showToast({
+          message: 'تعذر إتمام المراجعة: لا يوجد بريد إلكتروني لهذا الفني.',
+          variant: 'error',
+        })
+        return
+      }
+
+      markApproved(technician.email)
+
+      showToast({ message: `تمت مراجعة حساب ${technician.name} والموافقة عليه` })
+    },
+    [showToast],
   )
 
   return (
@@ -132,6 +190,7 @@ function Technicians() {
             to={start + rows.length}
             onPageChange={setPage}
             onToggleStatus={toggleStatus}
+            onApproveReview={approveReview}
             busyId={busyId}
           />
         </>
