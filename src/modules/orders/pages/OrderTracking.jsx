@@ -11,7 +11,14 @@ import { useServiceRequest } from "../hooks/useServiceRequest";
 import { OFFER_CURRENCY } from "../../requests/services/serviceRequestService";
 
 // TEMPORARY — DEMO ONLY. See `services/demoOfferAcceptance.js`.
-import { useDemoAcceptance } from "../hooks/useDemoAcceptance.js";
+import ReviewForm from "../../reviews/components/ReviewForm";
+import { useDemoAcceptance, useDemoStage } from "../hooks/useDemoAcceptance.js";
+import {
+  DEMO_STAGES,
+  DEMO_STAGE_ORDER,
+  advanceStage,
+  recordDemoReview,
+} from "../services/demoOfferAcceptance.js";
 
 /**
  * Where a request stands, for the customer who filed it.
@@ -88,10 +95,28 @@ const formatDuration = (minutes) => {
 
 const initialOf = (name) => String(name || "؟").trim().charAt(0) || "؟";
 
-// المراحل التي لا يوفرها الخادم بعد. تُعرض كقائمة منتظرة بدل ادعاء حدوثها:
-// لا توجد نقطة نهاية تنقل الطلب، ولا قيمة في ServiceRequestStatus تصف "في
-// الطريق" أو "وصل الفني".
-const PENDING_STAGES = ["الفني في الطريق", "وصل الفني", "اكتملت الخدمة"];
+// The journey as the customer reads it.
+//
+// The first two rows are answered by the server — a request has a creation
+// time, and it either has offers or it does not. The last four are the demo's:
+// no endpoint moves a request along, and `ServiceRequestStatus` has no value
+// for "on the way" or "arrived", so their progress comes from the local store.
+// `demoStage` marks which rows those are.
+const TIMELINE = [
+  { key: "created", title: "تم إنشاء الطلب" },
+  { key: "offers", title: "وصلت العروض" },
+  { key: "on_the_way", title: "الفني في الطريق", demoStage: DEMO_STAGES.onTheWay },
+  { key: "arrived", title: "وصل الفني", demoStage: DEMO_STAGES.arrived },
+  { key: "completed", title: "اكتملت الخدمة", demoStage: DEMO_STAGES.completed },
+  { key: "rated", title: "تم تقييم الفني", demoStage: DEMO_STAGES.rated },
+];
+
+// TEMPORARY — DEMO ONLY. What the button offering each step should say.
+const NEXT_STEP_LABEL = {
+  [DEMO_STAGES.onTheWay]: "الفني في الطريق",
+  [DEMO_STAGES.arrived]: "وصل الفني",
+  [DEMO_STAGES.completed]: "إنهاء الخدمة",
+};
 
 export default function OrderTracking() {
   const { id: orderId } = useParams();
@@ -102,6 +127,10 @@ export default function OrderTracking() {
   // on. The server knows nothing about this; it only picks which offer's real
   // technician the card below describes.
   const acceptance = useDemoAcceptance(orderId);
+
+  // TEMPORARY — DEMO ONLY. How far the local journey has walked, and the single
+  // step it is allowed to offer next.
+  const { stage, next, review } = useDemoStage(orderId);
 
   const offers = request?.offers ?? [];
 
@@ -149,6 +178,46 @@ export default function OrderTracking() {
     );
   }
 
+  // Each row's state, in one place so the marker, the colour and the label can
+  // never describe the step differently.
+  //
+  // The first two rows are answered by the server. The rest are the demo's, and
+  // they only light up once an offer has been chosen — before that the journey
+  // has not started, whatever the local store happens to hold.
+  const currentIndex = DEMO_STAGE_ORDER.indexOf(stage);
+
+  const timeline = TIMELINE.map((row) => {
+    if (row.key === "created") {
+      return {
+        ...row,
+        state: "done",
+        detail: formatTime(request.createdAt) || "—",
+      };
+    }
+
+    if (row.key === "offers") {
+      return {
+        ...row,
+        state: offers.length ? "done" : "waiting",
+        detail: offers.length
+          ? `${offers.length} عرض من الفنيين`
+          : "بانتظار عروض الفنيين",
+      };
+    }
+
+    if (!chosenOffer) {
+      return { ...row, state: "waiting", detail: "بانتظار اختيار الفني" };
+    }
+
+    const rowIndex = DEMO_STAGE_ORDER.indexOf(row.demoStage);
+
+    if (rowIndex < currentIndex) return { ...row, state: "done", detail: "" };
+    if (rowIndex === currentIndex)
+      return { ...row, state: "current", detail: "الآن" };
+
+    return { ...row, state: "waiting", detail: "" };
+  });
+
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-cairo" dir="rtl">
       <UserNavbar />
@@ -190,78 +259,65 @@ export default function OrderTracking() {
               <div className="relative pr-6 space-y-7">
                 <div className="absolute right-3 top-2.5 bottom-2.5 w-0.5 bg-gray-200" />
 
-                {/* تم إنشاء الطلب — وقت حقيقي من الخادم */}
-                <div className="relative flex items-start gap-4">
-                  <div className="absolute -right-6 top-0.5 w-6 h-6 rounded-full bg-[#2563eb] text-white flex items-center justify-center ring-4 ring-white shadow-2xs z-10">
-                    <Check size={14} className="stroke-[3]" />
-                  </div>
-                  <div className="mr-2">
-                    <h3 className="font-bold text-[#2563eb] text-sm sm:text-base">
-                      تم إنشاء الطلب
-                    </h3>
-                    <p className="text-gray-400 text-xs mt-0.5 font-medium">
-                      {formatTime(request.createdAt) || "—"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* العروض — عدد حقيقي */}
-                <div
-                  className={`relative flex items-start gap-4 ${
-                    offers.length ? "" : "opacity-60"
-                  }`}
-                >
+                {timeline.map((row) => (
                   <div
-                    className={`absolute -right-6 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white z-10 ${
-                      offers.length
-                        ? "bg-[#2563eb] text-white shadow-2xs"
-                        : "bg-gray-100 border border-gray-300 text-gray-400"
+                    key={row.key}
+                    className={`relative flex items-start gap-4 ${
+                      row.state === "waiting" ? "opacity-60" : ""
                     }`}
                   >
-                    <Check size={13} className="stroke-[2]" />
-                  </div>
-                  <div className="mr-2">
-                    <h3
-                      className={`text-sm sm:text-base ${
-                        offers.length
-                          ? "font-bold text-[#2563eb]"
-                          : "font-medium text-gray-500"
+                    <div
+                      className={`absolute -right-6 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white z-10 ${
+                        row.state === "done"
+                          ? "bg-[#2563eb] text-white shadow-2xs"
+                          : row.state === "current"
+                            ? "bg-[#10b981] text-white shadow-2xs"
+                            : "bg-gray-100 border border-gray-300 text-gray-400"
                       }`}
                     >
-                      وصلت العروض
-                    </h3>
-                    <p className="text-gray-400 text-xs mt-0.5 font-medium">
-                      {offers.length
-                        ? `${offers.length} عرض من الفنيين`
-                        : "بانتظار عروض الفنيين"}
-                    </p>
-                  </div>
-                </div>
-
-                {PENDING_STAGES.map((stage) => (
-                  <div
-                    key={stage}
-                    className="relative flex items-start gap-4 opacity-60"
-                  >
-                    <div className="absolute -right-6 top-0.5 w-6 h-6 rounded-full bg-gray-100 border border-gray-300 text-gray-400 flex items-center justify-center ring-4 ring-white z-10">
-                      <Clock size={12} />
+                      {row.state === "waiting" ? (
+                        <Clock size={12} />
+                      ) : (
+                        <Check size={13} className="stroke-[2.5]" />
+                      )}
                     </div>
+
                     <div className="mr-2">
-                      <h3 className="text-sm sm:text-base font-medium text-gray-500">
-                        {stage}
+                      <h3
+                        className={`text-sm sm:text-base ${
+                          row.state === "done"
+                            ? "font-bold text-[#2563eb]"
+                            : row.state === "current"
+                              ? "font-bold text-[#059669]"
+                              : "font-medium text-gray-500"
+                        }`}
+                      >
+                        {row.title}
                       </h3>
-                      <p className="text-gray-400 text-xs mt-0.5 font-medium">
-                        غير متاح بعد
-                      </p>
+
+                      {row.detail ? (
+                        <p className="text-gray-400 text-xs mt-0.5 font-medium">
+                          {row.detail}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <p className="mt-6 rounded-xl bg-gray-50 p-3 text-[11px] leading-relaxed text-gray-500">
-                التتبع اللحظي لحركة الفني غير متاح حاليًا من الخادم. تعرض هذه
-                الشاشة الحالة الفعلية للطلب فقط.
-              </p>
+              {/* TEMPORARY — DEMO ONLY. The one step the journey may take next.
+                  Nothing here reaches the server: there is no endpoint that
+                  moves a request between states, so pressing these advances the
+                  local store only. Delete with `demoOfferAcceptance.js`. */}
+              {chosenOffer && next && NEXT_STEP_LABEL[next] ? (
+                <button
+                  type="button"
+                  onClick={() => advanceStage(orderId, next)}
+                  className="mt-6 w-full rounded-xl bg-[#2563eb] py-3 text-sm font-bold text-white transition-colors hover:bg-[#1d4ed8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d4ed8]"
+                >
+                  {NEXT_STEP_LABEL[next]}
+                </button>
+              ) : null}
             </div>
 
             <Link
@@ -416,13 +472,67 @@ export default function OrderTracking() {
                     ) : null}
                   </dl>
 
-                  {/* TEMPORARY — DEMO ONLY. القبول لم يُرسل إلى الخادم، والطلب
-                      ما زال غير مُسند فعليًا. */}
-                  <p className="mt-4 rounded-xl bg-amber-50 p-3 text-[11px] leading-relaxed text-amber-700">
-                    اختيار هذا الفني محفوظ في هذا المتصفح فقط لأغراض العرض
-                    التوضيحي — لم يتم إسناد الطلب إليه في الخادم بعد، ولم يصله
-                    إشعار.
-                  </p>
+                  {/* TEMPORARY — DEMO ONLY. The rating step.
+                      There is no review endpoint anywhere in the API, so this
+                      submission is kept beside the request in the same local
+                      store and reaches nobody. It deliberately does not touch
+                      the technician's own `rating`, which the server owns and
+                      reports as 0 for every technician. */}
+                  {stage === DEMO_STAGES.completed ? (
+                    <div className="mt-6 flex flex-col items-center border-t border-gray-100 pt-6">
+                      <p className="text-sm font-bold text-[#059669]">
+                        اكتملت الخدمة — قيّم الفني لإنهاء الطلب
+                      </p>
+
+                      <ReviewForm
+                        onSubmitted={(submitted) =>
+                          recordDemoReview(orderId, submitted)
+                        }
+                      />
+                    </div>
+                  ) : null}
+
+                  {stage === DEMO_STAGES.rated && review ? (
+                    <div className="mt-6 border-t border-gray-100 pt-6 text-center">
+                      <span
+                        aria-hidden="true"
+                        className="mx-auto flex size-12 items-center justify-center rounded-full bg-[#e6f7ed] text-[#059669]"
+                      >
+                        <Check size={26} className="stroke-[2.5]" />
+                      </span>
+
+                      <h3 className="mt-3 text-lg font-bold text-gray-900">
+                        تم إنهاء الطلب وتقييم الفني
+                      </h3>
+
+                      <div className="mt-2 flex items-center justify-center gap-1">
+                        {Array.from({ length: 5 }, (_, index) => (
+                          <Star
+                            key={index}
+                            size={16}
+                            className={
+                              index < review.rating
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-gray-300"
+                            }
+                          />
+                        ))}
+                      </div>
+
+                      {review.comment ? (
+                        <p className="mx-auto mt-3 max-w-md rounded-xl bg-gray-50 p-3 text-xs leading-relaxed text-gray-600">
+                          {review.comment}
+                        </p>
+                      ) : null}
+
+                      <Link
+                        to="/my-orders"
+                        className="mt-5 inline-block rounded-xl bg-[#2563eb] px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#1d4ed8]"
+                      >
+                        العودة إلى طلباتي
+                      </Link>
+                    </div>
+                  ) : null}
                 </>
               ) : (
                 <div className="text-center">

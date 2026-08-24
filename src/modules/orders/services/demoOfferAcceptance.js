@@ -28,6 +28,33 @@
 
 const STORAGE_KEY = 'ammarha.demo.offerAcceptance'
 
+/**
+ * The stages the demo walks through after an offer is chosen.
+ *
+ * These are NOT `ServiceRequestStatus`. That enum has five values —
+ * PendingOffers, Assigned, InProgress, Completed, Cancelled — and no endpoint
+ * to move a request between them, so none of the progression below reaches the
+ * server. A request sitting at `rated` here is still `PendingOffers` there.
+ *
+ * The order is the whole rule: a request only ever moves one step down this
+ * list, which is what stops the demo showing an arrival before a departure.
+ */
+export const DEMO_STAGES = Object.freeze({
+  accepted: 'accepted',
+  onTheWay: 'on_the_way',
+  arrived: 'arrived',
+  completed: 'completed',
+  rated: 'rated',
+})
+
+export const DEMO_STAGE_ORDER = Object.freeze([
+  DEMO_STAGES.accepted,
+  DEMO_STAGES.onTheWay,
+  DEMO_STAGES.arrived,
+  DEMO_STAGES.completed,
+  DEMO_STAGES.rated,
+])
+
 const EMPTY = Object.freeze({ version: 1, accepted: Object.freeze({}) })
 
 // `useSyncExternalStore` compares snapshots by identity and re-renders whenever
@@ -145,7 +172,82 @@ export const recordAcceptance = (requestId, offerId) => {
     ...state,
     accepted: {
       ...state.accepted,
-      [key]: { offerId: offer, acceptedAt: new Date().toISOString() },
+      [key]: {
+        offerId: offer,
+        acceptedAt: new Date().toISOString(),
+        stage: DEMO_STAGES.accepted,
+      },
+    },
+  })
+}
+
+/**
+ * How far the demo has walked for one request.
+ *
+ * An entry written before stages existed has no `stage`, and an entry naming a
+ * stage this build does not know is treated the same way: the journey starts at
+ * the beginning rather than at a step nothing can render.
+ */
+export const stageOf = (state, requestId) => {
+  const stage = acceptanceFor(state, requestId)?.stage
+  return DEMO_STAGE_ORDER.includes(stage) ? stage : DEMO_STAGES.accepted
+}
+
+/** The step after the current one, or null at the end of the list. */
+export const nextStageOf = (state, requestId) =>
+  DEMO_STAGE_ORDER[DEMO_STAGE_ORDER.indexOf(stageOf(state, requestId)) + 1] ??
+  null
+
+/**
+ * Moves one request one step along, and only forwards.
+ *
+ * Nothing is sent. A stage that is not the immediate next one is ignored, so a
+ * stale button in another tab cannot skip the queue or walk the demo backwards.
+ */
+export const advanceStage = (requestId, stage) => {
+  const key = keyFor(requestId)
+  if (!key) return
+
+  const state = read()
+  const current = state.accepted[key]
+  if (!current) return
+
+  if (stage !== nextStageOf(state, requestId)) return
+
+  write({
+    ...state,
+    accepted: {
+      ...state.accepted,
+      [key]: { ...current, stage, stageAt: new Date().toISOString() },
+    },
+  })
+}
+
+/**
+ * Keeps the customer's rating beside the request, and moves to the last stage.
+ *
+ * TEMPORARY — DEMO ONLY, and the most important one to delete: there is no
+ * review endpoint at all, so this rating reaches nobody. It does not touch the
+ * technician's `rating`, which the API owns and reports as 0 for everyone.
+ */
+export const recordDemoReview = (requestId, { rating, comment }) => {
+  const key = keyFor(requestId)
+  if (!key) return
+
+  const state = read()
+  const current = state.accepted[key]
+  if (!current) return
+
+  write({
+    ...state,
+    accepted: {
+      ...state.accepted,
+      [key]: {
+        ...current,
+        stage: DEMO_STAGES.rated,
+        stageAt: new Date().toISOString(),
+        review: { rating, comment, at: new Date().toISOString() },
+      },
     },
   })
 }

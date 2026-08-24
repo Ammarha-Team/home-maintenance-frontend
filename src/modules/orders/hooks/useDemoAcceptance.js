@@ -4,6 +4,8 @@ import {
   acceptanceFor,
   getServerSnapshot,
   getSnapshot,
+  nextStageOf,
+  stageOf,
   subscribe,
 } from '../services/demoOfferAcceptance.js'
 
@@ -25,3 +27,22 @@ export const useDemoAcceptanceState = () =>
  */
 export const useDemoAcceptance = (requestId) =>
   acceptanceFor(useDemoAcceptanceState(), requestId)
+
+/**
+ * Where the demo journey stands for one request.
+ *
+ * `next` is the only step the UI is allowed to offer, which is what keeps the
+ * buttons in order and stops the flow being walked backwards.
+ *
+ * @param {string|undefined} requestId
+ * @returns {{stage: string, next: string|null, review: object|null}}
+ */
+export const useDemoStage = (requestId) => {
+  const state = useDemoAcceptanceState()
+
+  return {
+    stage: stageOf(state, requestId),
+    next: nextStageOf(state, requestId),
+    review: acceptanceFor(state, requestId)?.review ?? null,
+  }
+}
